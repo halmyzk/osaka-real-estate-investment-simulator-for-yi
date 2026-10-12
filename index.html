@@ -990,8 +990,7 @@ button,.button,[role="button"]{touch-action:manipulation}
         
       </figure>
       <div id="designFlowHost"><div id="questionnaireFlow"><div class="workflow-bar"><span class="workflow-heading" id="currentTopic">事業条件の確認</span><span class="workflow-count">回答済み <strong id="sideCount">0 / 0</strong></span></div>
-      <details class="topic-index"><summary>検討テーマから移動 <span class="summary-sub">設問一覧</span></summary><div class="stepnav" id="stepnav"></div></details>
-      <details class="question-index"><summary>設問から移動 <span class="summary-sub">モデル別の設問</span></summary><div class="question-list" id="questionList"></div></details>
+      <details class="question-index"><summary>検討テーマから移動 <span class="summary-sub">設問一覧</span></summary><div class="question-list" id="questionList"></div></details>
       <div class="grid2"><div class="panel question-panel" id="wizardCard"></div><div class="panel side-panel" id="wizardSidebar"></div></div></div></div>
       <div class="section-heading lower"><div><h2>事業化に向けた検証事項</h2><p>収益性が見込める場合でも、法制度・契約上の成立条件と、想定する宿泊・賃貸需要の実在は独立して確認する必要があります。</p></div></div>
       <div class="riskgrid"><div class="riskitem"><b>法制度・契約上の成立条件</b><p>特区民泊の新規受付終了や、住宅要件・賃借承諾等は経済的魅力度に加点せず、独立して扱います。</p></div><div class="riskitem"><b>市場需要の裏付け</b><p>ADRや各賃貸モデルの賃料を入力しても、成約データがない限り需要が証明されたとは判定しません。</p></div></div>
@@ -1245,7 +1244,6 @@ function renderWizard(){
  const item=items[state.current],value=state.answers[item.id];
  $('currentTopic').textContent=stage===1?'事業設計・商品構想':'需要・契約構造の検証';
  $('sideCount').textContent=items.filter(x=>state.answers[x.id]!==undefined&&state.answers[x.id]!==defaults[x.id]).length+' / '+items.length;
- $('stepnav').innerHTML='';
  $('questionList').innerHTML=items.map((p,i)=>'<button class="question-jump '+(i===state.current?'current':'')+'" data-jump="'+i+'">'+String(i+1).padStart(2,'0')+' '+esc(p.title)+'</button>').join('');
  document.querySelectorAll('[data-jump]').forEach(el=>el.onclick=()=>{state.current=Number(el.dataset.jump);renderWizard()});
  $('wizardCard').innerHTML='<div class="question-top">QUESTION '+String(state.current+1).padStart(2,'0')+' / '+items.length+'</div><div class="progressline"><div style="width:'+((state.current+1)/items.length*100)+'%"></div></div><h2 class="q-title">'+esc(item.title)+'</h2><p class="q-help">'+esc(item.help)+'</p><div class="options">'+item.options.map(([v,label])=>'<button type="button" class="option '+(value===v?'selected':'')+'" data-answer="'+esc(v)+'"><span class="radio-dot"></span><span class="option-text"><span class="option-title">'+esc(label)+'</span></span></button>').join('')+'</div><div class="footer-actions"><button class="button" id="stepPrev" '+(state.current===0?'disabled':'')+'>← 前へ</button><button class="button dark" id="stepNext">'+(state.current===items.length-1?'次の工程へ →':'次へ →')+'</button></div>';
