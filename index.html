@@ -1,0 +1,1426 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>大阪・タワーマンション宿泊事業シミュレーター for YI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;600;700&family=Noto+Serif+JP:wght@300;400;500&family=Source+Serif+4:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+ --white:#FFFFFF;--ink:#111111;--navy:#102B47;--blue:#7297C5;--charcoal:#31373D;
+ --muted:#58636D;--line:rgba(16,43,71,.19);--soft:#F5F8FB;--pale:#EAF1F8;
+ --bg:#FFFFFF;--surface:#FFFFFF;--ink2:#31373D;--accent:#102B47;--accent2:#EAF1F8;
+ --gold:#31373D;--red:#31373D;--rose:#F5F8FB;--shadow:none;
+ --font-ui:Inter,"Noto Sans JP","Hiragino Sans","Yu Gothic",Meiryo,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;color:var(--ink);background:var(--white);font:400 15px/1.7 var(--font-ui);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+a{color:var(--navy);text-underline-offset:4px}
+a:hover{text-decoration-thickness:2px}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{
+ outline:3px solid var(--blue);outline-offset:3px
+}
+.app{min-height:100vh}
+.site-header{position:sticky;top:0;z-index:50;background:var(--white);border-top:5px solid var(--blue);border-bottom:1px solid var(--line)}
+.header-inner{max-width:1520px;margin:auto;min-height:77px;padding:14px clamp(20px,5.4vw,82px);display:flex;align-items:center;justify-content:space-between;gap:28px}
+.site-identity{display:flex;align-items:center;gap:19px;min-width:0}
+.brand-stripe{display:block;background:var(--blue);width:35px;height:35px;flex:0 0 35px}
+.brand-copy{min-width:0}
+.brand-title{font-size:16px;font-weight:700;line-height:1.45;letter-spacing:-.02em;color:var(--navy)}
+.brand-sub{font-family:Inter,sans-serif;letter-spacing:.12em;font-size:10px;font-weight:600;color:var(--muted);margin-top:3px}
+.header-actions{display:flex;gap:18px;align-items:center;white-space:nowrap}
+.header-status{font-size:11px;letter-spacing:.01em;color:var(--muted)}
+.primary-nav{max-width:1520px;margin:auto;display:flex;gap:0;padding:0 clamp(20px,5.4vw,82px);overflow:auto hidden;scrollbar-width:thin}
+.nav-btn{appearance:none;border:0;border-top:3px solid transparent;background:transparent;color:var(--charcoal);padding:15px 30px 16px 0;margin-right:36px;display:inline-flex;align-items:center;gap:11px;white-space:nowrap;font-weight:500;font-size:13px}
+.nav-btn:hover{color:var(--navy)}
+.nav-btn.active{border-top-color:var(--blue);color:var(--navy);font-weight:700}
+.nav-number{font-family:Inter,sans-serif;font-variant-numeric:tabular-nums;font-size:11px;color:var(--muted);font-weight:500}
+.nav-btn.active .nav-number{color:var(--navy)}
+.content{max-width:1520px;margin:0 auto;padding:0 clamp(20px,5.4vw,82px) 100px}
+.screen{display:none}.screen.active{display:block}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:36px;margin:38px 0 45px;min-height:295px;background:var(--navy);color:white;padding:clamp(28px,4.5vw,64px) clamp(28px,4.5vw,68px);position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;right:-120px;top:-180px;width:440px;height:440px;border:1px solid rgba(255,255,255,.18);transform:rotate(28deg);pointer-events:none}
+.hero-copy{max-width:850px;position:relative;z-index:1}
+.eyebrow{font:600 11px/1.4 Inter,var(--font-ui);letter-spacing:.15em;text-transform:uppercase;color:var(--blue)}
+.hero .eyebrow{color:#B8D2EC}
+.hero h1{font:600 clamp(29px,3.2vw,47px)/1.35 var(--font-ui);letter-spacing:-.04em;margin:22px 0 20px;color:var(--white)}
+.hero p{font-size:15px;line-height:1.95;margin:0;max-width:660px;color:rgba(255,255,255,.87)}
+.hero-aside{z-index:1;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end}
+.hero-index{font:300 96px/1 Inter,sans-serif;letter-spacing:-.07em;color:rgba(255,255,255,.22)}
+.hero-tag{display:block;border-top:1px solid rgba(255,255,255,.5);padding-top:11px;font-size:12px;color:white;font-weight:600;letter-spacing:.03em}
+.section-heading{display:flex;align-items:end;justify-content:space-between;gap:24px;margin:66px 0 22px;border-bottom:1px solid var(--line);padding-bottom:18px}
+.section-heading.lower{margin-top:74px}
+.section-heading h2{font-size:24px;line-height:1.4;font-weight:600;letter-spacing:-.04em;margin:0 0 6px;color:var(--navy)}
+.section-heading p{font-size:13px;line-height:1.75;margin:0;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(270px,.85fr);gap:48px;align-items:start}
+.panel{background:white;min-width:0}
+.question-panel{border-top:3px solid var(--blue);padding:25px 0 10px}
+.side-panel{border-top:1px solid var(--line);padding:28px 0}
+.workflow-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 18px;margin:0 0 10px;border-bottom:0}
+.workflow-heading{font-size:14px;color:var(--navy);font-weight:650}
+.workflow-count{font-size:13px;font-family:Inter,var(--font-ui);font-variant-numeric:tabular-nums;color:var(--muted)}
+.topic-index{border-bottom:0;margin-bottom:42px}
+.topic-index summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:20px;list-style:none;padding:16px 0;font-size:13px;font-weight:600;color:var(--navy)}
+.topic-index summary::-webkit-details-marker{display:none}
+.topic-index summary:after{content:"+";font:400 24px/1 Inter,sans-serif;margin-left:auto}
+.topic-index[open] summary:after{content:"−"}
+.topic-index .summary-sub{color:var(--muted);font-size:11px;font-weight:400;margin-left:12px}
+.stepnav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:2px 0 26px}
+.stepbtn{background:var(--white);border:1px solid var(--line);padding:14px 12px;min-height:65px;display:flex;align-items:center;gap:9px;text-align:left;color:var(--ink);font-size:12px;line-height:1.45}
+.stepbtn:hover,.stepbtn:focus-visible{border-color:var(--navy)}
+.stepbtn.current{border-color:var(--blue);background:var(--soft)}
+.stepbtn.done .stepdot{background:var(--blue);color:var(--navy)}
+.stepdot{width:24px;height:24px;flex:0 0 24px;background:var(--soft);border:1px solid var(--line);display:grid;place-items:center;font:600 11px/1 Inter,sans-serif}
+.question-top{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--muted);font-size:11px;letter-spacing:.035em;font-variant-numeric:tabular-nums}
+.progressline{background:var(--pale);height:3px;margin:17px 0 31px;overflow:hidden}
+.progressline div{height:100%;background:var(--blue);transition:width .15s ease}
+.label-pill{display:inline-block;color:var(--navy);background:var(--pale);padding:5px 10px;font:600 10px/1.6 Inter,var(--font-ui);letter-spacing:.025em}
+.q-title{font-size:clamp(22px,2.15vw,30px);letter-spacing:-.035em;line-height:1.5;color:var(--navy);font-weight:650;margin:22px 0 10px}
+.q-help{font-size:14px;color:var(--muted);line-height:1.85;margin:0 0 24px}
+.options{display:grid;gap:0;border-top:1px solid var(--line)}
+.option{display:flex;align-items:center;gap:18px;width:100%;text-align:left;background:white;border:0;border-bottom:1px solid var(--line);padding:17px 14px;min-height:67px;color:var(--ink);transition:background-color .12s}
+.option:hover{background:var(--soft)}
+.option.selected{background:var(--pale);box-shadow:inset 3px 0 var(--blue)}
+.radio-dot{border:1.5px solid var(--charcoal);height:18px;width:18px;border-radius:50%;flex:0 0 18px;display:block;position:relative}
+.option.selected .radio-dot{border-color:var(--navy)}
+.option.selected .radio-dot:after{content:"";position:absolute;background:var(--navy);inset:4px;border-radius:50%}
+.option-text{display:flex;flex-direction:column;gap:3px}
+.option-title{font-size:14px;font-weight:600;line-height:1.5}
+.option-desc{font-size:12px;line-height:1.65;color:var(--muted)}
+.q-hint{padding:12px 0 0;font-size:12px;color:var(--muted)}
+.q-footer{display:flex;align-items:center;gap:14px;justify-content:space-between;border-top:1px solid var(--line);padding-top:23px;margin-top:25px}
+.faint{font-size:12px;color:var(--muted)}
+.button{appearance:none;background:white;border:1px solid var(--navy);border-radius:0;color:var(--navy);display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:43px;padding:10px 19px;font-size:12px;font-weight:650;text-decoration:none;white-space:nowrap;line-height:1.45}
+.button:hover{background:var(--soft);border-color:var(--blue);text-decoration:none}
+.button.primary,.button.dark{background:var(--navy);border-color:var(--navy);color:white}
+.button.primary:hover,.button.dark:hover{background:#1E4568}
+.button:disabled{opacity:.38;cursor:not-allowed}
+.button:disabled:hover{background:var(--white);border-color:var(--navy)}
+.header-actions .button{border:0;border-bottom:1px solid var(--navy);padding:7px 0;min-height:auto}
+.header-actions .button:hover{background:transparent;border-color:var(--blue)}
+.side-title{color:var(--navy);font-size:12px;font-weight:700;letter-spacing:.035em;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.mini-metric{display:flex;align-items:baseline;justify-content:space-between;gap:18px;padding:16px 0;border-bottom:1px solid var(--line)}
+.mini-metric small{display:block;color:var(--muted);font-size:12px}
+.mini-metric strong{font:600 18px/1.3 Inter,var(--font-ui);font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--navy)}
+.signal{background:var(--soft);border-left:3px solid var(--blue);margin-top:20px;padding:16px 17px;font-size:12px;line-height:1.85;color:var(--charcoal)}
+.signal b{display:inline-block;margin:4px 0;font:700 19px/1.5 Inter,var(--font-ui);font-variant-numeric:tabular-nums;color:var(--navy)}
+.riskgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+.riskitem{border-top:2px solid var(--blue);background:var(--soft);padding:24px 26px;min-width:0}
+.riskitem b{font-size:15px;color:var(--navy);font-weight:650}
+.riskitem p{color:var(--charcoal);font-size:13px;line-height:1.85;margin:9px 0 0}
+.notice{border-left:3px solid var(--blue);background:var(--soft);padding:17px 20px;font-size:13px;line-height:1.8;color:var(--charcoal);margin:16px 0}
+.notice.warning,.notice.danger{border-left-color:var(--charcoal)}
+.statgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:3px solid var(--blue);border-bottom:1px solid var(--line);margin:29px 0 35px}
+.statcard{padding:26px 24px 27px;border-right:1px solid var(--line)}
+.statcard:last-child{border-right:0}
+.statcard .name{font-size:12px;color:var(--muted);min-height:24px}
+.statcard .value{font:650 clamp(19px,2.1vw,27px)/1.4 Inter,var(--font-ui);font-variant-numeric:tabular-nums;letter-spacing:-.035em;color:var(--navy);margin:9px 0}
+.statcard .detail{font-size:11px;line-height:1.6;color:var(--muted)}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:28px 0 25px}
+.segmented{display:flex;gap:6px;flex-wrap:wrap}
+.segmented button{border:1px solid var(--line);background:white;color:var(--charcoal);font-size:12px;font-weight:600;padding:9px 14px}
+.segmented button.on{background:var(--navy);border-color:var(--navy);color:white}
+.compare-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.scenario{border:1px solid var(--line);padding:26px 23px 24px;display:flex;flex-direction:column;min-width:0;background:var(--white)}
+.scenario.highlight{border-top:4px solid var(--blue);padding-top:23px}
+.scenario.blocked{background:#FAFBFC}
+.sc-meta{display:flex;gap:7px;align-items:center;flex-wrap:wrap;min-height:26px;margin-bottom:19px}
+.chip{display:inline-block;font-size:10px;font-weight:700;line-height:1.45;padding:5px 8px;white-space:normal;background:var(--pale);color:var(--navy)}
+.chip.warn,.chip.block{background:#F0F1F2;color:var(--charcoal);border:1px solid var(--line)}
+.chip.buy,.chip.rent{background:var(--pale);color:var(--navy)}
+.chip.ok{background:var(--soft)}
+.sc-title{font-size:17px;line-height:1.45;letter-spacing:-.015em;font-weight:650;margin:0 0 7px;color:var(--navy)}
+.sc-sub{font-size:12px;line-height:1.65;color:var(--muted);min-height:40px}
+.sc-profit{font:650 clamp(23px,2.7vw,33px)/1.35 Inter,var(--font-ui);font-variant-numeric:tabular-nums;letter-spacing:-.045em;margin:16px 0 1px;color:var(--navy)}
+.positive,.negative{color:var(--navy)}
+.sc-small{font-size:11px;color:var(--muted);margin-bottom:19px}
+.sc-line{display:flex;align-items:baseline;justify-content:space-between;gap:13px;border-top:1px solid var(--line);padding:11px 0;font-size:11px;color:var(--muted)}
+.sc-line b{font:600 12px/1.5 Inter,var(--font-ui);font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
+.sc-issue{font-size:11px;line-height:1.7;padding:11px 13px;margin-top:11px;background:var(--soft);color:var(--charcoal)}
+.checkrow{display:flex;align-items:center;gap:8px;padding-top:18px;margin-top:auto;font-size:12px;font-weight:600;color:var(--navy)}
+.checkrow input{accent-color:var(--navy);height:16px;width:16px}
+.widepanel{padding:27px 0;border-top:1px solid var(--line);border-bottom:0}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:600px}
+th,td{padding:14px 14px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left;font-weight:600;position:sticky;left:0;background:var(--white)}
+th{background:var(--soft);color:var(--navy);font-weight:650}
+.kpi-foot{color:var(--muted);font-size:12px;line-height:1.8;margin-top:18px}
+.mini-legend{display:flex;gap:19px;flex-wrap:wrap;color:var(--muted);font-size:11px}
+.mini-legend span{display:inline-flex;gap:8px;align-items:center}
+.sw{width:11px;height:11px;display:inline-block}
+.barline{display:flex;gap:3px;height:13px;background:var(--soft);margin:12px 0}
+.barline span{display:block;height:100%}
+.barline .b1{background:var(--navy)}.barline .b2{background:var(--blue)}.barline .b3{background:var(--charcoal)}
+.assumptions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:25px 26px}
+.field{display:flex;flex-direction:column;gap:8px;min-width:0}
+.field label{font-size:12px;font-weight:650;color:var(--navy)}
+.field input{border:1px solid var(--line);min-height:44px;width:100%;border-radius:0;padding:10px 12px;color:var(--ink);background:var(--white);font-variant-numeric:tabular-nums}
+.field input:focus{border-color:var(--blue)}
+.unit{font-size:11px;color:var(--muted)}
+.source{display:flex;justify-content:space-between;gap:25px;align-items:center;border-bottom:1px solid var(--line);padding:22px 0}
+.source:last-child{border-bottom:0}
+.source b{font-size:14px;font-weight:650;color:var(--navy)}
+.source p{font-size:12px;line-height:1.75;color:var(--muted);margin:6px 0 0}
+.sources-note{font-size:14px;line-height:1.9;color:var(--charcoal);margin:0 0 18px}
+.footer-actions{display:flex;flex-wrap:wrap;gap:11px;justify-content:flex-end;margin-top:35px}
+.empty{padding:25px;color:var(--muted);font-size:13px}
+.lower{margin-top:40px}
+#fileImport{display:none}
+.site-footer{border-top:1px solid var(--line);width:100%;padding:34px max(clamp(20px,5.4vw,82px),calc((100vw - 1520px)/2 + clamp(20px,5.4vw,82px))) 45px;display:flex;align-items:start;justify-content:space-between;gap:24px}
+.footer-title{font-size:12px;font-weight:650;color:var(--navy)}
+.footer-disclaimer{font-size:11px;line-height:1.8;color:var(--muted);max-width:730px}
+@media(max-width:1100px){
+ .grid2{grid-template-columns:minmax(0,1fr);gap:35px}
+ .side-panel{display:block}
+ .compare-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .statgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .statcard:nth-child(2){border-right:0}
+ .statcard:nth-child(-n+2){border-bottom:1px solid var(--line)}
+}
+@media(max-width:740px){
+ .header-inner{padding:12px 19px;gap:9px;min-height:72px}
+ .brand-stripe{width:24px;height:24px;flex-basis:24px}
+ .site-identity{gap:11px}
+ .brand-title{font-size:13px}
+ .brand-sub{font-size:9px;letter-spacing:.03em}
+ .header-status{display:none}
+ .header-actions .button{font-size:11px}
+ .primary-nav{padding:0 18px;gap:0}
+ .nav-btn{padding:11px 0 12px;margin-right:25px;font-size:12px}
+ .content{padding:0 19px 65px}
+ .hero{grid-template-columns:minmax(0,1fr);min-height:0;padding:34px 25px;margin:21px 0 31px;gap:22px}
+ .hero h1{font-size:30px;margin:15px 0}
+ .hero p{font-size:13px;line-height:1.9}
+ .hero-aside{flex-direction:row;align-items:center;justify-content:flex-start}
+ .hero-index{display:none}
+ .hero-tag{border-top:0;border-left:2px solid var(--blue);padding:2px 0 2px 12px}
+ .stepnav{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .statgrid,.compare-grid,.riskgrid,.assumptions{grid-template-columns:minmax(0,1fr)}
+ .statcard{border:0;border-bottom:1px solid var(--line)!important;padding:19px 6px}
+ .statcard:last-child{border-bottom:0!important}
+ .statcard .name{min-height:0}
+ .toolbar,.section-heading,.source{align-items:start;flex-direction:column}
+ .toolbar{gap:12px}
+ .section-heading{margin-top:45px}
+ .section-heading h2{font-size:21px}
+ .q-title{font-size:24px}
+ .q-footer{flex-wrap:wrap}
+ .q-footer .faint{order:3;flex:1 0 100%;text-align:center}
+ .riskitem{padding:22px 19px}
+ .site-footer{padding:24px 19px 35px;flex-direction:column}
+ .footer-actions{justify-content:flex-start}
+ .source{gap:12px}
+}
+@media(max-width:390px){
+ .brand-title{font-size:12px}
+ .brand-sub{display:none}
+ .header-actions .button{font-size:10px}
+ .stepnav{grid-template-columns:1fr}
+}
+@media print{
+ .site-header,.header-actions,.topic-index,.workflow-bar,.footer-actions,.q-footer,.button{display:none!important}
+ .screen{display:none!important}
+ .screen.active{display:block!important}
+ .content{max-width:none;padding:0}
+ .hero{background:white!important;color:black!important;border-bottom:2px solid #111;padding:12px 0;min-height:0}
+ .hero h1,.hero p{color:black!important}
+ .hero-aside{display:none}
+ .scenario,.statcard,.riskitem{break-inside:avoid}
+ .site-footer{padding:12px 0}
+}
+
+/* Editorial typography & predominantly black-on-white layout.
+   Design adaptation inspired by the information hierarchy on goldmansachs.com/japan.
+   Not an assertion about the reference site's exact CSS or its Japanese font files. */
+:root{
+ --white:#FFFFFF;
+ --ink:#111111;
+ --navy:#102B47;
+ --blue:#7297C5;
+ --charcoal:#31373D;
+ --muted:#565B61;
+ --line:rgba(0,0,0,.17);
+ --soft:#FAFAF9;
+ --pale:#F3F5F6;
+ --font-ui:Inter,"Noto Sans JP","Hiragino Sans",Meiryo,sans-serif;
+ --font-display:"Source Serif 4","Noto Serif JP","Yu Mincho","Hiragino Mincho ProN",serif;
+}
+body{color:var(--ink);background:#FFFFFF;font:400 15px/1.85 var(--font-ui)}
+a{color:var(--ink)}
+.site-header{border-top:0;border-bottom:1px solid var(--line);background:#FFFFFF}
+.header-inner{min-height:94px;padding-block:22px}
+.brand-stripe{height:35px;width:3px;flex:0 0 3px;background:var(--blue)}
+.brand-title{color:var(--ink);font-size:17px;font-weight:600;letter-spacing:-.015em}
+.brand-sub{color:var(--muted);letter-spacing:.09em}
+.header-status{color:var(--muted)}
+.primary-nav{border-top:1px solid var(--line)}
+.nav-btn{color:var(--ink);border-top:0;border-bottom:2px solid transparent;margin-right:46px;padding:16px 0 15px;font-weight:500}
+.nav-btn.active{color:var(--ink);border-bottom-color:var(--blue);font-weight:700}
+.nav-btn:hover,.nav-btn.active .nav-number{color:var(--ink)}
+.nav-number{color:var(--muted)}
+.content{max-width:1480px}
+.hero{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) 110px;
+ gap:32px;
+ background:#FFFFFF;
+ color:var(--ink);
+ padding:74px 0 68px;
+ margin:0 0 44px;
+ min-height:0;
+ border-bottom:1px solid var(--line);
+ overflow:visible
+}
+.hero:after{display:none}
+.hero-copy{max-width:880px}
+.hero .eyebrow,.eyebrow{color:var(--muted);font-weight:500;letter-spacing:.12em}
+.hero h1{
+ font-family:var(--font-display);
+ font-weight:500;
+ font-size:clamp(37px,4.2vw,60px);
+ line-height:1.39;
+ letter-spacing:-.038em;
+ color:var(--ink);
+ margin:23px 0 26px;
+ text-wrap:pretty
+}
+.hero p{
+ font-size:15px;
+ line-height:2.15;
+ max-width:760px;
+ color:var(--ink);
+ letter-spacing:.005em
+}
+.hero-aside{align-items:flex-end;justify-content:space-between}
+.hero-index{
+ font-family:var(--font-display);
+ font-weight:400;
+ font-size:76px;
+ letter-spacing:-.055em;
+ line-height:1;
+ color:rgba(0,0,0,.13)
+}
+.hero-tag{
+ color:var(--muted);
+ font-weight:500;
+ border:0;
+ border-top:1px solid var(--line);
+ line-height:1.65;
+ padding:13px 0 0;
+ font-size:11px
+}
+.section-heading{margin:75px 0 30px;padding:0 0 18px;border-bottom:1px solid var(--line);align-items:start}
+.section-heading.lower{margin-top:85px}
+.section-heading h2{
+ font-family:var(--font-display);
+ color:var(--ink);
+ font-weight:500;
+ font-size:clamp(23px,2.15vw,31px);
+ line-height:1.5;
+ letter-spacing:-.03em;
+ margin:0 0 9px
+}
+.section-heading p{color:var(--muted);font-size:13px;line-height:1.9;max-width:800px}
+.question-panel{border-top:2px solid var(--ink);padding:29px 0 8px}
+.side-panel{border-top:1px solid var(--line)}
+.workflow-heading{color:var(--ink);font-weight:600}
+.topic-index summary{color:var(--ink)}
+.topic-index .summary-sub{color:var(--muted)}
+.stepbtn{background:#FFFFFF;border:1px solid var(--line);color:var(--ink)}
+.stepbtn.current{background:#FFFFFF;border:1.5px solid var(--ink);color:var(--ink)}
+.stepbtn.done .stepdot{background:var(--ink);border-color:var(--ink);color:#FFFFFF}
+.stepbtn.current .stepdot{border-color:var(--ink);color:var(--ink);background:#FFFFFF}
+.question-top{color:var(--muted)}
+.progressline{background:rgba(0,0,0,.1);height:3px}
+.progressline div{background:var(--blue)}
+.label-pill{color:var(--muted);background:transparent;border-bottom:1px solid var(--line);padding:0 0 7px;font-weight:500}
+.q-title{
+ color:var(--ink);
+ font-family:var(--font-ui);
+ font-size:clamp(21px,2.1vw,27px);
+ font-weight:600;
+ line-height:1.55;
+ letter-spacing:-.022em
+}
+.q-help{color:var(--ink);line-height:1.9;font-size:14px}
+.option{color:var(--ink);padding:18px 13px}
+.option:hover{background:#FAFAFA}
+.option.selected{background:#F7F8F8;box-shadow:inset 2px 0 var(--ink)}
+.option.selected .radio-dot{border-color:var(--ink)}
+.option.selected .radio-dot:after{background:var(--ink)}
+.option-title{color:var(--ink);font-weight:600}
+.option-desc{color:var(--muted)}
+.q-hint{color:var(--muted)}
+.button{border-color:var(--ink);color:var(--ink);font-weight:600}
+.button.primary,.button.dark{background:var(--ink);border-color:var(--ink);color:#FFFFFF}
+.button.primary:hover,.button.dark:hover{background:var(--charcoal);border-color:var(--charcoal)}
+.button:hover{background:#F8F8F8;border-color:var(--ink)}
+.header-actions .button{border-bottom-color:var(--ink)}
+.side-title{color:var(--ink);font-weight:600;letter-spacing:.045em}
+.mini-metric strong{color:var(--ink);font-variant-numeric:tabular-nums}
+.signal{border-left:2px solid var(--charcoal);background:#FAFAFA;color:var(--ink)}
+.signal b{color:var(--ink)}
+.riskgrid{gap:24px}
+.riskitem{background:#FFFFFF;border-top:1px solid var(--ink);padding:25px 0 7px}
+.riskitem b{color:var(--ink);font-size:15px;font-weight:600}
+.riskitem p{color:var(--ink);font-size:13px;line-height:1.95}
+.notice{background:#FAFAFA;border-left:2px solid var(--charcoal);color:var(--ink)}
+.notice.warning,.notice.danger{border-left-color:var(--ink)}
+.statgrid{border-top:1px solid var(--ink);border-bottom:1px solid var(--line)}
+.statcard{padding-top:29px;padding-bottom:31px}
+.statcard .name{color:var(--muted)}
+.statcard .value{
+ font-family:Inter,"Noto Sans JP",sans-serif;
+ color:var(--ink);
+ font-weight:600;
+ font-size:clamp(20px,2.25vw,31px);
+ line-height:1.35;
+ letter-spacing:-.04em;
+ font-variant-numeric:tabular-nums lining-nums
+}
+.statcard .detail{color:var(--muted)}
+.segmented button{background:#FFFFFF;color:var(--ink)}
+.segmented button.on{background:var(--ink);border-color:var(--ink);color:#FFFFFF}
+.scenario{border:1px solid var(--line);padding:28px 25px 23px;background:#FFFFFF}
+.scenario.highlight{border-top:2px solid var(--ink);padding-top:27px}
+.scenario.blocked{background:#FFFFFF}
+.chip,.chip.buy,.chip.rent,.chip.ok{background:#F5F5F5;color:var(--ink);font-weight:600}
+.chip.warn,.chip.block{background:#FFFFFF;border:1px solid var(--charcoal);color:var(--ink)}
+.sc-title{color:var(--ink);font-weight:600}
+.sc-sub{color:var(--muted)}
+.sc-profit{
+ font-family:Inter,"Noto Sans JP",sans-serif;
+ color:var(--ink);
+ font-weight:600;
+ font-variant-numeric:tabular-nums lining-nums
+}
+.positive,.negative{color:var(--ink)}
+.sc-small{color:var(--muted)}
+.sc-line{color:var(--muted)}
+.sc-line b{color:var(--ink)}
+.sc-issue{background:#F7F7F7;color:var(--ink)}
+.checkrow{color:var(--ink)}
+.checkrow input{accent-color:var(--ink)}
+.widepanel{border-color:var(--line)}
+th{background:#F7F7F7;color:var(--ink)}
+th:first-child,td:first-child{background:#FFFFFF}
+.kpi-foot{color:var(--muted)}
+.mini-legend{color:var(--muted)}
+.barline{background:#F1F1F1}
+.barline .b1{background:#111111}
+.barline .b2{background:#7297C5}
+.barline .b3{background:#787878}
+.field label{color:var(--ink);font-weight:600}
+.field input{border-color:var(--line);color:var(--ink);font-variant-numeric:tabular-nums}
+.field input:focus{border-color:var(--ink)}
+.unit{color:var(--muted)}
+.source b{color:var(--ink)}
+.source p{color:var(--muted)}
+.sources-note{color:var(--ink)}
+.site-footer{border-color:var(--line)}
+.footer-title{color:var(--ink)}
+.footer-disclaimer{color:var(--muted)}
+@media(max-width:740px){
+ .hero{padding:45px 0 43px;margin:0 0 32px;gap:15px;grid-template-columns:1fr}
+ .hero h1{font-size:clamp(32px,7.5vw,43px);line-height:1.45;margin:18px 0}
+ .hero p{font-size:14px;line-height:2}
+ .hero-tag{border-top:0;border-left:2px solid var(--blue);padding:0 0 0 12px;color:var(--muted)}
+ .hero-aside{justify-content:flex-start;align-items:flex-start}
+ .hero-index{display:none}
+ .section-heading{margin-top:58px}
+ .section-heading h2{font-size:25px}
+ .q-title{font-size:23px}
+ .statcard .value{font-size:27px}
+ .riskitem{padding:20px 0 14px}
+ .site-header .header-inner{min-height:74px;padding-block:14px}
+}
+@media print{
+ .hero{background:#FFFFFF!important;color:#000000!important;padding:15px 0!important}
+ .hero h1,.hero p{color:#000000!important}
+ .section-heading h2,.statcard .value,.sc-profit{color:#000000!important}
+}
+
+
+/* Phase 1 implementation, based on supplied Goldman Sachs Japan HTML/CSS.
+   Reference measures apply to identified site components; this project's
+   controls are deliberate adaptations, not exact GS component copies. */
+:root{
+ --ink:#0D0D0D;
+ --muted:#333333;
+ --line:rgba(0,0,0,.24);
+ --soft:#F7F7FA;
+ --pale:#F7F7FA;
+ --font-display:"Noto Serif JP","Yu Mincho","Hiragino Mincho ProN",serif;
+ --font-ui:"Noto Sans JP",Inter,"Hiragino Sans",Meiryo,sans-serif;
+}
+body{font-family:var(--font-ui);line-height:1.75}
+.site-header{background:#7297C5;border-bottom:1px solid rgba(0,0,0,.2)}
+.header-inner,.primary-nav{background:transparent}
+.primary-nav{border-top:1px solid rgba(0,0,0,.2)}
+.brand-stripe{display:none}
+.brand-title{color:#0D0D0D;font-weight:500}
+.brand-sub,.header-status,.nav-number{color:#202020}
+.nav-btn{font:400 16px/20px var(--font-ui);color:#0D0D0D}
+.nav-btn.active{font-weight:500;color:#0D0D0D;border-bottom-color:#0D0D0D}
+.nav-btn.active .nav-number{color:#0D0D0D}
+.header-actions .button{background:transparent;color:#0D0D0D;border-color:#0D0D0D}
+.hero{padding-top:64px;padding-bottom:64px}
+.hero h1{
+ font-family:var(--font-display);
+ font-size:clamp(36px,5.4vw,80px);
+ font-weight:300;
+ line-height:1.08;
+ letter-spacing:0;
+ color:#0D0D0D;
+ margin:16px 0 32px;
+}
+.hero p{font-family:var(--font-ui);font-weight:400;font-size:16px;line-height:1.5;color:#333333}
+.hero .eyebrow{font:400 14px/18px var(--font-ui);letter-spacing:0;color:#333333}
+.hero-index{font-weight:300;color:rgba(0,0,0,.18)}
+.hero-tag{font-weight:400}
+.section-heading h2{
+ font-family:var(--font-ui);
+ font-size:clamp(36px,4.1vw,60px);
+ font-weight:400;
+ line-height:1.06;
+ letter-spacing:0;
+ color:var(--ink);
+ margin:0 0 16px;
+}
+.section-heading p{font:400 15px/1.65 var(--font-ui);color:var(--muted)}
+.section-heading{margin:64px 0 32px;padding-bottom:24px;border-bottom:0}
+.q-title{font-family:var(--font-ui);font-weight:500;color:var(--ink);letter-spacing:0}
+.button{
+ border:1px solid rgba(0,0,0,.95);
+ border-radius:0;
+ background:transparent;
+ color:rgba(0,0,0,.95);
+ font:500 16px/20px var(--font-ui);
+ padding:9px 11px;
+ box-shadow:none;
+ transition:background-color .2s ease,color .2s ease,border-color .2s ease;
+}
+.button:hover{background:rgba(0,0,0,.04);border-color:rgba(0,0,0,.95)}
+.button:active{background:rgba(0,0,0,.08)}
+.button:focus-visible,.nav-btn:focus-visible,.option:focus-visible,a:focus-visible{
+ outline:2px solid #121212;outline-offset:3px
+}
+.button.dark,.button.primary{background:#0D0D0D;border-color:#0D0D0D;color:#FFFFFF}
+.button.dark:hover,.button.primary:hover{background:#333333;border-color:#333333;color:#FFFFFF}
+.source a{color:var(--ink)}
+.source a:hover{text-decoration:underline;text-underline-offset:3px}
+.panel{border-radius:0}
+.scenario{
+ border:0;
+ border-top:1px solid rgba(0,0,0,.34);
+ background:#F7F7FA;
+ border-radius:0;
+ padding:24px;
+ box-shadow:none;
+}
+.scenario.highlight{border:0;border-top:2px solid #0D0D0D;padding-top:23px}
+.scenario.blocked{background:#F7F7FA}
+.sc-title{font:500 26px/32px var(--font-ui);letter-spacing:0}
+.riskitem{border-top:1px solid rgba(0,0,0,.34)}
+.statgrid{border-top-color:rgba(0,0,0,.34)}
+.source{border-color:rgba(0,0,0,.34)}
+.topic-index,.workflow-bar{border-color:transparent}
+.q-help{line-height:1.75}
+.option{border-radius:0}
+.option.selected{background:#F7F7FA}
+@media(min-width:1024px){
+ .hero h1{font-size:clamp(60px,5.55vw,80px);line-height:1}
+ .section-heading h2{font-size:clamp(42px,4.2vw,60px);line-height:1}
+}
+@media(min-width:768px) and (max-width:1023px){
+ .hero h1{font-size:50px;line-height:1}
+}
+@media(max-width:767px){
+ .header-inner{padding:16px 20px}
+ .hero{padding:48px 0 48px;grid-template-columns:1fr}
+ .hero h1{font-size:36px;line-height:1;letter-spacing:0;margin:16px 0 32px}
+ .hero p{font-size:16px;line-height:24px}
+ .hero .eyebrow{font-size:14px;line-height:18px}
+ .section-heading h2{font-size:36px;line-height:1.12;font-weight:400}
+ .section-heading{margin:48px 0 32px}
+ .sc-title{font-size:22px;line-height:26px}
+ .scenario{padding:16px}
+ .riskitem{padding:24px 0}
+}
+@media print{
+ .site-header{background:#FFFFFF!important}
+ .hero h1{color:#000000!important}
+}
+
+/* Source page: hero owns the introductory divider; the adjacent panel must not repeat it. */
+.screen[data-screen="sources"] > .hero + .widepanel{border-top:0;padding-top:0}
+
+/* Align the current topic and both navigation summaries on consistent center axes. */
+.workflow-bar{min-height:58px;padding:0;margin:0 0 4px;align-items:center}
+.workflow-bar .workflow-heading,.workflow-bar .workflow-count{line-height:1.5}
+.topic-index{margin-bottom:0}
+.topic-index summary,.question-index summary{
+ display:grid;
+ grid-template-columns:minmax(0,max-content) minmax(0,1fr) 24px;
+ align-items:center;
+ column-gap:16px;
+ min-height:58px;
+ padding:10px 0;
+ line-height:1.5;
+}
+.topic-index summary .summary-sub,.question-index summary .summary-sub{
+ display:block;margin:0;line-height:1.5;
+}
+.topic-index summary:after,.question-index summary:after{
+ position:static;grid-column:3;justify-self:end;align-self:center;margin:0;
+}
+.question-index{margin:0 0 38px}
+@media(max-width:767px){
+ .workflow-bar{min-height:58px}
+ .topic-index summary,.question-index summary{min-height:58px}
+ .question-index{margin:0 0 32px}
+}
+/* Per-question answer reset between navigation buttons. */
+.q-footer .reset-answer{font-size:13px;font-weight:400;color:var(--muted);border-color:var(--line);white-space:nowrap}
+.q-footer .reset-answer:disabled{opacity:.38}
+@media(max-width:767px){
+ .screen[data-screen="wizard"] .q-footer{grid-template-columns:max-content minmax(0,1fr) max-content;column-gap:6px}
+ .screen[data-screen="wizard"] .q-footer #resetQ{grid-column:2;grid-row:1;justify-self:center;padding:9px 6px;font-size:12px}
+}
+/* Natural document-flow questionnaire with direct question navigation. */
+.site-header{position:relative;top:auto}
+button,.button,[role="button"]{touch-action:manipulation}
+.q-footer .faint{font:400 14px/20px var(--font-ui);color:#333}
+.question-index{margin:-25px 0 38px;border-bottom:1px solid var(--line)}
+.question-index summary{cursor:pointer;display:flex;align-items:center;gap:12px;padding:16px 0;list-style:none;color:var(--ink);font-size:13px;font-weight:600}
+.question-index summary::-webkit-details-marker{display:none}
+.question-index summary:after{content:"+";font:400 24px/1 var(--font-ui);margin-left:auto}
+.question-index[open] summary:after{content:"−"}
+.question-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 22px;padding:0 0 22px}
+.question-jump{display:flex;gap:12px;align-items:baseline;width:100%;min-width:0;padding:12px 4px;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;color:var(--ink);font:400 13px/1.6 var(--font-ui);cursor:pointer}
+.question-jump .jump-number{font:500 12px/1.5 var(--font-ui);font-variant-numeric:tabular-nums;flex:0 0 22px}
+.question-jump .jump-title{flex:1;min-width:0}
+.question-jump .jump-check{flex:0 0 auto;font-size:12px;color:var(--muted)}
+.question-jump.current{font-weight:600;background:var(--soft)}
+.question-jump:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+@media(max-width:767px){
+ .question-list{grid-template-columns:minmax(0,1fr);gap:0}
+ .question-index{margin:-25px 0 32px}
+ .screen[data-screen="wizard"]{padding-bottom:0}
+ .screen[data-screen="wizard"] .question-panel{display:block;min-height:0;height:auto;overflow:visible;padding:29px 0 8px}
+ .screen[data-screen="wizard"] .q-footer{position:static;display:grid;grid-template-columns:max-content minmax(0,1fr) max-content;grid-template-rows:auto auto;align-items:center;gap:8px 12px;width:100%;margin:25px 0 0;padding:18px 0 0;border-top:1px solid var(--line);background:transparent;box-shadow:none}
+ .screen[data-screen="wizard"] .q-footer #prevQ{grid-column:1;grid-row:1;white-space:nowrap}
+ .screen[data-screen="wizard"] .q-footer #nextQ{grid-column:3;grid-row:1;white-space:nowrap}
+ .screen[data-screen="wizard"] .q-footer .faint{grid-column:1/-1;grid-row:2;order:initial;flex:initial;width:100%;text-align:center;font:400 14px/20px var(--font-ui)}
+ .screen[data-screen="wizard"] .q-footer .button{font-size:14px;line-height:20px;padding:9px 11px;touch-action:manipulation}
+ .site-footer{padding-bottom:35px}
+}
+@media print{
+ .site-header{position:static}
+ .screen[data-screen="wizard"] .q-footer{display:none!important}
+ .site-footer{padding-bottom:24px}
+}
+
+/* Equal-sized previous and next buttons; the center resets questionnaire answers. */
+.q-footer{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);grid-template-rows:auto auto;align-items:stretch;column-gap:10px;row-gap:10px}
+.q-footer #prevQ,.q-footer #nextQ{width:100%;min-height:48px;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.4}
+.q-footer #prevQ{grid-column:1;grid-row:1}
+.q-footer #resetQ{grid-column:2;grid-row:1;align-self:stretch}
+.q-footer #nextQ{grid-column:3;grid-row:1}
+.q-footer .faint{grid-column:1/-1;grid-row:2;text-align:center}
+@media(max-width:767px){
+ .screen[data-screen="wizard"] .q-footer{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px}
+ .screen[data-screen="wizard"] .q-footer #prevQ,
+ .screen[data-screen="wizard"] .q-footer #nextQ{width:100%;min-height:48px;padding:8px 4px;font-size:12px;white-space:normal}
+ .screen[data-screen="wizard"] .q-footer #resetQ{grid-column:2;grid-row:1;justify-self:stretch;min-height:48px;padding:7px 5px;font-size:11px;white-space:normal;max-width:100px}
+}
+
+/* Calculation caveats are semantic, properly indented list items. */
+.notice .warning-list{margin:0;padding:0 0 0 1.35em;list-style:disc outside}
+.notice .warning-list li{padding-left:.15em;margin:0 0 .65em;line-height:1.8}
+.notice .warning-list li:last-child{margin-bottom:0}
+
+/* A manually entered number is shown as a non-clickable custom answer in the questionnaire. */
+.question-panel .custom-value{cursor:default;pointer-events:none}
+
+/* Mobile header: fit all three tabs and preserve readable identity/actions. */
+@media(max-width:767px){
+ .site-header .header-inner{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  min-height:0;
+  padding:18px 16px 16px;
+ }
+ .site-header .site-identity{min-width:0;gap:0}
+ .site-header .brand-copy{min-width:0}
+ .site-header .brand-title{
+  font-size:clamp(13px,3.5vw,16px);
+  line-height:1.45;
+  font-weight:500;
+  letter-spacing:-.025em;
+  overflow-wrap:anywhere;
+ }
+ .site-header .brand-sub{
+  font-size:9px;
+  line-height:1.45;
+  letter-spacing:.045em;
+  white-space:normal;
+ }
+ .site-header .header-actions{min-width:0;white-space:normal;justify-content:flex-end}
+ .site-header .header-actions .button{
+  font-size:11px;
+  line-height:1.45;
+  padding:7px 0;
+  white-space:nowrap;
+ }
+ .site-header .primary-nav{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:0;
+  width:100%;
+  padding:0 12px;
+  overflow:visible;
+ }
+ .site-header .nav-btn{
+  min-width:0;
+  width:100%;
+  margin:0;
+  padding:15px 3px 14px;
+  justify-content:center;
+  gap:5px;
+  font-size:clamp(11px,3.15vw,13px);
+  line-height:1.35;
+  letter-spacing:-.035em;
+  white-space:nowrap;
+  text-align:center;
+ }
+ .site-header .nav-number{font-size:10px;flex:0 0 auto}
+}
+@media(max-width:359px){
+ .site-header .header-inner{padding-inline:12px;gap:6px}
+ .site-header .brand-title{font-size:12px}
+ .site-header .header-actions .button{font-size:10px}
+ .site-header .primary-nav{padding-inline:6px}
+ .site-header .nav-btn{font-size:10px;gap:3px}
+ .site-header .nav-number{font-size:9px}
+}
+
+/* Text-zoom resilient header: no overlapping navigation labels. */
+@media(max-width:767px){
+ .site-header .header-inner{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px 18px;
+  padding:16px;
+ }
+ .site-header .site-identity{
+  flex:1 1 230px;
+  min-width:0;
+ }
+ .site-header .brand-title{
+  font-size:clamp(13px,3.5vw,16px);
+  overflow-wrap:normal;
+  word-break:normal;
+  line-height:1.5;
+ }
+ .site-header .header-actions{
+  flex:0 1 auto;
+  max-width:100%;
+  min-width:0;
+ }
+ .site-header .header-actions .button{
+  white-space:normal;
+  overflow-wrap:anywhere;
+  text-align:left;
+ }
+ .site-header .primary-nav{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:stretch;
+  justify-content:stretch;
+  padding:0 12px;
+  gap:0;
+  overflow:visible;
+ }
+ .site-header .nav-btn{
+  flex:1 1 30%;
+  min-width:0;
+  width:auto;
+  margin:0;
+  padding:14px 7px 13px;
+  gap:5px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  word-break:normal;
+  line-height:1.5;
+  text-align:center;
+ }
+ .site-header .nav-number{flex:0 0 auto}
+}
+@media(max-width:359px){
+ .site-header .nav-btn{flex-basis:46%;padding-inline:5px}
+}
+
+
+/* Stage-based primary navigation; appendix remains unnumbered. */
+@media(max-width:767px){
+ .site-header .primary-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:0 12px;gap:0}
+ .site-header .nav-btn{flex:none;min-width:0;width:100%;padding:12px 3px;font-size:clamp(11px,3vw,13px);gap:4px;white-space:normal;overflow-wrap:anywhere}
+ .site-header .nav-btn[data-nav="sources"]{grid-column:1/-1;justify-self:end;width:auto;min-height:32px;padding:5px 12px;font-size:11px}
+}
+@media(min-width:768px){.site-header .nav-btn[data-nav="sources"]{margin-left:auto;font-size:12px;opacity:.8}}
+
+/* Four peer navigation tabs: vertically aligned labels and numbers. */
+.site-header .primary-nav{
+ display:grid;
+ grid-template-columns:repeat(4,minmax(0,1fr));
+ align-items:stretch;
+ gap:0;
+ overflow:visible;
+}
+.site-header .nav-btn,
+.site-header .nav-btn[data-nav="sources"]{
+ display:flex;
+ flex-wrap:nowrap;
+ align-items:center;
+ justify-content:center;
+ align-self:stretch;
+ gap:6px;
+ min-width:0;
+ width:100%;
+ margin:0;
+ padding:14px 6px;
+ border-top:0;
+ border-bottom:2px solid transparent;
+ font-size:clamp(11px,1.25vw,15px);
+ line-height:1.45;
+ font-weight:400;
+ letter-spacing:-.035em;
+ white-space:nowrap;
+ text-align:center;
+}
+.site-header .nav-btn.active{border-bottom-color:#0D0D0D;font-weight:500}
+.site-header .nav-number{
+ display:inline-flex;
+ align-items:center;
+ justify-content:center;
+ flex:none;
+ font-size:inherit;
+ font-family:Inter,var(--font-ui);
+ line-height:inherit;
+ font-weight:inherit;
+ letter-spacing:0;
+ font-variant-numeric:tabular-nums;
+}
+@media(max-width:767px){
+ .site-header .primary-nav{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:0;
+  padding:0 8px;
+  overflow:visible;
+ }
+ .site-header .nav-btn,
+ .site-header .nav-btn[data-nav="sources"]{
+  grid-column:auto;
+  flex:none;
+  min-width:0;
+  width:100%;
+  min-height:46px;
+  padding:12px 2px;
+  gap:3px;
+  font-size:clamp(9px,2.6vw,12px);
+  line-height:1.45;
+  white-space:nowrap;
+  flex-wrap:nowrap;
+  margin:0;
+  opacity:1;
+ }
+ .site-header .nav-number{font-size:inherit;line-height:inherit;flex:none}
+}
+@media(max-width:359px){
+ .site-header .primary-nav{padding:0 3px}
+ .site-header .nav-btn,
+ .site-header .nav-btn[data-nav="sources"]{font-size:9px;gap:2px;padding-inline:1px}
+}
+
+/* Full-viewport divider inside the header; navigation content stays centered. */
+.site-header .primary-nav{position:relative;border-top:0}
+.site-header .primary-nav::before{
+ content:"";position:absolute;top:0;left:50%;width:100vw;
+ transform:translateX(-50%);border-top:1px solid var(--line);
+ pointer-events:none;
+}
+.site-header .nav-btn{text-decoration:none}
+.site-header .nav-btn:focus-visible{outline:2px solid currentColor;outline-offset:-3px}
+
+/* Header-only navy/white scheme. Preserve all non-header blues and chart colors. */
+.site-header{background:#233580}
+.site-header .brand-title,
+.site-header .brand-sub,
+.site-header .header-status,
+.site-header .nav-btn,
+.site-header .nav-number,
+.site-header .nav-btn.active,
+.site-header .nav-btn.active .nav-number,
+.site-header .nav-btn:hover,
+.site-header .header-actions .button{color:#FFFFFF}
+@media(max-width:390px){
+ .site-header .brand-sub{display:block}
+}
+
+/* Deliberate GS-inspired editorial photography: separate context from financial controls. */
+.editorial-photo{margin:0}
+.editorial-photo img{display:block;width:100%;object-fit:cover;object-position:center}
+.editorial-photo figcaption{margin-top:10px;font-size:11px;line-height:1.6;color:var(--muted);letter-spacing:.02em;text-align:right}
+.screen[data-screen="wizard"]>.editorial-photo--opening{margin:-9px 0 44px}
+.editorial-photo--opening img{height:clamp(250px,33vw,470px);object-position:center 48%}
+.screen[data-screen="review"]>.hero{grid-template-columns:minmax(0,1fr) clamp(260px,28vw,365px) 80px;gap:clamp(15px,2vw,32px);align-items:start}
+.editorial-photo--review{min-width:0;align-self:stretch}
+.editorial-photo--review img{height:340px;object-position:center 43%}
+@media(max-width:1000px) and (min-width:768px){
+ .screen[data-screen="review"]>.hero{grid-template-columns:minmax(0,1fr) minmax(225px,34%)}
+ .screen[data-screen="review"]>.hero .hero-aside{display:none}
+ .editorial-photo--review img{height:320px}
+}
+@media(max-width:767px){
+ .screen[data-screen="wizard"]>.editorial-photo--opening{margin:-12px 0 34px}
+ .editorial-photo--opening img{height:clamp(215px,58vw,320px);object-position:center}
+ .screen[data-screen="review"]>.hero{grid-template-columns:minmax(0,1fr);gap:28px}
+ .editorial-photo--review img{height:clamp(230px,65vw,330px);object-position:center 40%}
+}
+
+/* Uniform editorial photo placement: full viewport width, outside the aligned hero.
+   Preserve image quality by object-fit cropping rather than upscaling source bitmaps in HTML. */
+.screen[data-screen="wizard"]>.editorial-photo--opening,
+.screen[data-screen="review"]>.editorial-photo--review{
+ width:100vw;max-width:none;
+ position:relative;left:50%;margin-left:-50vw;
+ margin-top:0;margin-bottom:48px;
+}
+.screen[data-screen="wizard"]>.editorial-photo--opening img,
+.screen[data-screen="review"]>.editorial-photo--review img{
+ width:100%;height:clamp(300px,34vw,520px);object-fit:cover;
+}
+.screen[data-screen="wizard"]>.editorial-photo--opening img{object-position:center 48%}
+.screen[data-screen="review"]>.editorial-photo--review img{object-position:center 42%}
+.screen[data-screen="review"]>.hero{
+ grid-template-columns:minmax(0,1fr) 110px;
+ gap:32px;align-items:stretch;
+}
+.screen .hero-aside{
+ display:flex;min-width:0;width:110px;
+ justify-content:space-between;align-items:flex-end;
+}
+.screen .hero-aside .hero-index{font-family:var(--font-display);font-size:80px;font-weight:300;line-height:1;letter-spacing:0;color:#D0D0D0}
+.screen .hero-aside .hero-tag{
+ width:110px;max-width:100%;
+ color:#333333;font-size:11px;line-height:1.5;font-weight:400;
+ padding-top:11px;border-top:1px solid var(--line);
+ text-align:left;letter-spacing:0;
+}
+@media(max-width:767px){
+ .screen[data-screen="review"]>.hero{grid-template-columns:minmax(0,1fr)}
+ .screen .hero-aside{display:none}
+ .screen[data-screen="wizard"]>.editorial-photo--opening,
+ .screen[data-screen="review"]>.editorial-photo--review{margin-top:0;margin-bottom:34px}
+ .screen[data-screen="wizard"]>.editorial-photo--opening img,
+ .screen[data-screen="review"]>.editorial-photo--review img{height:clamp(245px,58vw,350px)}
+}
+/* White accents within the navy header; other component colors remain untouched. */
+.site-header .nav-btn.active{border-bottom-color:#FFFFFF}
+.site-header .header-actions .button,
+.site-header .header-actions .button:hover{border-bottom-color:#FFFFFF}
+.site-header .primary-nav::before{border-top-color:rgba(255,255,255,.6)}
+.site-header{border-bottom-color:rgba(255,255,255,.6)}
+
+/* All four page titles share one typographic scale. */
+@media(max-width:767px){
+ .screen .hero h1{
+  font-size:clamp(32px,7.5vw,43px);
+  line-height:1.45;
+  letter-spacing:0;
+  white-space:normal;
+ }
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="site-header">
+  <div class="header-inner">
+    <div class="site-identity">
+      <span class="brand-stripe" aria-hidden="true"></span>
+      <div class="brand-copy">
+        <div class="brand-title">大阪・タワーマンション宿泊事業</div>
+        <div class="brand-sub">FEASIBILITY SIMULATOR · FOR YI</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span class="header-status" id="saveStatus" role="status" aria-live="polite">ブラウザ内に自動保存</span>
+      <button class="button" id="topExport" type="button">データを書き出す ↗</button>
+    </div>
+  </div>
+  <nav class="primary-nav" aria-label="メインナビゲーション">
+    <a class="nav-btn active" data-nav="wizard" href="#design" aria-current="page"><span class="nav-number">01</span>事業設計</a>
+    <a class="nav-btn" data-nav="review" href="#validation"><span class="nav-number">02</span>事業性検証</a><a class="nav-btn" data-nav="compare" href="#analysis"><span class="nav-number">03</span>収支分析</a>
+    <a class="nav-btn" data-nav="sources" href="#appendix">Appendix</a>
+  </nav>
+</header>
+<main class="content" id="main-content">
+    <section class="screen active" data-screen="wizard">
+      <div class="hero"><div class="hero-copy"><div class="eyebrow">01 / BUSINESS DESIGN</div><h1>事業モデルと基本条件</h1><p>大阪市内のタワーマンションを活用した宿泊事業について、購入・賃借の取得方法と短期宿泊・中長期賃貸の運用形態を組み合わせ、事業収支を試算します。法制度・契約条件、市場需要、初期投資と運営費を分けて整理し、事業化の可否を検討するための基礎情報を示します。</p></div><div class="hero-aside"><span class="hero-index" aria-hidden="true">01</span><span class="hero-tag">事業条件を入力する</span></div></div>
+      <figure class="editorial-photo editorial-photo--opening">
+        <img src="assets/photos/osaka-city-night.webp" width="1920" height="1313" alt="大阪都心の高層建築と街路を見渡す夜景" decoding="async" fetchpriority="high">
+        
+      </figure>
+      <div id="designFlowHost"><div id="questionnaireFlow"><div class="workflow-bar"><span class="workflow-heading" id="currentTopic">事業条件の確認</span><span class="workflow-count">回答済み <strong id="sideCount">0 / 0</strong></span></div>
+      <details class="topic-index"><summary>検討テーマから移動 <span class="summary-sub">設問一覧</span></summary><div class="stepnav" id="stepnav"></div></details>
+      <details class="question-index"><summary>設問から移動 <span class="summary-sub">モデル別の設問</span></summary><div class="question-list" id="questionList"></div></details>
+      <div class="grid2"><div class="panel question-panel" id="wizardCard"></div><div class="panel side-panel" id="wizardSidebar"></div></div></div></div>
+      <div class="section-heading lower"><div><h2>事業化に向けた検証事項</h2><p>収益性が見込める場合でも、法制度・契約上の成立条件と、想定する宿泊・賃貸需要の実在は独立して確認する必要があります。</p></div></div>
+      <div class="riskgrid"><div class="riskitem"><b>法制度・契約上の成立条件</b><p>特区民泊の新規受付終了や、住宅要件・賃借承諾等は経済的魅力度に加点せず、独立して扱います。</p></div><div class="riskitem"><b>市場需要の裏付け</b><p>ADRや各賃貸モデルの賃料を入力しても、成約データがない限り需要が証明されたとは判定しません。</p></div></div>
+    </section>
+    <section class="screen" data-screen="review"><div class="hero"><div class="hero-copy"><div class="eyebrow">02 / FEASIBILITY ASSESSMENT</div><h1>事業性の検証</h1><p>大阪市内のタワーマンション一室について、リーガル・契約、マーケティング、運営・リスクを論点別に確認します。短期宿泊は住宅宿泊事業法のみを対象とします。</p></div><div class="hero-aside"><span class="hero-index" aria-hidden="true">02</span><span class="hero-tag">法制度・需要・運営</span></div></div><figure class="editorial-photo editorial-photo--review"><img src="assets/photos/osaka-mufg-day.webp" width="1537" height="2048" loading="lazy" decoding="async" alt="大阪・淀屋橋周辺の高層建築と街路を見渡す昼景"></figure><div id="reviewFlowHost"></div></section><section class="screen" data-screen="compare">
+      <div class="hero"><div class="hero-copy"><div class="eyebrow">03 / FINANCIAL ANALYSIS</div><h1>収支シナリオ比較</h1><p>購入・賃借それぞれについて、民泊、ウィークリー・マンスリー賃貸、一般賃貸、ハイブリッドの4モデル（購入・賃借で最大8シナリオ）を比較します。年間営業キャッシュフロー、初期投資額、簡易回収年数を共通の形式で表示し、制度・契約上の成立条件と市場検証の不足事項を別に示します。結果は入力条件に基づく仮定値です。</p></div><div class="hero-aside"><span class="hero-index" aria-hidden="true">03</span><span class="hero-tag" id="compareTag">入力に基づく概算</span></div></div>
+      <div id="compareBanner"></div>
+      <div class="statgrid" id="stats"></div>
+      <div class="toolbar"><div class="segmented" id="scenarioFilter"><button class="on" data-filter="all">すべて</button><button data-filter="buy">購入のみ</button><button data-filter="rent">賃借のみ</button></div><div style="color:var(--muted);font-size:11px">最大4案を選択して詳細比較</div></div>
+      <div class="compare-grid" id="scenarios"></div>
+      <div class="section-heading"><div><h2>選択した事業モデルの比較</h2><p>各モデルの売上・費用・初期資金・営業キャッシュフローに加え、年次CF・回収年数・IRR・NPVを示します。ただし、購入と賃借では投下資本の意味が異なるため、利回りの単純比較には注意が必要です。</p></div></div>
+      <div class="panel widepanel"><div class="table-wrap" id="comparisonTable"></div><div class="mini-legend" style="margin-top:14px"><span><i class="sw" style="background:#102B47"></i>民泊売上</span><span><i class="sw" style="background:#7297C5"></i>賃貸売上</span><span><i class="sw" style="background:rgba(49,55,61,.35)"></i>営業費用</span></div><div id="revenueBars"></div></div>
+      <div class="section-heading"><div><h2>試算条件の調整</h2><p>標準初期値を出発点として、民泊配分スライダー、単価、稼働率、資金調達、繰上返済、出口価格等を個別に変更できます。変更した条件は試算に反映されますが、市場における実現可能性を保証するものではありません。</p></div><button class="button" id="resetNumbers">数値を初期化</button></div>
+      <div class="panel widepanel"><div class="assumptions" id="inputs"></div><div class="notice warning" id="calcWarnings"></div></div>
+      <div class="section-heading"><div><h2>事業化判断に向けた追加検証</h2><p>物件取得前に回答できない確認事項と、現段階でも調べられる市場・事業構造の論点を整理します。投資判断に進む前に、必要な事実確認と一次資料の取得を行ってください。</p></div></div><div class="riskgrid" id="riskList"></div>
+      <div class="footer-actions"><button class="button" id="backToQ">← 条件入力に戻る</button><button class="button" id="exportCsv">比較表をCSVで保存</button><button class="button dark" id="printPage">印刷・PDF保存</button></div>
+    </section>
+    <section class="screen" data-screen="sources">
+      <div class="hero"><div class="hero-copy"><div class="eyebrow">APPENDIX / BASIS &amp; REFERENCES</div><h1>試算の前提と根拠</h1><p>試算に用いる計算方法、費用・収益の範囲、参照先の一次資料、評価上の限界を整理しています。本ツールは候補物件の法令適合性、貸主承諾、宿泊需要、成約賃料等を個別に検証するものではありません。実際の事業化判断には、行政窓口・専門家への確認と取引条件の精査が必要です。</p></div><div class="hero-aside"><span class="hero-index" aria-hidden="true">A</span><span class="hero-tag">計算方法・参照資料</span></div></div>
+      <div class="panel widepanel"><h2 style="font-size:16px;margin-top:0">計算方法（v1）</h2>
+<div class="riskgrid">
+<div class="riskitem"><b>4モデルの売上</b><p>A：ADR×民泊配分日数×販売率。B：月額換算賃料×12×賃貸供給日数比×稼働率。C：月額賃料×12×稼働率。D：AとBの和。初年度稼働は安定値の60％。</p></div>
+<div class="riskitem"><b>10年間のCF</b><p>売上単価年1％成長、運営費年2％上昇を暫定想定。物件維持費・賃借料・返済額・繰上返済を年次処理し、金融前営業CFと返済後CFを区別。</p></div>
+<div class="riskitem"><b>投資回収</b><p>取得・契約費、初期設備・準備費、固定的支出6か月分の運転資金を算入。総投資回収と自己資金回収を、売却を含めず10年間累積CFから判定。</p></div>
+<div class="riskitem"><b>出口評価</b><p>価格変化率方式（年0%）と一般居住用NOI還元による参考価格を別表示。大規模修繕履歴が不明の場合の補正は0%。売却諸費用・残債はIRR・NPVに反映。</p></div>
+</div><div class="notice warning">物件の法的適合や賃貸借該当性を保証しません。金融前CF・返済後CFはいずれも税引前概算です。10年国債3.101％は2026年10月6日の入札平均利回り、融資金利4.5％は金融機関提示ではない仮置き値です。</div></div>
+<div class="panel widepanel lower"><h2 style="font-size:16px;margin-top:0">参照資料</h2><div id="sourceList"></div></div>
+      <div class="panel widepanel lower"><h2 style="font-size:16px;margin-top:0">本ツールで判断できない事項</h2><p class="sources-note">物件選定後のチェックリスト：特定マンションの管理規約、建物の建築・消防適合、貸主承諾の実在、住宅要件の実際の適合、法令上の最終判断、銀行の融資審査、実際のADR・稼働率・成約賃料。管理規約は宿泊事業の成立性に影響するため個別確認が必要です。法令や市場は変わるため、投資前に必ず再調査してください。</p><div class="notice">2026年10月時点：大阪市では特区民泊の新規受付が2026年5月29日で終了しています。住宅宿泊事業法の年間180日上限を新規の標準モデルとして扱います。旅館業法に基づく通年営業は、別途許可・建築消防等の検討を要するため本アプリの収益計算には含めません。</div></div>
+      <div class="panel widepanel lower"><h2 style="font-size:16px;margin-top:0">データの保存・読み込み</h2><p class="sources-note">入力内容はブラウザのlocalStorageに自動保存します。同じHTMLファイルを別端末で開いても入力は引き継がれません。JSONファイルに書き出し、別端末で読み込むことができます。外部送信やサーバー通信は行いません。</p><div class="footer-actions"><button class="button primary" id="exportJson">JSONを書き出す</button><button class="button" id="importJson">JSONを読み込む</button><button class="button" id="resetAll">すべて初期化する</button></div><input id="fileImport" type="file" accept=".json,application/json"></div>
+    </section>
+</main>
+<footer class="site-footer">
+  <div class="footer-disclaimer">本ツールは事業可能性を整理するための試算資料です。法的適合性、需要、融資、収益を保証するものではありません。入力内容はこのブラウザに保存され、外部へ自動送信されません。</div>
+</footer>
+</div>
+<script>
+(function application(){
+'use strict';
+const STORE='osaka_premium_stay_v3';
+const oldV2='osaka_premium_stay_v2';
+const oldStore='osaka_premium_stay_v1';
+const $=id=>document.getElementById(id);
+const yen=x=>Number.isFinite(x)?Math.round(x).toLocaleString('ja-JP')+'円':'—';
+const man=x=>Number.isFinite(x)?(x/10000).toLocaleString('ja-JP',{maximumFractionDigits:1})+'万円':'—';
+const pct=x=>(100*x).toFixed(1)+'%';
+// Group editable numeric values without altering the numeric model or exports.
+const groupNumber=value=>Number(value).toLocaleString('ja-JP',{useGrouping:true,maximumFractionDigits:10});
+const numericDraft=value=>{
+ const raw=String(value).replace(/,/g,'').trim();
+ if(!/^-?\d*(?:\.\d*)?$/.test(raw))return String(value);
+ const parts=raw.split('.');
+ parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,',');
+ return parts.join('.');
+};
+const readNumeric=value=>{
+ const formatted=String(value).trim();
+ if(!/^-?(?:(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d*)?|\.\d+)$/.test(formatted))return null;
+ const n=Number(formatted.replace(/,/g,''));return Number.isFinite(n)?n:null;
+};
+function attachNumericGrouping(el){
+ el.addEventListener('input',event=>{
+  if(event.isComposing)return;
+  const start=el.selectionStart,end=el.selectionEnd;
+  const before=el.value,next=numericDraft(before);
+  if(next===before)return;
+  const newStart=numericDraft(before.slice(0,start)).length;
+  const newEnd=numericDraft(before.slice(0,end)).length;
+  el.value=next;
+  if(start!==null&&end!==null)el.setSelectionRange(newStart,newEnd);
+ });
+ el.addEventListener('compositionend',()=>{el.value=numericDraft(el.value)});
+}
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;'}[c]));
+const defs=[
+['areaSqm','試算住戸専有面積','㎡',65,20,500,1],['buyPrice','想定購入価格','円',100000000,0,1000000000,1000000],['closingRate','購入諸費用率','%',6,0,20,0.5],
+['baseRent','賃借時の月額支払賃料','円',370000,0,3000000,10000],['depositMonths','返還予定の敷金（月数）','か月',4,0,24,1],['brokerMonths','賃借契約関連費（月数）','か月',1,0,12,0.5],
+['initial','家具・設備・内装の初期投資','円',5000000,0,50000000,100000],['setupCost','開業準備費用','円',500000,0,20000000,100000],['ownerCost','購入物件の年間維持費','円/年',900000,0,10000000,50000],['fixedCost','運営共通固定費','円/年',600000,0,20000000,50000],
+['adr','民泊ADR（宿泊基本料・仮定）','円/泊',27000,0,500000,1000],['nights','民泊専業：販売可能期間','日/年',180,0,180,5],['shortOcc','民泊の販売率','%',70,0,100,1],['shortCost','民泊売上連動費率','%',25,0,90,1],
+['bRent','週・月賃貸の月額賃料（手入力優先）','円/月',445500,0,3000000,500],['bPremium','BのC賃料に対する短期家具付倍率（仮定）','倍',1.35,1,3,0.05],['bOcc','週・月賃貸の稼働率','%',75,0,100,1],['bFee','週・月賃貸の委託料率（公表例）','%',20,0,60,1],['bOther','週・月賃貸のその他年間費用','円/年',500000,0,15000000,50000],
+['cRent','一般賃貸の月額賃料','円/月',330000,0,3000000,10000],['cOcc','一般賃貸の稼働率','%',92,0,100,1],['cFee','一般賃貸の管理料率','%',5,0,50,0.5],['cOther','一般賃貸の年間修繕・募集引当','円/年',300000,0,15000000,50000],
+['hybridDays','ハイブリッド民泊年間配分','日/年',150,0,180,5],['switchLoss','併用切替・募集ロス','日/年',14,0,90,1],['hybridExtra','併用追加管理費','円/年',150000,0,5000000,10000],
+['reserveMonths','初期運転資金月数','か月',6,0,24,1],['firstYearFactor','初年度稼働率補正','%',60,0,100,5],['revenueGrowth','年間単価・賃料成長率','%',1,-10,15,0.5],['costGrowth','年間運営費上昇率','%',2,-10,15,0.5],
+['ltv','購入価格に対する借入割合','%',70,0,100,5],['loanRate','事業用借入金利（暫定仮定）','%',4.5,0,20,0.25],['loanYears','借入期間','年',25,1,40,1],
+['prepayYear','繰上返済実行年（0＝なし）','年',0,0,10,1],['prepayAmount','繰上返済額','円',0,0,100000000,100000],['prepayFee','繰上返済手数料','円',0,0,1000000,1000],
+['priceGrowth','不動産価格の年変化率','%',0,-15,15,0.5],['ageAdj','経年・管理補正（情報不明なら0）','%/年',0,-10,10,0.5],['saleCost','売却費用率','%',3,0,20,0.5],['exitCap','参考NOI還元利回り','%',4,0.1,20,0.25],['discountRate','NPV割引率（仮定）','%',6,0,25,0.5],
+['startYear','事業開始年（2026年を第1年）','年目',1,1,10,1],['startMonth','事業開始月','月',1,1,12,1],['aCleaningIncome','Aの清掃徴収額（1宿泊あたり）','円/滞在',0,0,100000,500],['aCleaningCost','Aの清掃支払額（1宿泊あたり）','円/滞在',0,0,100000,500],['aAvgStay','Aの平均宿泊数','泊/滞在',3,1,30,1],['bUtilityIncome','Bの月額光熱・サービス徴収','円/月',0,0,200000,1000],['bUtilityCost','Bの月額光熱・サービス原価','円/月',0,0,200000,1000],['bCleaningIncome','Bの年間清掃徴収','円/年',0,0,1000000,10000],['bCleaningCost','Bの年間清掃原価','円/年',0,0,1000000,10000],['bFurnitureRenewal','Bの年間家具更新引当','円/年',0,0,2000000,10000],['riskFree','2026-10-06 10年国債入札平均利回り','%',3.101,0,20,0.001]
+];
+const models=[['A','民泊'],['B','ウィークリー・マンスリー賃貸'],['C','一般賃貸'],['D','ハイブリッド']];
+const buildings=['グラングリーン大阪 THE NORTH RESIDENCE','Brillia Tower 堂島','パークタワー大阪堂島浜','グランフロント大阪オーナーズタワー','ザ・パークハウス 大阪梅田タワー','シティタワー大阪本町'];
+const buildingEvidence=[
+ {id:'P1',completion:'2025年12月竣工／2026年3月引渡予定',level:'特殊住戸の売出1件・棟代表値ではない',price:'103.29㎡・16階・5億4,000万円（約523万円/㎡）',rent:'比較可能値未取得',ppm:0,url:'https://suumo.jp/ms/chuko/osaka/sc_osakashikita/nc_21006618/',note:'特殊角住戸の単価を他面積に比例換算しない'},
+ {id:'P2',completion:'2024年1月竣工',level:'デベロッパー募集／賃貸募集',price:'販売中2億1,000万～7億5,000万円（住戸面積との対が不明）',rent:'38.71㎡・純賃料19.5万円＋管理費等3万円/月',ppm:0,url:'https://www.brillia.com/',note:'同一建物の範囲でも住戸間の価格差に注意'},
+ {id:'P3',completion:'2027年1月下旬竣工予定／同5月下旬入居予定',level:'未竣工・同棟中古成約なし',price:'同棟成約参考未取得',rent:'同棟賃貸未取得',ppm:0,url:'https://www.31sumai.com/',note:'営業開始2027年6月を暫定仮定'},
+ {id:'P4',completion:'2013年竣工',level:'一般賃貸の募集提示1件',price:'同棟成約参考未取得',rent:'56.49㎡・純賃料月26万円の募集事例',ppm:0,url:'https://www.all-mansion.com/54917_m/',note:'1件の募集賃料を棟代表値と呼ばない'},
+ {id:'P5',completion:'2025年9月竣工',level:'仲介成約参考：㎡単価3件（条件不明）',price:'211・230・232万円/㎡；中央値230万円/㎡',rent:'同棟一般賃料の比較可能実績未取得',ppm:2300000,url:'https://sp.all-mansion.com/55212_m/894515R/',note:'階・面積等が非公開。手動の参考単価適用のみ'},
+ {id:'P6',completion:'2021年12月竣工',level:'仲介成約参考：62件・一部販売時値混在可能',price:'1K/1Rを除く平均198万円/㎡',rent:'同棟一般賃料の比較可能実績未取得',ppm:1980000,url:'https://chuo.eightcorp.co.jp/name.php?case_filter=1&case_layout=3LDK&exclude_1kr=1&exclude_reform=0&name=%E3%82%B7%E3%83%86%E3%82%A3%E3%82%BF%E3%83%AF%E3%83%BC%E5%A4%A7%E9%98%AA%E6%9C%AC%E7%94%BA&years=2',note:'平均198万円/㎡であり中央値ではない。条件別変動大'}
+];
+const hotelEvidence=[
+ ['フォーシーズンズホテル大阪',null,null,'JTB','https://www.jtb.co.jp/kokunai-hotel/htl/6490087/'],
+ ['ウォルドーフ・アストリア大阪',75900,152900,'JTB','https://www.jtb.co.jp/kokunai-hotel/htl/6490086/'],
+ ['パティーナ大阪',88696,130762,'トラベルコ','https://www.tour.ne.jp/j_hotel/69332/'],
+ ['ザ・リッツ・カールトン大阪',82226,158126,'JTB','https://www.jtb.co.jp/kokunai-hotel/htl/6490017/'],
+ ['W大阪',69576,111320,'JTB','https://www.jtb.co.jp/kokunai-hotel/htl/6492008/'],
+ ['コンラッド大阪',119900,202400,'JTB','https://www.jtb.co.jp/kokunai-hotel/htl/6490022/'],
+ ['インターコンチネンタルホテル大阪',83032,146664,'JTB','https://www.jtb.co.jp/kokunai-hotel/htl/6490057/'],
+ ['セント レジス ホテル 大阪',89816,139150,'JTB','https://www.jtb.co.jp/kokunai-hotel/htl/6491008/'],
+ ['シェラトン都ホテル大阪',23600,null,'JTB','https://www.jtb.co.jp/kokunai-hotel/htl/6492004/'],
+ ['ウェスティンホテル大阪',null,null,'未取得','https://www.jtb.co.jp/kokunai-hotel/'],
+ ['ホテルグランヴィア大阪',23750,46100,'JTB','https://www.jtb.co.jp/kokunai-hotel/htl/6490004/'],
+ ['ホテル阪急インターナショナル',37400,65000,'JTB','https://www.jtb.co.jp/kokunai-hotel/htl/6490014/'],
+ ['THE OSAKA STATION HOTEL, Autograph Collection',69576,104996,'トラベルコ','https://www.tour.ne.jp/j_hotel/68026/']
+];
+const choice=(id,stage,title,options,applies='ALL',help='')=>({id,stage,title,options,applies,help});
+const q=[
+choice('operationMode',1,'検討する運用モデルは？',[['all','4モデルすべてを比較'],['A','民泊'],['B','ウィークリー・マンスリー賃貸'],['C','一般賃貸'],['D','ハイブリッド']]),
+choice('acquisition',1,'物件の確保方法は？',[['compare','購入・賃借の両方'],['buy','購入'],['rent','賃借']]),
+choice('goal',1,'重視する投資目的は？',[['cash','年間キャッシュフロー'],['capital','資産価値・投資収益'],['experiment','小規模な事業実証']]),
+choice('benchmarkBuilding',1,'標準ベンチマーク物件は？',[['none','複数物件・未定'],...buildings.map((name,i)=>['P'+(i+1),name])],'ALL','比較対象の選択です。対象物件を所有・取得済みという意味ではありません。'),
+choice('size',1,'想定専有面積は？',[['40-55','40〜55㎡'],['56-75','56〜75㎡'],['76-100','76〜100㎡'],['100+','100㎡超'],['unknown','未定']]),
+choice('layout',1,'想定間取りは？',[['1','1LDK'],['2','2LDK'],['3','3LDK以上'],['unknown','未定']]),
+choice('furniture',1,'家具・家電の提供方針は？',[['full','フル家具付き'],['part','一部家具付き'],['none','原則なし'],['model','モデル別に設定']]),
+choice('operator',1,'運営・管理の基本方針は？',[['outsourced','外部委託中心'],['self','自主管理中心'],['partial','一部委託'],['unknown','未定']]),
+choice('aTarget',1,'民泊の主なターゲットは？',[['inbound','訪日観光客'],['domestic','国内観光客'],['business','法人・出張'],['family','家族・グループ'],['mixed','複数を想定']],'A'),
+choice('aGuests',1,'民泊の想定人数は？',[['2','1〜2名'],['4','3〜4名'],['6','5〜6名'],['unknown','未定']],'A'),
+choice('bTarget',1,'週・月賃貸の主な入居目的は？',[['business','出張・研修'],['temporary','転居・仮住まい'],['repair','住宅改修中の仮住まい'],['mixed','複数を想定']],'B'),
+choice('bTerm',1,'週・月賃貸の想定契約期間は？',[['week','数週間（法的該当性の検証を要する）'],['month','1〜3か月'],['long','3〜6か月'],['unknown','未定']],'B'),
+choice('cTarget',1,'一般賃貸の主な入居者像は？',[['single','単身'],['couple','二人暮らし'],['family','家族'],['corporate','法人契約'],['unknown','未定']],'C'),
+choice('cLease',1,'一般賃貸の想定契約は？',[['normal','普通借家'],['fixed','定期借家'],['both','両方検討'],['unknown','未定']],'C'),
+choice('hPurpose',1,'ハイブリッドの主な目的は？',[['maximize','年間収益最大化'],['smooth','季節需要への対応'],['limit','民泊日数制限への対応'],['test','比較実証']],'D'),
+choice('leaseReality',2,'週・月賃貸の提供実態は？',[['lease','入居者の占有を伴う住宅賃貸借として設計'],['service','宿泊サービスに近い可能性'],['unknown','未設計']],'B','契約期間や名称だけで旅館業法の適用は判断できません。'),
+choice('leaseCleaning',2,'週・月賃貸の入居中の衛生管理は？',[['tenant','入居者が行う'],['shared','役割分担を契約で定める'],['operator','運営事業者が主に実施'],['unknown','未設計']],'B'),
+choice('marketA',2,'民泊ADR・宿泊需要の根拠は？',[['actual','同条件の実績・成約情報'],['listing','掲載価格・公開統計'],['none','未調査・仮説']],'A'),
+choice('marketB',2,'週・月賃貸の賃料・需要の根拠は？',[['actual','成約・法人需要の情報'],['listing','募集事例のみ'],['none','未調査・仮説']],'B'),
+choice('marketC',2,'一般賃貸の賃料・需要の根拠は？',[['actual','成約データ'],['listing','募集事例のみ'],['none','未調査・仮説']],'C'),
+choice('operationReadiness',2,'運営・委託体制の検討状況は？',[['quoted','見積・具体的な担当候補あり'],['planned','運営業務を整理済み'],['unknown','これから整理']]),
+choice('hybridSwitch',2,'ハイブリッドの切替方針は？',[['season','季節ごと'],['fixed','一定期間ごと'],['demand','需要に応じて'],['unknown','未定']],'D'),
+choice('riskFocus',2,'優先して検証する下振れリスクは？',[['demand','需要・稼働率'],['price','販売単価・賃料'],['expense','運営費・金利'],['contract','契約・切替']])
+];
+const defaults={operationMode:'all',acquisition:'compare',goal:'cash',benchmarkBuilding:'none',size:'56-75',layout:'2',furniture:'full',operator:'outsourced',aTarget:'mixed',aGuests:'4',bTarget:'business',bTerm:'month',cTarget:'couple',cLease:'both',hPurpose:'maximize',leaseReality:'unknown',leaseCleaning:'unknown',marketA:'none',marketB:'none',marketC:'none',operationReadiness:'unknown',hybridSwitch:'unknown',riskFocus:'demand'};
+let previous={};try{previous=JSON.parse(localStorage.getItem(oldStore)||'{}')||{}}catch(e){}
+let saved={};try{saved=JSON.parse(localStorage.getItem(STORE)||localStorage.getItem(oldV2)||'{}')||{}}catch(e){}
+const isV2=saved.version!==3;
+const legacyDefaults={...Object.fromEntries(defs.map(x=>[x[0],x[3]])),adr:45000,bRent:450000};
+const initialNums=Object.fromEntries(defs.map(x=>[x[0],x[3]]));
+const migratedNums={...initialNums};
+const migratedOverrides={};
+if(saved.nums&&typeof saved.nums==='object'){
+ for(const d of defs){const key=d[0],val=Number(saved.nums[key]);if(Object.prototype.hasOwnProperty.call(saved.nums,key)&&Number.isFinite(val)&&val>=d[4]&&val<=d[5]){
+  if(!isV2||val!==legacyDefaults[key]){migratedNums[key]=val;migratedOverrides[key]=true}
+ }}
+}
+if(!isV2&&saved.overrides&&typeof saved.overrides==='object')for(const [key,v] of Object.entries(saved.overrides))if(Object.prototype.hasOwnProperty.call(initialNums,key))migratedOverrides[key]=v===true;
+const validAnswers=(incoming)=>{const x={...defaults};if(incoming&&typeof incoming==='object'){for(const question of q){const v=incoming[question.id];if(question.options.some(([id])=>id===v))x[question.id]=v}for(const id of ['repaymentType','prepayType'])if((id==='repaymentType'?['annuity','equalPrincipal']:['shorten','reduce']).includes(incoming[id]))x[id]=incoming[id]}return x};
+const state={answers:validAnswers(saved.answers),nums:migratedNums,overrides:migratedOverrides,preset:['conservative','base','optimistic'].includes(saved.preset)?saved.preset:'base',screen:['wizard','review','compare','sources'].includes(saved.screen)?saved.screen:'wizard',selected:Array.isArray(saved.selected)?saved.selected.filter(x=>/^(buy|rent)_[ABCD]$/.test(x)).slice(0,4):['buy_D','rent_D','buy_C','rent_C'],current:Number.isInteger(saved.current)?saved.current:0,filter:'all'};
+if(!saved.answers&&previous.answers){for(const id of ['acquisition','goal'])if(previous.answers[id])state.answers[id]=previous.answers[id]}
+const presets={conservative:{adr:20000,shortOcc:55,bPremium:1.20,bOcc:60,cOcc:85},base:{adr:27000,shortOcc:70,bPremium:1.35,bOcc:75,cOcc:92},optimistic:{adr:36000,shortOcc:80,bPremium:1.60,bOcc:85,cOcc:96}};
+const baseGet=id=>{const d=defs.find(x=>x[0]===id);const n=Number(state.nums[id]);return d&&Number.isFinite(n)?Math.max(d[4],Math.min(d[5],n)):(d?d[3]:0)};
+const get=id=>{if(id==='startYear'&&state.answers.benchmarkBuilding==='P3')return Math.max(2,baseGet(id));if(id==='startMonth'&&state.answers.benchmarkBuilding==='P3'&&get('startYear')===2)return Math.max(6,baseGet(id));if(id==='bRent'&&!state.overrides.bRent)return Math.round(get('cRent')*get('bPremium'));if(!state.overrides[id]&&Object.prototype.hasOwnProperty.call(presets[state.preset],id))return presets[state.preset][id];return baseGet(id)};
+const persist=()=>{try{localStorage.setItem(STORE,JSON.stringify({version:3,answers:state.answers,nums:state.nums,overrides:state.overrides,preset:state.preset,screen:state.screen,selected:state.selected,current:state.current}));$('saveStatus').textContent='✓ 自動保存済み'}catch(e){$('saveStatus').textContent='保存不可'}};
+const includes=m=>state.answers.operationMode==='all'||state.answers.operationMode===m||(state.answers.operationMode==='D'&&(m==='A'||m==='B'));
+const active=stage=>q.filter(x=>x.stage===stage&&(x.applies==='ALL'||includes(x.applies)));
+const scenarios=()=>['buy','rent'].flatMap(type=>models.map(([mode,name])=>({id:type+'_'+mode,type,mode,title:(type==='buy'?'購入':'賃借')+' × '+name})));
+const bounds=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
+function schedule(principal){
+ const totalMonths=get('loanYears')*12,r=get('loanRate')/1200,preYear=get('prepayYear'),fee=get('prepayFee');
+ const equalPrincipal=state.answers.repaymentType==='equalPrincipal',reduce=state.answers.prepayType!=='shorten';
+ const annual=Array.from({length:10},()=>({paid:0,interest:0,principal:0,prepay:0,fee:0,balance:0}));
+ let balance=principal,remaining=totalMonths,monthlyPrincipal=principal/totalMonths;
+ let fixedPay=r?principal*r/(1-Math.pow(1+r,-totalMonths)):principal/totalMonths;
+ for(let month=1;month<=120;month++){
+  const yr=Math.floor((month-1)/12),y=annual[yr];
+  if(balance<=0){y.balance=0;continue}
+  const interest=balance*r;
+  const principalPay=Math.min(balance,Math.max(0,equalPrincipal?monthlyPrincipal:fixedPay-interest));
+  balance=Math.max(0,balance-principalPay);y.interest+=interest;y.principal+=principalPay;y.paid+=interest+principalPay;remaining--;
+  if(preYear>0&&month===preYear*12&&balance>0){
+   const extra=Math.min(balance,get('prepayAmount'));balance-=extra;y.prepay+=extra;y.fee+=extra>0?fee:0;
+   if(reduce&&extra>0&&remaining>0){
+    if(equalPrincipal)monthlyPrincipal=balance/remaining;
+    else fixedPay=r?balance*r/(1-Math.pow(1+r,-remaining)):balance/remaining;
+   }
+  }
+  y.balance=Math.max(0,balance);
+ }
+ return annual;
+}
+function irrx(flows){const npv=r=>flows.reduce((s,v,i)=>s+v/Math.pow(1+r,i),0);let lo=-0.95,hi=3;if(npv(lo)*npv(hi)>0)return null;for(let i=0;i<130;i++){const m=(lo+hi)/2;if(npv(lo)*npv(m)<=0)hi=m;else lo=m;}return (lo+hi)/2;}
+function payback(principal,arr){if(principal<=0)return 0;let accumulated=0;for(let y=0;y<arr.length;y++){const before=accumulated;accumulated+=arr[y];if(accumulated>=principal&&arr[y]>0)return y+(principal-before)/arr[y];}return null;}
+function calculate(d){
+ const fy=get('firstYearFactor')/100,revg=get('revenueGrowth')/100,costg=get('costGrowth')/100;
+ const purchase=d.type==='buy',short=d.mode==='A'||d.mode==='D',b=d.mode==='B'||d.mode==='D',cc=d.mode==='C';
+ const cashLoan=purchase?get('buyPrice')*get('ltv')/100:0;
+ const loan=purchase?schedule(cashLoan):Array.from({length:10},()=>({paid:0,interest:0,principal:0,prepay:0,fee:0,balance:0}));
+ const fixed0=get('fixedCost')+(purchase?get('ownerCost'):get('baseRent')*12)+(d.mode==='D'?get('hybridExtra'):0);
+ const unavoidable=fixed0+(b?get('bOther')+get('bFurnitureRenewal'):0)+(cc?get('cOther'):0);
+ const deposit=purchase?0:get('baseRent')*get('depositMonths');
+ const nonRefundable=(purchase?get('buyPrice')*(1+get('closingRate')/100):get('baseRent')*get('brokerMonths'))+get('initial')+get('setupCost');
+ const capital0=nonRefundable+deposit;
+ const buffer=(unavoidable+loan[0].paid)*get('reserveMonths')/12, investment=capital0+buffer,equity=investment-cashLoan;
+ const startYr=get('startYear');
+ const startMo=get('startMonth');
+ const years=[];
+ for(let i=0;i<10;i++){
+  const yr=i+1,share=yr<startYr?0:yr===startYr?(13-startMo)/12:1;
+  const occ=yr===startYr?fy:yr<startYr?0:1;
+  const ratio=share*occ,price=Math.pow(1+revg,i),cost=Math.pow(1+costg,i);
+  const shortDays=short?(d.mode==='D'?get('hybridDays'):Math.min(180,get('nights'))):0;
+  const sold=shortDays*get('shortOcc')/100*ratio;
+  const otherDays=b?(d.mode==='D'?Math.max(0,365-get('hybridDays')-get('switchLoss')):365):0;
+  const bMonths=otherDays/365*12*get('bOcc')/100*ratio;
+  const aBaseRevenue=sold*get('adr')*price;
+  const aStays=sold/Math.max(1,get('aAvgStay'));
+  const aExtraIncome=aStays*get('aCleaningIncome')*price;
+  const bBaseRevenue=bMonths*get('bRent')*price;
+  const bExtraIncome=bMonths*get('bUtilityIncome')*price+ (b?get('bCleaningIncome')*bMonths/12*price:0);
+  const cRevenue=cc?12*get('cOcc')/100*ratio*get('cRent')*price:0;
+  const aRevenue=aBaseRevenue+aExtraIncome,bRevenue=bBaseRevenue+bExtraIncome,gross=aRevenue+bRevenue+cRevenue;
+  // Contractual percentage-based fees scale with revenue but DO NOT receive cost inflation twice.
+  const fees=aBaseRevenue*get('shortCost')/100+bBaseRevenue*get('bFee')/100+cRevenue*get('cFee')/100;
+  const passCosts=(aStays*get('aCleaningCost')+bMonths*get('bUtilityCost')+(b?get('bCleaningCost')*bMonths/12:0))*cost;
+  const variable=fees+passCosts;
+  const fixed=unavoidable*cost;
+  const op=gross-variable-fixed;
+  const debt=loan[i].paid+loan[i].prepay+loan[i].fee;
+  const after=op-debt;
+  years.push({year:yr,gross,aRevenue,bRevenue,cRevenue,variable,fixed,op,debt,after,sold,bMonths,bDays:otherDays*ratio,balance:loan[i].balance,interest:loan[i].interest,principal:loan[i].principal+loan[i].prepay,activeShare:share});
+ }
+ const last=years[9],marketFactor=Math.pow(1+get('priceGrowth')/100,10);
+ const buildingFactor=Math.pow(1+get('ageAdj')/100,10);
+ const salePrice=purchase?get('buyPrice')*marketFactor*buildingFactor:0;
+ // Separate residential valuation: NO hospitality earnings capitalised at residential cap rate.
+ const y10Rent=get('cRent')*12*get('cOcc')/100*Math.pow(1+revg,9);
+ const y10ResidentialExpenses=(get('ownerCost')+get('cOther'))*Math.pow(1+costg,9);
+ const noi=Math.max(0,y10Rent*(1-get('cFee')/100)-y10ResidentialExpenses);
+ const capPrice=purchase?noi/(get('exitCap')/100):0;
+ const capSensitivity=purchase?[3,4,5].map(rate=>({rate,value:noi/(rate/100)})):[];
+ const resale=purchase?salePrice*(1-get('saleCost')/100)-last.balance:0;
+ const refund=deposit;
+ const terminal=resale+refund+buffer;
+ const equityFlows=[-equity,...years.map((y,i)=>y.after+(i===9?terminal:0))];
+ const irr=irrx(equityFlows),discount=get('discountRate')/100;
+ const npv=equityFlows.reduce((sum,x,i)=>sum+x/Math.pow(1+discount,i),0);
+ const afters=years.map(x=>x.after),ops=years.map(x=>x.op);
+ return {...d,years,gross:years[0].gross,profit:years[0].op,after:years[0].after,initial:investment,equity,buffer,shortRevenue:years[0].aRevenue,longRevenue:years[0].bRevenue+years[0].cRevenue,variableCost:years[0].variable,fixed:years[0].fixed,actualNights:years[0].sold,midMonths:years[0].bMonths,return:investment?years[0].op/investment:0,payback:payback(investment,ops),equityPayback:payback(equity,afters),irr,npv,salePrice,capPrice,capSensitivity,resale,refund,terminal,loan:cashLoan,blockers:[],warnings:[],status:'税引前・条件付き試算'};
+}
+const all=()=>scenarios().map(calculate);
+function renderWizard(){
+ const stage=state.screen==='wizard'?1:2,items=active(stage);
+ if(!items.length)return;
+ state.current=bounds(state.current,0,items.length-1);
+ const item=items[state.current],value=state.answers[item.id];
+ $('currentTopic').textContent=stage===1?'事業設計・商品構想':'需要・契約構造の検証';
+ $('sideCount').textContent=items.filter(x=>state.answers[x.id]!==undefined&&state.answers[x.id]!==defaults[x.id]).length+' / '+items.length;
+ $('stepnav').innerHTML='';
+ $('questionList').innerHTML=items.map((p,i)=>'<button class="question-jump '+(i===state.current?'current':'')+'" data-jump="'+i+'">'+String(i+1).padStart(2,'0')+' '+esc(p.title)+'</button>').join('');
+ document.querySelectorAll('[data-jump]').forEach(el=>el.onclick=()=>{state.current=Number(el.dataset.jump);renderWizard()});
+ $('wizardCard').innerHTML='<div class="question-top">QUESTION '+String(state.current+1).padStart(2,'0')+' / '+items.length+'</div><div class="progressline"><div style="width:'+((state.current+1)/items.length*100)+'%"></div></div><h2 class="q-title">'+esc(item.title)+'</h2><p class="q-help">'+esc(item.help)+'</p><div class="options">'+item.options.map(([v,label])=>'<button type="button" class="option '+(value===v?'selected':'')+'" data-answer="'+esc(v)+'"><span class="radio-dot"></span><span class="option-text"><span class="option-title">'+esc(label)+'</span></span></button>').join('')+'</div><div class="footer-actions"><button class="button" id="stepPrev" '+(state.current===0?'disabled':'')+'>← 前へ</button><button class="button dark" id="stepNext">'+(state.current===items.length-1?'次の工程へ →':'次へ →')+'</button></div>';
+ document.querySelectorAll('[data-answer]').forEach(el=>el.onclick=()=>{const prior=state.answers[item.id];state.answers[item.id]=el.dataset.answer;if(item.id==='benchmarkBuilding'&&prior!==el.dataset.answer){state.nums.startYear=el.dataset.answer==='P3'?2:1;state.nums.startMonth=el.dataset.answer==='P3'?6:1;delete state.overrides.startYear;delete state.overrides.startMonth}if(item.id==='operationMode'&&prior!==el.dataset.answer)state.current=0;persist();renderWizard()});
+ $('stepPrev').onclick=()=>{state.current--;persist();renderWizard()};
+ $('stepNext').onclick=()=>{if(state.current<items.length-1){state.current++;persist();renderWizard()}else navigate(stage===1?'review':'compare')};
+ const ref=calculate({type:'rent',mode:'D',title:'賃借 × ハイブリッド'});
+ $('wizardSidebar').innerHTML='<div class="side-title">試算の標準前提</div><div class="mini-metric"><small>民泊ADR（仮定）</small><strong>'+man(get('adr'))+'</strong></div><div class="mini-metric"><small>Bの月額換算賃料（仮定）</small><strong>'+man(get('bRent'))+'</strong></div><div class="mini-metric"><small>賃借×ハイブリッドの初年度営業CF</small><strong>'+man(ref.profit)+'</strong></div><p class="sources-note">物件固有の管理規約・消防・転貸承諾等は、物件選定後の確認事項として扱います。</p><button class="button dark" id="peekCompare">収支分析へ →</button>';
+ $('peekCompare').onclick=()=>navigate('compare');
+}
+let hasInputs=false;
+function renderCompare(){
+ const allCases=all();
+ // The first holding year can be pre-opening (e.g. P03, assumed opening June 2027).
+ // Surface the first fully stabilised calendar year, not only year-one fixed losses.
+ const openingYear=get('startYear'),openingMonth=get('startMonth');
+ const openingIdx=openingYear-1;
+ const stableIdx=openingYear<10?openingYear:null;
+ const keyIdx=stableIdx===null?openingIdx:stableIdx;
+ const keyLabel=stableIdx===null?'営業開始年':'安定稼働年';
+ const keyYear=keyIdx+1;
+ const yearLabel=i=>'第'+(i+1)+'年';
+ const chosen=state.answers.operationMode,acq=state.answers.acquisition;
+ const visible=allCases.filter(x=>(chosen==='all'||chosen===x.mode)&&(acq==='compare'||x.type===acq));
+ const allowed=visible.map(x=>x.id);
+ state.selected=state.selected.filter(id=>allowed.includes(id)).slice(0,4);
+ if(!state.selected.length)state.selected=allowed.slice(0,Math.min(4,allowed.length));
+ const selectedCases=visible.filter(x=>state.selected.includes(x.id));
+ const show=visible.filter(x=>state.filter==='all'||x.type===state.filter);
+ $('compareTag').textContent='収支比較';
+ const picked=buildingEvidence.find(x=>x.id===state.answers.benchmarkBuilding);
+ const evidenceTable='<details style="margin:12px 0"><summary style="cursor:pointer;font-weight:700">標準6物件の市場根拠・データ品質を表示</summary><div style="overflow-x:auto"><table><thead><tr><th>物件／竣工</th><th>売買価格の根拠</th><th>C賃料の根拠</th><th>品質・出典</th></tr></thead><tbody>'+buildingEvidence.map((x,i)=>'<tr><td>'+esc(buildings[i])+'<br><small>'+esc(x.completion)+'</small></td><td>'+esc(x.price)+'</td><td>'+esc(x.rent)+'</td><td>'+esc(x.level)+' <a href="'+x.url+'" target="_blank" rel="noopener noreferrer">出典 ↗</a></td></tr>').join('')+'</tbody></table></div><p>参考値は住戸属性・取得時点の差があり、未校正の物件名だけで売買価格を自動確定しません。</p></details>';
+
+ $('compareBanner').innerHTML='<div class="notice"><b>v1｜運営収益の3ケース</b>　<label for="casePreset">シナリオ</label> <select id="casePreset"><option value="conservative">保守</option><option value="base">標準</option><option value="optimistic">強気</option></select><p>ADR・稼働率・短期家具付き賃料倍率は暫定仮定であり実測値ではありません。管理規約による制約はないと仮定。住宅宿泊事業法の180日上限など一般法令は別です。</p></div>';
+ $('compareBanner').innerHTML+=evidenceTable;
+ const startLabel='第'+openingYear+'年（'+(2025+openingYear)+'年'+openingMonth+'月）';
+ const paramText='民泊ADR '+yen(get('adr'))+'／泊・A販売率 '+get('shortOcc')+'%・B月額 '+yen(get('bRent'))+'（C賃料×'+get('bPremium').toFixed(2)+'）・B稼働率 '+get('bOcc')+'%・C稼働率 '+get('cOcc')+'%';
+ $('compareBanner').innerHTML+='<p style="margin:12px 0 6px;font-size:12px"><b>現在適用される収益前提：</b>'+esc(paramText)+'</p>'+
+  '<p style="margin:0 0 12px;font-size:12px">営業開始：<b>'+startLabel+'</b>。保有第1年'+(openingYear>1?'は売上ゼロ・固定費のみ。':'は立ち上がり稼働率60%。')+
+  (stableIdx===null?'10年の分析期間内に安定稼働年なし。':'主な収益比較は'+yearLabel(stableIdx)+'の安定稼働CFを表示。')+'</p>';
+ const overridable=['adr','shortOcc','bPremium','bOcc','cOcc','bRent'];
+ const manuallySet=overridable.filter(id=>state.overrides[id]);
+ if(manuallySet.length){
+  $('compareBanner').innerHTML+='<div class="notice" style="margin:10px 0"><b>手入力が優先されています：</b>'+esc(manuallySet.map(id=>defs.find(d=>d[0]===id)?.[1]||id).join('・'))+
+    '<p>この項目は3シナリオで自動変更されません。</p><button type="button" class="button" id="clearScenarioOverrides">該当する手入力を解除して3ケースを比較</button></div>';
+ }
+
+ if(picked){$('compareBanner').innerHTML+='<p class="notice">選択中：<b>'+esc(buildings[Number(picked.id.slice(1))-1])+'</b>｜'+esc(picked.level)+'｜'+esc(picked.note)+'。入力購入価格：'+man(get('buyPrice'))+'。 <span id="evidenceApply"></span></p>';
+ if(picked.ppm){$('evidenceApply').innerHTML='<label for="applySqm">住戸面積</label> <input id="applySqm" type="text" inputmode="decimal" autocomplete="off" style="width:86px" value="'+groupNumber(get('areaSqm'))+'">㎡ <button id="applyPpm" type="button" class="button">参考㎡単価を手動適用</button>';
+ attachNumericGrouping($('applySqm'));
+ $('applyPpm').onclick=()=>{const area=readNumeric($('applySqm').value);if(area===null||area<20||area>500){alert('面積は20〜500㎡で入力してください');return}state.nums.areaSqm=area;state.nums.buyPrice=Math.round(picked.ppm*area/1000)*1000;state.overrides.areaSqm=true;state.overrides.buyPrice=true;persist();renderCompare()};
+ }}
+ $('casePreset').value=state.preset;$('casePreset').onchange=e=>{state.preset=e.target.value;persist();renderCompare()};
+ if(manuallySet.length)$('clearScenarioOverrides').onclick=()=>{manuallySet.forEach(id=>delete state.overrides[id]);hasInputs=false;persist();renderCompare()};
+
+ const b=visible.find(x=>x.id==='buy_D')||visible.find(x=>x.type==='buy'),r=visible.find(x=>x.id==='rent_D')||visible.find(x=>x.type==='rent');
+ $('stats').innerHTML=[['比較候補',visible.length+'案','最大8シナリオ'],['購入｜'+keyLabel+'CF',b?man(b.years[keyIdx].op):'対象外',yearLabel(keyIdx)+'・税／金融前'],['賃借｜'+keyLabel+'CF',r?man(r.years[keyIdx].op):'対象外',yearLabel(keyIdx)+'・税／金融前'],['運転資金確保月数',get('reserveMonths')+'か月','固定的支出が基準']].map(x=>'<div class="statcard"><div class="name">'+x[0]+'</div><div class="value">'+x[1]+'</div><div class="detail">'+x[2]+'</div></div>').join('');
+ $('scenarios').innerHTML=show.map(x=>'<article class="scenario '+(state.selected.includes(x.id)?'highlight':'')+'"><div class="sc-meta"><span class="chip '+x.type+'">'+(x.type==='buy'?'購入':'賃借')+'</span><span class="chip warn">条件付き試算</span></div><h3 class="sc-title">'+x.title+'</h3><div class="sc-profit">'+man(x.years[keyIdx].op)+'</div><div class="sc-small">'+keyLabel+'営業CF（'+yearLabel(keyIdx)+'、税・金融前）</div><div class="sc-line"><span>保有第1年の営業CF</span><b>'+man(x.profit)+'</b></div><div class="sc-line"><span>営業開始年の営業CF（'+yearLabel(openingIdx)+'）</span><b>'+man(x.years[openingIdx].op)+'</b></div><div class="sc-line"><span>'+keyLabel+'の返済後CF</span><b>'+man(x.years[keyIdx].after)+'</b></div><div class="sc-line"><span>初期必要資金</span><b>'+man(x.initial)+'</b></div><div class="sc-line"><span>総投資回収</span><b>'+(x.payback===null?'10年以内未回収':x.payback.toFixed(1)+'年')+'</b></div><div class="sc-line"><span>自己資金回収</span><b>'+(x.equityPayback===null?'10年以内未回収':x.equityPayback.toFixed(1)+'年')+'</b></div><label class="checkrow"><input type="checkbox" data-choose="'+x.id+'" '+(state.selected.includes(x.id)?'checked':'')+'> 比較表に表示</label></article>').join('');
+ document.querySelectorAll('[data-choose]').forEach(el=>el.onchange=()=>{if(el.checked){if(state.selected.length>=4){alert('比較表では最大4シナリオを選択してください');el.checked=false;return}state.selected.push(el.dataset.choose)}else state.selected=state.selected.filter(x=>x!==el.dataset.choose);persist();renderCompare()});
+ const c=selectedCases;const rows=[['保有第1年売上',x=>man(x.gross)],['保有第1年営業CF',x=>man(x.profit)],['保有第1年返済後CF',x=>man(x.after)],['営業開始年',x=>yearLabel(openingIdx)+'（'+(2025+openingYear)+'年'+openingMonth+'月）'],['営業開始年営業CF',x=>man(x.years[openingIdx].op)],[''+keyLabel+'営業CF（'+yearLabel(keyIdx)+'）',x=>man(x.years[keyIdx].op)],[''+keyLabel+'返済後CF（'+yearLabel(keyIdx)+'）',x=>man(x.years[keyIdx].after)],['初期必要資金',x=>man(x.initial)],['自己資金額',x=>man(x.equity)],['運転資金バッファ',x=>man(x.buffer)],['総投資回収年数',x=>x.payback===null?'10年以内未回収':x.payback.toFixed(1)+'年'],['自己資金回収年数',x=>x.equityPayback===null?'10年以内未回収':x.equityPayback.toFixed(1)+'年'],['10年自己資本IRR（売却等含む）',x=>x.irr===null?'算定不可':pct(x.irr)],['10年NPV',x=>man(x.npv)],['10年目売却価格（価格変化率方式）',x=>x.type==='buy'?man(x.salePrice):'対象外'],['参考NOI還元価格（4%・仮定）',x=>x.type==='buy'?man(x.capPrice):'対象外'],['住宅NOI還元感度（3%／4%／5%）',x=>x.type==='buy'?x.capSensitivity.map(v=>v.rate+'%:'+man(v.value)).join(' / '):'対象外']];
+ $('comparisonTable').innerHTML=c.length?'<table><thead><tr><th>指標</th>'+c.map(x=>'<th>'+esc(x.title)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr><td>'+row[0]+'</td>'+c.map(x=>'<td>'+row[1](x)+'</td>').join('')+'</tr>').join('')+'</tbody></table>':'<p>比較するシナリオを選択してください。</p>';
+ $('revenueBars').innerHTML=c.map(x=>{
+  let cumulative=0;
+  const rows=x.years.map(y=>{cumulative+=y.after;const terminal=y.year===10?x.terminal:0;return '<tr><td>'+y.year+'年</td><td>'+man(y.gross)+'</td><td>'+man(y.op)+'</td><td>'+man(y.debt)+'</td><td>'+man(y.after)+'</td><td>'+man(cumulative)+'</td><td>'+(terminal?man(terminal):'—')+'</td></tr>'}).join('');
+  return '<details class="riskitem" style="margin-top:12px"><summary><b>'+esc(x.title)+'｜10年間の税引前キャッシュフロー</b></summary><div style="overflow-x:auto"><table><thead><tr><th>年次</th><th>売上</th><th>営業CF</th><th>返済額</th><th>返済後CF</th><th>累積（売却前）</th><th>売却・回収</th></tr></thead><tbody>'+rows+'</tbody></table></div><p>10年目の売却・保証金・運転資金回収はIRR/NPVに含む一方、回収年数と累積営業CFには含みません。</p></details>';
+ }).join('');
+ if(!hasInputs){buildInputs();hasInputs=true}
+ document.querySelectorAll('[data-number]').forEach(el=>{if(document.activeElement!==el)el.value=groupNumber(get(el.dataset.number))});
+ const slider=$('hybridSlider');if(slider){slider.value=get('hybridDays');$('hybridValue').textContent=get('hybridDays')+'日';$('hybridRemain').textContent=Math.max(0,365-get('hybridDays')-get('switchLoss'))+'日'}
+ $('riskList').innerHTML=[
+ ['実行に必要な法令・契約条件','管理規約上の制約はないと仮定。住宅宿泊事業届出、建築消防、賃借時の使用権限などの法令・契約要件は別。'],
+ ['ウィークリー・マンスリーの契約実態','名称や貸出日数だけで真正な賃貸借とは判断できません。週単位の商品は特に検証が必要です。'],
+ ['成約・市場データ','仲介成約参考・売出募集・試算仮定を区別。物件価格は手入力を優先し、6棟共通の代表価格はありません。'],
+ ['金融前提','事業用借入4.5%は金融機関の実際の適用金利ではありません。国債利回り3.101%は2026-10-06入札データです。']
+ ].map(x=>'<div class="riskitem"><b>'+x[0]+'</b><p>'+x[1]+'</p></div>').join('');
+ $('calcWarnings').innerHTML='<p>税引前の概算です。事業開始初年度に安定期稼働率の60%、それ以降に100%を適用。未竣工物件は開始前の売上を0とします。売上単価年1%、費用年2%上昇。返還予定保証金・運転資金は費用として計上していません。売却時回収は10年IRR/NPVのみに含め、回収年数には含めません。NOI還元価格は居住用参考賃料に基づく参考値です。</p>';
+}
+function buildInputs(){
+ const groups=[
+ ['稼働開始時点',['startYear','startMonth']],
+ ['ハイブリッド配分',['hybridDays','switchLoss','hybridExtra']],
+ ['物件・初期投資',['areaSqm','buyPrice','closingRate','baseRent','depositMonths','brokerMonths','initial','setupCost','ownerCost','fixedCost','reserveMonths']],
+ ['A 民泊',['adr','nights','shortOcc','shortCost','aAvgStay','aCleaningIncome','aCleaningCost']],
+ ['B ウィークリー・マンスリー賃貸',['bPremium','bRent','bOcc','bFee','bOther','bUtilityIncome','bUtilityCost','bCleaningIncome','bCleaningCost','bFurnitureRenewal']],
+ ['C 一般賃貸',['cRent','cOcc','cFee','cOther']],
+ ['10年収支・資金調達',['firstYearFactor','revenueGrowth','costGrowth','ltv','loanRate','loanYears','prepayYear','prepayAmount','prepayFee']],
+ ['出口・投資評価',['priceGrowth','ageAdj','saleCost','exitCap','discountRate','riskFree']]
+ ];
+ $('inputs').innerHTML='<div style="grid-column:1/-1"><div class="field"><label for="hybridSlider">ハイブリッド：年間民泊配分 <strong id="hybridValue">'+get('hybridDays')+'日</strong></label><input id="hybridSlider" type="range" min="0" max="180" step="5" value="'+get('hybridDays')+'" style="width:100%"><p class="unit">残余の賃貸供給期間（切替ロス差引）<strong id="hybridRemain"></strong>。実際の稼働日数とは別です。</p></div></div>'+
+ groups.map(([label,ids])=>'<div style="grid-column:1/-1"><h3 style="font-size:15px;margin:22px 0 8px">'+label+'</h3></div>'+ids.map(id=>{const d=defs.find(x=>x[0]===id);return '<div class="field"><label for="n_'+id+'">'+esc(d[1])+'</label><input id="n_'+id+'" data-number="'+id+'" inputmode="decimal" type="text" autocomplete="off" value="'+groupNumber(get(id))+'"><div class="unit">'+esc(d[2])+' · '+(state.overrides[id]?'手入力値':(['adr','shortOcc','bPremium','bOcc','cOcc','bRent'].includes(id)?'シナリオ仮定・自動推計':'編集可能な暫定前提'))+'</div></div>'}).join('')).join('')+
+ '<div class="field"><label>借入返済方式</label><select id="repaymentType"><option value="annuity">元利均等</option><option value="equalPrincipal">元金均等</option></select></div><div class="field"><label>繰上返済方式</label><select id="prepayType"><option value="reduce">返済額軽減</option><option value="shorten">期間短縮</option></select></div>';
+ document.querySelectorAll('[data-number]').forEach(el=>{
+  attachNumericGrouping(el);
+  el.onchange=()=>{
+   const d=defs.find(x=>x[0]===el.dataset.number),n=readNumeric(el.value);
+   if(n===null){el.value=groupNumber(get(d[0]));return}
+   state.nums[d[0]]=bounds(n,d[4],d[5]);
+   state.overrides[d[0]]=true;
+   hasInputs=false;persist();renderCompare();
+   document.querySelectorAll('[data-number]').forEach(x=>{x.value=groupNumber(get(x.dataset.number))});
+  };
+ });
+ $('hybridSlider').oninput=e=>{state.nums.hybridDays=Number(e.target.value);state.overrides.hybridDays=true;$('hybridValue').textContent=get('hybridDays')+'日';$('hybridRemain').textContent=Math.max(0,365-get('hybridDays')-get('switchLoss'))+'日';persist();renderCompare()};
+ state.answers.repaymentType??='annuity';state.answers.prepayType??='reduce';
+ $('repaymentType').value=state.answers.repaymentType;$('prepayType').value=state.answers.prepayType;
+ for(const id of ['repaymentType','prepayType'])$(id).onchange=e=>{state.answers[id]=e.target.value;persist();renderCompare()};
+}
+function renderSources(){
+ const source=[
+ ['住宅宿泊事業法・観光庁','https://www.mlit.go.jp/kankocho/minpaku/'],
+ ['大阪市・宿泊施設について','https://www.city.osaka.lg.jp/kenko/page/0000382418.html'],
+ ['長栄のマンスリーオーナー向け案内','https://www.choei-mm-osaka.com/owner/'],
+ ['BraTTo運営代行','https://bratto.co.jp/service/outsource/'],
+ ['財務省 国債入札結果','https://www.mof.go.jp/jgbs/auction/calendar/index.htm'],
+ ];
+ const hotelTable='<h3 style="margin-top:24px">ホテル13軒：同一宿泊日の公開提示価格</h3><p>調査時点スナップショット。11/17（火）・11/21（土）各1泊／2名／1室の掲載下限。税込表示を原資料から確認したもので、客室タイプ・朝食・キャンセル条件は揃っていません。実績ADRではなく民泊ADRに転用しません。料金は現在の予約価格ではありません。</p><div style="overflow-x:auto"><table><thead><tr><th>ホテル</th><th>2026/11/17</th><th>2026/11/21</th><th>比較元</th></tr></thead><tbody>'+hotelEvidence.map(x=>'<tr><td>'+esc(x[0])+'</td><td>'+(x[1]===null?'未取得':yen(x[1]))+'</td><td>'+(x[2]===null?'未取得':yen(x[2]))+'</td><td><a href="'+x[4]+'" target="_blank" rel="noopener noreferrer">'+esc(x[3])+' ↗</a></td></tr>').join('')+'</tbody></table></div><p>長期滞在型：Fraser Residence Nankai Osaka、Citadines Namba Osaka、インターコンチネンタル大阪のレジデンス客室。Airbnbの日付・人数を揃えた料金は未取得です。</p>';
+ $('sourceList').innerHTML=source.map(([name,url])=>'<div class="source"><b>'+esc(name)+'</b><a href="'+url+'" target="_blank" rel="noopener noreferrer">資料を開く ↗</a></div>').join('')+hotelTable;
+}
+const screenHash={wizard:'#design',review:'#validation',compare:'#analysis',sources:'#appendix'};
+const hashScreen=()=>Object.keys(screenHash).find(key=>screenHash[key]===window.location.hash);
+function navigate(screen,updateUrl=true){
+ if(!Object.prototype.hasOwnProperty.call(screenHash,screen))screen='wizard';
+ if(updateUrl&&window.location.hash!==screenHash[screen])window.history.pushState(null,'',screenHash[screen]);
+ state.screen=screen;state.current=0;
+ document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('active',el.dataset.screen===screen));
+ document.querySelectorAll('[data-nav]').forEach(el=>{const on=el.dataset.nav===screen;el.classList.toggle('active',on);if(on)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current')});
+ if(screen==='wizard'||screen==='review'){$(screen==='wizard'?'designFlowHost':'reviewFlowHost').appendChild($('questionnaireFlow'));renderWizard()}
+ if(screen==='compare')renderCompare();if(screen==='sources')renderSources();
+ persist();window.scrollTo({top:0,behavior:'instant'});
+}
+function download(name,body,mime){const blob=new Blob(['\ufeff',body],{type:mime}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),500)}
+function exportJson(){download('osaka-tower-simulator-v1.json',JSON.stringify({version:3,exportedAt:new Date().toISOString(),answers:state.answers,nums:state.nums,overrides:state.overrides,preset:state.preset,selected:state.selected},null,2),'application/json')}
+function exportCsv(){const list=all().filter(x=>state.selected.includes(x.id));const rows=[['指標',...list.map(x=>x.title)],...Array.from({length:10},(_,i)=>['第'+(i+1)+'年返済後CF',...list.map(x=>Math.round(x.years[i].after))]),['自己資本IRR',...list.map(x=>x.irr)],['10年NPV',...list.map(x=>x.npv)]];download('osaka-tower-8scenarios.csv',rows.map(r=>r.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\r\n'),'text/csv')}
+function importJson(file){
+ const rd=new FileReader();rd.onload=()=>{
+  try{
+   const d=JSON.parse(rd.result);
+   if(!d||![1,2,3].includes(d.version)||!d.answers||typeof d.answers!=='object')throw Error('format');
+   state.answers=validAnswers(d.version===1?{acquisition:d.answers.acquisition,goal:d.answers.goal}:d.answers);
+   state.nums=Object.fromEntries(defs.map(x=>[x[0],x[3]]));state.overrides={};
+   if(d.version>=2&&d.nums&&typeof d.nums==='object'&&!Array.isArray(d.nums)){
+    for(const def of defs){const id=def[0],n=Number(d.nums[id]);
+     if(!Object.prototype.hasOwnProperty.call(d.nums,id)||!Number.isFinite(n)||n<def[4]||n>def[5])continue;
+     if(d.version===3){state.nums[id]=n;if(d.overrides&&d.overrides[id]===true)state.overrides[id]=true}
+     else if(n!==legacyDefaults[id]){state.nums[id]=n;state.overrides[id]=true}
+    }
+   }
+   state.preset=d.version===3&&Object.prototype.hasOwnProperty.call(presets,d.preset)?d.preset:'base';
+   state.selected=Array.isArray(d.selected)?[...new Set(d.selected.filter(x=>typeof x==='string'&&/^(buy|rent)_[ABCD]$/.test(x)))].slice(0,4):['buy_D','rent_D','buy_C','rent_C'];
+   if(d.version===1)alert('旧形式から基本方針のみ移行しました。旧「中長期賃貸」の数値はB・Cに転用しません。');
+   hasInputs=false;persist();navigate('wizard');alert('v1形式で読み込みました');
+  }catch(err){alert('JSON形式・数値範囲を確認してください。無効データは適用しません')}finally{$('fileImport').value=''}
+ };rd.readAsText(file);
+}
+document.querySelectorAll('[data-nav]').forEach(el=>el.addEventListener('click',event=>{
+ if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
+ event.preventDefault();navigate(el.dataset.nav);
+}));
+const navigateFromUrl=()=>{const screen=hashScreen();if(screen)navigate(screen,false)};
+window.addEventListener('popstate',navigateFromUrl);
+window.addEventListener('hashchange',navigateFromUrl);
+$('topExport').onclick=exportJson;$('exportJson').onclick=exportJson;$('exportCsv').onclick=exportCsv;
+$('importJson').onclick=()=>$('fileImport').click();$('fileImport').onchange=e=>{if(e.target.files[0])importJson(e.target.files[0])};
+$('resetAll').onclick=()=>{if(!confirm('保存内容を初期化しますか？'))return;localStorage.removeItem(STORE);location.reload()};
+$('resetNumbers').onclick=()=>{if(!confirm('新仕様の数値設定を初期化しますか？'))return;state.nums=Object.fromEntries(defs.map(x=>[x[0],x[3]]));state.overrides={};state.preset='base';hasInputs=false;persist();renderCompare()};
+$('backToQ').onclick=()=>navigate('wizard');$('printPage').onclick=()=>window.print();
+$('scenarioFilter').querySelectorAll('button').forEach(el=>el.onclick=()=>{state.filter=el.dataset.filter;$('scenarioFilter').querySelectorAll('button').forEach(btn=>btn.classList.toggle('on',btn===el));renderCompare()});
+const titles=document.querySelectorAll('.screen .hero-copy p');
+if(titles[0])titles[0].textContent='大阪のプレミアムタワーマンション一室について、民泊・ウィークリー／マンスリー賃貸・一般賃貸・ハイブリッドの4モデルを検討します。取得前に回答できる事業構想だけを入力してください。';
+if(titles[1])titles[1].textContent='管理規約上の制約はないと仮定。賃貸借の実態、需要根拠、運営準備度を検証します。届出や消防など一般法令は別途前提とします。';
+if(titles[2])titles[2].textContent='購入・賃借×4モデルの最大8シナリオを比較。初年度CF、10年間のCF、総投資・自己資金回収年数、IRR・NPV、出口評価を扱います。仮定値は編集可能です。';
+const app=document.querySelector('.screen[data-screen="sources"] .panel.widepanel');
+if(app)app.innerHTML='<h2>v1 計算方法と制約</h2><p>初年度は安定稼働率の60%、2年目から100%。単価年1.0%、費用年2.0%を仮定。営業CFと借入返済後CF、総投資回収と自己資金回収を分離します。10年目の売却はIRR・NPVのみに含め、回収年数には含めません。</p><p>出口は取得価格の変化率（標準0%）に経年補正（不明時0%）を適用。NOI還元による参考価格は一般居住用賃料に基づき、民泊の営業利益を直接還元しません。</p><p>借入金利4.5%、B運営委託20%、初期運転資金6か月は暫定仮定です。国債10年利回り3.101%は2026年10月6日入札の平均利回りであり、現在の市場価格や借入条件ではありません。</p>';
+navigate(hashScreen()||(['wizard','review','compare','sources'].includes(state.screen)?state.screen:'wizard'),!hashScreen());
+})();
+</script>
+</body>
+</html>
