@@ -9,12 +9,10 @@
     "holdingYears": 1,
     "currency": "JPY",
     "fields": {
-      "P": {
-        "P04": {
-          "value": 8,
-          "unit": "percent",
-          "sourceType": "userAssumption"
-        }
+      "P04": {
+        "value": 8,
+        "unit": "percent",
+        "sourceType": "userAssumption"
       }
     }
   },
