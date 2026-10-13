@@ -6,7 +6,7 @@ import {evaluatePortfolio} from "../src/portfolio.mjs";
 const nta="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6501.htm";
 const standard={
  entityId:"corp",taxPeriodStart:"2026-01-01",taxPeriodEnd:"2026-12-31",
- taxpayerType:"corporation",baselinePeriodTaxableSales:9000000,
+ taxpayerType:"corporation",foreignTaxpayerClassification:"domestic",baselinePeriodTaxableSales:9000000,
  specificPeriodTaxableSales:8000000,
  specialPeriodAlternativePayrollAmount:8000000,
  specificPeriodTestBasis:"taxableSales",invoiceRegistration:"none",
@@ -80,4 +80,23 @@ test("B-T17 only confirmed VAT settlement crosses into VAT-inclusive cash and co
  const p=evaluatePortfolio({entityLedgers:attached,baseCalendarYear:2026,holdingYears:1,
   discountRate:.08,taxCoverage:[{entityId:"corp",status:"estimated"}]});
  assert.deepEqual(p.preTax.cashFlows,[0,11000,-500]);
+});
+
+test("NTA 6501 foreign taxpayer cannot use payroll basis for post-2024 special period",()=>{
+ const foreign=reviewVATTaxpayerPeriod({...standard,foreignTaxpayerClassification:"foreign",
+  specificPeriodTestBasis:"payrollAlternative",
+  specialPeriodAlternativePayrollAmount:8000000});
+ assert.equal(foreign.status,"incomplete");
+ assert.equal(foreign.taxpayerStatus,null);
+ const domestic=reviewVATTaxpayerPeriod({...standard,
+  specificPeriodTestBasis:"payrollAlternative",
+  specialPeriodAlternativePayrollAmount:8000000});
+ assert.equal(domestic.status,"estimated");
+});
+test("High-value asset VAT restriction may prohibit simplified taxation even with taxable taxpayer",()=>{
+ const blocked=reviewVATTaxpayerPeriod({...standard,
+  largeAssetTaxationRestriction:true,method:"simplified"});
+ assert.equal(blocked.status,"incomplete");
+ const missingNationality=reviewVATTaxpayerPeriod({...standard,foreignTaxpayerClassification:"unknown"});
+ assert.equal(missingNationality.status,"incomplete");
 });
