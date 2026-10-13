@@ -55,6 +55,7 @@ const money=(taxYear,withholdingAmount,base=110000)=>({
  taxTableEvidence:{taxYear,payPeriod:"monthly",tableColumn:"ko",dependentCount:0,
   version:"NTA-MONTHLY-"+taxYear+"-VERIFIED-SUBSET",
   sourceUrl:officialNtaTableSources[taxYear],lookupStatus:"officialTableVerified",
+  declarationSubmitted:true,dependentCountReviewed:true,
   taxableMonthlyBase:base,withholdingAmount}
 });
 test("Officer payroll can use official amount instead of arbitrary scenario-provided NTA tax",()=>{
@@ -79,4 +80,16 @@ test("Official status cannot be forged with an arbitrary amount, year or URL",()
  assert.equal(unsupported.status,"incomplete");
  assert.deepEqual(unsupported.cashEvents,[]);
  assert.equal(unsupported.tableVerificationStatus,"incomplete");
+});
+
+test("Official ko row is not sufficient without reviewed submitted declaration and dependents",()=>{
+ const example=money(2026,380);
+ const missingDeclaration=compileOfficerPayrollMonth({...example,
+  taxTableEvidence:{...example.taxTableEvidence,declarationSubmitted:false}});
+ assert.equal(missingDeclaration.status,"incomplete");
+ assert.deepEqual(missingDeclaration.cashEvents,[]);
+ const unknownCount=compileOfficerPayrollMonth({...example,
+  taxTableEvidence:{...example.taxTableEvidence,dependentCountReviewed:false}});
+ assert.equal(unknownCount.status,"incomplete");
+ assert.equal(unknownCount.officialEligibilityReviewed,false);
 });
