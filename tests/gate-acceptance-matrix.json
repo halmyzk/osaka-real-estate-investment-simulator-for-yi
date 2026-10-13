@@ -1,5 +1,5 @@
 {
-  "traceVersion": "2026-10-13-gate-acceptance-5",
+  "traceVersion": "2026-10-13-gate-acceptance-6",
   "target": "docs/v1.1-design-change-spec.md §§13.9,14.11",
   "definition": {
     "exampleVerified": "Specific illustrative expected outcome tested; not full legal or boundary coverage",
@@ -231,13 +231,30 @@
     },
     {
       "id": "B-T21",
-      "status": "exampleVerified",
+      "status": "criterionVerified",
       "evidence": [
         "tests/tax.test.mjs",
         "tests/annual-income-tax.test.mjs",
-        "tests/payroll-tax-assessment-bridge.test.mjs"
+        "tests/payroll-tax-assessment-bridge.test.mjs",
+        "tests/gate-b-t21-acceptance.test.mjs"
       ],
-      "gap": "源泉税の有無を年次所得税との差額で照合し、同じ税額を二重控除しない。全課税主体の法定還付・税額ゼロの申告精度は未検証。"
+      "gap": "狭義の計算恒等式についてB-T21を独立検証済み（複数納税主体/年度、税額差0円と1円対照）。各税務区分の確定税額・法定適格性・現金還付の検証とは別でありGate B全体の受入は未了。",
+      "criterionVerification": {
+        "criterion": "IncrementalCashIncomeTax=0 => BeforeTaxEquityCF=AfterTaxEquityCF in every calendar year, and corresponding NPV/IRR equal",
+        "basis": "approvedGateBAccountingInvariant",
+        "specification": "docs/v1.1-design-change-spec.md §14.11 B-T21 and §14.10",
+        "independentExpected": {
+          "zeroIncrementalTaxCF": 0,
+          "matchingYearlyCF": true,
+          "matchingNPV": true,
+          "negativeControlAdditionalTaxYen": 1,
+          "negativeControlChangeAfterTaxCFYen": -1
+        },
+        "evidenceTests": [
+          "tests/gate-b-t21-acceptance.test.mjs"
+        ],
+        "scopeLimit": "Proves the numerical identity only for tested calendar/entity cases. It does not certify legal tax calculation or payment eligibility."
+      }
     },
     {
       "id": "B-T22",
@@ -325,5 +342,5 @@
       "gap": "Grouped line references and VAT trace improved; multi-entity full ledger reconciliation still needed"
     }
   ],
-  "acceptanceNotice": "No new criterion promoted to formally accepted: B-T13 remains one narrow criterionVerified; B-T19 and four other examples are exampleVerified; the other 18 are partial. Added mixed-use evidence ledger, officer payroll withholding/prepaid personal tax, VAT taxpayer exception/actual settlement reconciliation and multi-entity CF verification."
+  "acceptanceNotice": "Two narrow criteria B-T13 and B-T21 criterionVerified; five exampleVerified (incl B-T19); seventeen partial. Neither tax law conformity nor overall Gate B acceptance granted."
 }
