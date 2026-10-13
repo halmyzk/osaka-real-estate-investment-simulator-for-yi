@@ -1,0 +1,157 @@
+{
+  "version": "v11-derived-ordinary-tax-plan-1",
+  "documentFingerprint": "v11-fnv1a32-982d1479",
+  "scenarioId": "base",
+  "taxScope": "ordinaryIncomeOnly",
+  "vatTreatment": "notConnected",
+  "withholdingTreatment": "notModeled",
+  "illustrationOnly": true,
+  "unitYearReviews": [
+    {
+      "unitId": "tokyo-m4",
+      "taxYear": 2026,
+      "reviewStatus": "reviewedScenarioAssumption",
+      "reviewEvidenceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+      "expenseAccrualMatchesOperations": true,
+      "lodgingCategory": null,
+      "rentalCategory": "corporate",
+      "sharedExpenseLodgingShare": 0,
+      "interestAccrualMatchesCash": true,
+      "interestDeductibleShare": 1,
+      "interestLodgingShare": 0,
+      "deductibleShares": {
+        "lodgingOperating": 1,
+        "rentalOperating": 1,
+        "propertyOperating": 1,
+        "masterRent": 1
+      }
+    },
+    {
+      "unitId": "person-lease",
+      "taxYear": 2026,
+      "reviewStatus": "reviewedScenarioAssumption",
+      "reviewEvidenceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+      "expenseAccrualMatchesOperations": true,
+      "lodgingCategory": null,
+      "rentalCategory": "realEstate",
+      "sharedExpenseLodgingShare": 0,
+      "interestAccrualMatchesCash": true,
+      "interestDeductibleShare": 1,
+      "interestLodgingShare": 0,
+      "deductibleShares": {
+        "lodgingOperating": 1,
+        "rentalOperating": 1,
+        "propertyOperating": 1,
+        "masterRent": 1
+      }
+    }
+  ],
+  "entityYearRules": [
+    {
+      "entityId": "person-1",
+      "taxYear": 2026,
+      "reviewStatus": "reviewedScenarioAssumption",
+      "baselineEvidenceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+      "baselineTaxableIncome": 2000000,
+      "taxRule": {
+        "personal": {
+          "taxYear": 2026,
+          "ruleVersion": "FICTIONAL-TAX-2026-NOT-FILING",
+          "sourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+          "computationMode": "standard",
+          "assumptionOrConfirmed": "assumption",
+          "brackets": [
+            [
+              1950000,
+              0.05,
+              0
+            ],
+            [
+              3300000,
+              0.1,
+              97500
+            ],
+            [
+              6950000,
+              0.2,
+              427500
+            ],
+            [
+              9000000,
+              0.23,
+              636000
+            ],
+            [
+              18000000,
+              0.33,
+              1536000
+            ],
+            [
+              40000000,
+              0.4,
+              2796000
+            ],
+            [
+              1000000000000,
+              0.45,
+              4796000
+            ]
+          ],
+          "baseRounding": 1000,
+          "residenceRate": 0.1,
+          "residenceBaseAdjustment": 0,
+          "realEstateLossOffsetAllowed": false,
+          "businessLossOffsetAllowed": false
+        }
+      }
+    },
+    {
+      "entityId": "corporation-1",
+      "taxYear": 2026,
+      "reviewStatus": "reviewedScenarioAssumption",
+      "baselineEvidenceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+      "baselineCorporateProfit": 1000000,
+      "taxRule": {
+        "corporate": {
+          "taxYear": 2026,
+          "ruleVersion": "FICTIONAL-TAX-2026-NOT-FILING",
+          "sourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+          "computationMode": "standard",
+          "assumptionOrConfirmed": "assumption",
+          "eligibleSmallCompany": true,
+          "defenseCorporateApplies": false,
+          "lossOffsetEligible": true,
+          "allowNewLossCarryforward": true,
+          "lossOffsetFraction": 1,
+          "smallBandRate": 0.15,
+          "standardRate": 0.232,
+          "smallBandAmount": 8000000,
+          "defenseAllowance": 5000000,
+          "localEntityCount": 1
+        },
+        "local": {
+          "taxYear": 2026,
+          "ruleVersion": "FICTIONAL-TAX-2026-NOT-FILING",
+          "sourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+          "computationMode": "standard",
+          "assumptionOrConfirmed": "assumption",
+          "paymentMonths": [
+            "2027-02"
+          ],
+          "components": [
+            {
+              "kind": "corporateBusinessIncomeLevy",
+              "basis": "taxableIncome",
+              "rate": 0.05
+            },
+            {
+              "kind": "corporateResidencePerCapita",
+              "basis": "fixedAmount",
+              "fixedAmount": 50000
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
