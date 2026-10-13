@@ -18,7 +18,8 @@ test("Audit crosswalk splits income/expenses for person M3 and corporation M4 wi
  assert.equal(personal.revenueGrossForTaxReview,1080000);
  assert.equal(personal.taxableIncome,null);
  assert.equal(corp.rentalRevenue,1080000);
- assert.equal(corp.propertyOperatingExpense,12000);
+ assert.equal(corp.rentalOperatingExpense,12000);
+ assert.equal(corp.propertyOperatingExpense,0);
  assert.equal(corp.masterRentExpense,600000);
  assert.equal(corp.operatingSurplus,468000);
  assert.equal(corp.cashOperatingExpenseForReview,612000);
