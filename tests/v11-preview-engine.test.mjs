@@ -31,7 +31,7 @@ const owned=(id="own",entity="corp")=>({
 const doc=(units=[lease()])=>({
  schemaVersion:"1.1.0",assumptionsVersion:"2026-10-13",
  portfolio:{id:"portfolio",name:"Demo",baseDate:"2026-01-01",holdingYears:1,
-  currency:"JPY",fields:{P:{P04:f(8,"percent")}}},
+  currency:"JPY",fields:{P04:f(8,"percent")}},
  entities:[{id:"individual",name:"Individual",taxpayerType:"individual",fields:{}},
   {id:"corp",name:"Corporation",taxpayerType:"corporation",fields:{}}],
  units,scenarios:[{id:"base",name:"Base",role:"base",overrides:[]}]
@@ -133,7 +133,7 @@ test("Same first-month own acquisition and disposal: acquisition/debt draw CF0, 
 });
 test("Optional interest rate P04 missing means NPV incomplete, not zero discount rate",()=>{
  const d=doc();
- delete d.portfolio.fields.P.P04;
+ delete d.portfolio.fields.P04;
  const r=previewV11Scenario(d);
  assert.equal(r.status,"estimated-pre-tax");assert.equal(r.preTax.NPV,null);
  assert.equal(r.preTax.npvStatus,"incomplete");
