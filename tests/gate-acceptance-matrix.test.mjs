@@ -20,14 +20,20 @@ test("Gate B not falsely marked fully accepted while gaps remain",()=>{
  assert.ok(matrix.gateB.every(x=>x.status!=="complete"),"Do not silently certify a full Gate B acceptance");
 });
 
-test("B-T13 criterion verification must have NTA primary source and independent numeric proof",()=>{
+test("B-T13 and B-T21 narrow criterion verifications must have independent proof",()=>{
  const verified=matrix.gateB.filter(x=>x.status==="criterionVerified");
- assert.equal(verified.length,1,"Only substantiated criteria may be promoted");
- const case13=verified[0];
+ assert.equal(verified.length,2,"Only B-T13 and B-T21 currently independently substantiated");
+ const case13=verified.find(x=>x.id==="B-T13");
  assert.equal(case13.id,"B-T13");
  assert.ok(case13.criterionVerification.primarySourceUrl.startsWith("https://www.nta.go.jp/"));
  assert.equal(case13.criterionVerification.independentExpectedMonthlyYen.smallFree,15360);
  assert.ok(case13.criterionVerification.evidenceTests.includes("tests/officer-housing-tax.test.mjs"));
  assert.ok(case13.criterionVerification.scopeLimit.includes("eligibility"));
+ const case21=verified.find(x=>x.id==="B-T21");
+ assert.equal(case21.criterionVerification.basis,"approvedGateBAccountingInvariant");
+ assert.equal(case21.criterionVerification.independentExpected.zeroIncrementalTaxCF,0);
+ assert.equal(case21.criterionVerification.independentExpected.negativeControlChangeAfterTaxCFYen,-1);
+ assert.ok(case21.criterionVerification.evidenceTests.includes("tests/gate-b-t21-acceptance.test.mjs"));
+ assert.ok(case21.criterionVerification.scopeLimit.includes("legal tax"));
  assert.ok(matrix.gateB.filter(x=>x.status!=="criterionVerified").length>0,"Gate B is not completely accepted");
 });
