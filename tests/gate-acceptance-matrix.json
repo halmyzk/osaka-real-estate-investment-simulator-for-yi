@@ -1,0 +1,254 @@
+{
+  "traceVersion": "2026-10-13-gate-acceptance-1",
+  "target": "docs/v1.1-design-change-spec.md §§13.9,14.11",
+  "definition": {
+    "exampleVerified": "Specific illustrative expected outcome tested; not full legal or boundary coverage",
+    "partial": "Related code has tests but entire acceptance criterion not proven",
+    "notImplemented": "No suitable verified implementation"
+  },
+  "gateB": [
+    {
+      "id": "B-T01",
+      "status": "partial",
+      "evidence": [
+        "tests/tax.test.mjs"
+      ],
+      "gap": "Miscellaneous losses not offset against salary in simple category model; complex tax offsets not complete"
+    },
+    {
+      "id": "B-T02",
+      "status": "partial",
+      "evidence": [
+        "tests/portfolio.test.mjs"
+      ],
+      "gap": "Separation by category shown; legal category classification still assumption"
+    },
+    {
+      "id": "B-T03",
+      "status": "partial",
+      "evidence": [
+        "tests/tax.test.mjs",
+        "tests/tax-rounding.test.mjs"
+      ],
+      "gap": "Tax bracket spot checks; statutory rounding/credits not complete"
+    },
+    {
+      "id": "B-T04",
+      "status": "partial",
+      "evidence": [
+        "tests/tax.test.mjs"
+      ],
+      "gap": "Separate 2026/2027 labels under design assumption; future tax laws require verification"
+    },
+    {
+      "id": "B-T05",
+      "status": "partial",
+      "evidence": [
+        "tests/portfolio.test.mjs",
+        "tests/end-to-end-finance.test.mjs"
+      ],
+      "gap": "Multiple entities and portfolio grouping tested; full individual income tax offset not implemented"
+    },
+    {
+      "id": "B-T06",
+      "status": "exampleVerified",
+      "evidence": [
+        "tests/tax.test.mjs"
+      ],
+      "gap": "Independent utility split 240k × 60/180 × 90/365 covered"
+    },
+    {
+      "id": "B-T07",
+      "status": "partial",
+      "evidence": [
+        "tests/tax.test.mjs"
+      ],
+      "gap": "Guest-night allocation separate; full practical annual data lineage remains missing"
+    },
+    {
+      "id": "B-T08",
+      "status": "partial",
+      "evidence": [
+        "tests/tax-rules.test.mjs"
+      ],
+      "gap": "Asset/year book roll-forward for straight line only; types and statutory rates incomplete"
+    },
+    {
+      "id": "B-T09",
+      "status": "partial",
+      "evidence": [
+        "tests/tax.test.mjs"
+      ],
+      "gap": "Capital spending does not automatically create deductible expense"
+    },
+    {
+      "id": "B-T10",
+      "status": "partial",
+      "evidence": [
+        "tests/tax-rules.test.mjs"
+      ],
+      "gap": "Business share 50% to 30% changes depreciation; tax CF sensitivity is not integrated"
+    },
+    {
+      "id": "B-T11",
+      "status": "partial",
+      "evidence": [
+        "tests/tax.test.mjs"
+      ],
+      "gap": "CapEx vs ordinary expense in separate model; statutory repair/capitalization rules incomplete"
+    },
+    {
+      "id": "B-T12",
+      "status": "partial",
+      "evidence": [
+        "tests/tax.test.mjs"
+      ],
+      "gap": "Basic small/luxury calculations; eligibility and general owned housing statutory method incomplete"
+    },
+    {
+      "id": "B-T13",
+      "status": "partial",
+      "evidence": [
+        "tests/tax.test.mjs"
+      ],
+      "gap": "Zero officer rent creates taxable benefit in model; person/corp payroll tax integration incomplete"
+    },
+    {
+      "id": "B-T14",
+      "status": "partial",
+      "evidence": [
+        "tests/reconciliation.test.mjs"
+      ],
+      "gap": "Inter-entity cash pair validated; officer payroll and corp deduction tax effects missing"
+    },
+    {
+      "id": "B-T15",
+      "status": "partial",
+      "evidence": [
+        "tests/tax-detail.test.mjs",
+        "tests/cash-adapter.test.mjs"
+      ],
+      "gap": "VAT classification and net/gross matching tested with illustrative transaction lines"
+    },
+    {
+      "id": "B-T16",
+      "status": "partial",
+      "evidence": [
+        "tests/tax-detail.test.mjs"
+      ],
+      "gap": "Exempt entity input-credit refund rejected; complex taxpayer status determination incomplete"
+    },
+    {
+      "id": "B-T17",
+      "status": "partial",
+      "evidence": [
+        "tests/tax.test.mjs",
+        "tests/tax-detail.test.mjs"
+      ],
+      "gap": "Simplified vs general conceptual arithmetic; eligibility and mixed use limits incomplete"
+    },
+    {
+      "id": "B-T18",
+      "status": "exampleVerified",
+      "evidence": [
+        "tests/tax.test.mjs"
+      ],
+      "gap": "January 1 five-year acquisition threshold boundary tested"
+    },
+    {
+      "id": "B-T19",
+      "status": "partial",
+      "evidence": [
+        "tests/tax-rules.test.mjs"
+      ],
+      "gap": "Adjusted acquisition basis is an input; private-use historical statutory basis calc missing"
+    },
+    {
+      "id": "B-T20",
+      "status": "exampleVerified",
+      "evidence": [
+        "tests/tax-schedule.test.mjs",
+        "tests/portfolio.test.mjs"
+      ],
+      "gap": "Post-disposal payment year included in portfolio series"
+    },
+    {
+      "id": "B-T21",
+      "status": "exampleVerified",
+      "evidence": [
+        "tests/tax.test.mjs"
+      ],
+      "gap": "Identical with/without project tax payments produce zero increment"
+    },
+    {
+      "id": "B-T22",
+      "status": "partial",
+      "evidence": [
+        "tests/tax.test.mjs",
+        "tests/finance.test.mjs"
+      ],
+      "gap": "CapEx cash and noncash depreciation kept separate; no complete register integration"
+    },
+    {
+      "id": "B-T23",
+      "status": "partial",
+      "evidence": [
+        "tests/tax-detail.test.mjs"
+      ],
+      "gap": "Loss vintages, expiry, limit tested; statutory continuity and eligible-loss attributes incomplete"
+    },
+    {
+      "id": "B-T24",
+      "status": "partial",
+      "evidence": [
+        "tests/acceptance.test.mjs",
+        "tests/tax-rules.test.mjs"
+      ],
+      "gap": "Unknown rules block tax numeric result when readiness checked; broader end-to-end enforcement incomplete"
+    }
+  ],
+  "gateA": [
+    {
+      "id": "A-13.9-01",
+      "status": "exampleVerified",
+      "evidence": [
+        "tests/operations.test.mjs"
+      ],
+      "gap": "Zero ADR, zero rent and all occupancy extremes need explicit complete matrix"
+    },
+    {
+      "id": "A-13.9-02",
+      "status": "exampleVerified",
+      "evidence": [
+        "tests/operations.test.mjs"
+      ],
+      "gap": "180/181 allocation and negative days covered"
+    },
+    {
+      "id": "A-13.9-03",
+      "status": "partial",
+      "evidence": [
+        "tests/finance.test.mjs",
+        "tests/cash-adapter.test.mjs"
+      ],
+      "gap": "Monthly and income/VAT cash boundary cases require broader coverage"
+    },
+    {
+      "id": "A-13.9-04",
+      "status": "partial",
+      "evidence": [
+        "tests/portfolio.test.mjs"
+      ],
+      "gap": "Nonconventional multi-IRR flagged; tangent roots not exhaustively detected"
+    },
+    {
+      "id": "A-13.9-05",
+      "status": "partial",
+      "evidence": [
+        "tests/reconciliation.test.mjs",
+        "tests/cash-adapter.test.mjs"
+      ],
+      "gap": "Grouped line references and VAT trace improved; multi-entity full ledger reconciliation still needed"
+    }
+  ]
+}
