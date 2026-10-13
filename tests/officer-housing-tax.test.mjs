@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {calculateOfficerHousingTaxMonth,summarizeOfficerHousingTaxYear} from "../src/officer-housing-tax.mjs";
+import {calculateOfficerHousingTaxMonth,summarizeOfficerHousingTaxYear,reconcileOfficerHousingCorporateTaxItems} from "../src/officer-housing-tax.mjs";
 import {assessPersonalYear,assessCorporateYear,combineAnnualIncomeTaxResults} from "../src/annual-income-tax.mjs";
 import {connectAnnualTaxAssessments} from "../src/income-tax-bridge.mjs";
 import {evaluatePortfolio} from "../src/portfolio.mjs";
@@ -84,6 +84,7 @@ test("B-T12/13/14 monthly benefit -> annual salary and corporate addback -> incr
   taxYear:2026,months});
  assert.equal(summary.salaryBenefit,184320);
  assert.equal(summary.corporateAddback,144000);
+ assert.equal(summary.corporateBookedExpense,144000);
  assert.deepEqual(summary.corporateTaxItems,[{entityId:"corp",taxYear:2026,category:"corporate",
   kind:"adjustment",amount:144000,source:"officerHousingNondeductibleBookedBenefit"}]);
  const person=assessPersonalYear({entityId:"officer",taxYear:2026,
@@ -91,19 +92,24 @@ test("B-T12/13/14 monthly benefit -> annual salary and corporate addback -> incr
   officerSalaryBenefitWithProject:summary.salaryBenefit});
  near(person.incomeTaxDelta,18786.4);
  near(person.residenceTaxDelta,18432);
+ const corpTaxBridge=reconcileOfficerHousingCorporateTaxItems({
+   annualHousing:summary,recordedBookExpenseTaxItems:[{entityId:"corp",taxYear:2026,
+    category:"corporate",kind:"deductibleExpense",amount:144000,
+    source:"officerHousingBookedBenefitExpense"}]});
+ assert.equal(corpTaxBridge.netTaxableProfitAdjustment,0);
  const corp=assessCorporateYear({entityId:"corp",taxYear:2026,baselineCorporateProfit:3000000,
-  projectTaxItems:summary.corporateTaxItems,openingLossesWithProject:[],
+  projectTaxItems:corpTaxBridge.projectTaxItems,openingLossesWithProject:[],
   openingLossesWithoutProject:[],taxRule:corpRule});
- near(corp.incrementalAssessment,28800);
+ near(corp.incrementalAssessment,0);
  const both=combineAnnualIncomeTaxResults({entities:[
   {entityId:"corp",entityType:"corporation"},{entityId:"officer",entityType:"individual"}],
   years:[2026],results:[person,corp]});
- near(both.incrementalAssessment,66018.4);
+ near(both.incrementalAssessment,37218.4);
  const dated=connectAnnualTaxAssessments({entities:[
   {entityId:"corp",entityType:"corporation"},{entityId:"officer",entityType:"individual"}],
   assessmentsWithProject:both.assessmentsWithProject,
   assessmentsWithoutProject:both.assessmentsWithoutProject});
- near(dated.incrementalTaxCF,-66018.4);
+ near(dated.incrementalTaxCF,-37218.4);
  assert.equal(dated.entries.find(x=>x.entityId==="corp"&&x.taxKind==="otherTax").month,"2027-02");
  assert.ok(dated.entries.some(x=>x.entityId==="officer"&&x.taxKind==="residenceTax"&&x.month==="2028-01"));
  const p=evaluatePortfolio({entityLedgers:[
@@ -111,7 +117,7 @@ test("B-T12/13/14 monthly benefit -> annual salary and corporate addback -> incr
   baseCalendarYear:2026,holdingYears:1,taxes:dated.entries,
   taxCoverage:[{entityId:"corp",status:"estimated"},{entityId:"officer",status:"estimated"}],
   discountRate:.08});
- near(p.reconciliation.taxCashFlowTotal,-66018.4);
+ near(p.reconciliation.taxCashFlowTotal,-37218.4);
  assert.equal(p.annual.at(-1).year,2028);
  assert.equal(p.taxStatus,"estimated");
  // The imputed benefit affects tax ONLY; the empty pre-tax entity cash ledgers
@@ -138,4 +144,36 @@ test("B-T13 independent zero-rent statutory examples: all eligible classified of
  near(leased.imputedSalaryBenefit,60000);
  near(luxury.imputedSalaryBenefit,350000);
  for(const x of [small,owned,leased,luxury])assert.ok(x.imputedSalaryBenefit>0);
+});
+
+test("B-T14 non-deductible addback is invalid without underlying booked expense",()=>{
+ const months=Array.from({length:12},(_,i)=>calculateOfficerHousingTaxMonth({
+  ...args(`2026-${String(i+1).padStart(2,"0")}`),
+  corporateExpenseTreatment:"nonDeductibleReviewed",bookedOfficerBenefitExpense:12000
+ }));
+ const year=summarizeOfficerHousingTaxYear({corporationId:"corp",officerId:"officer",
+   taxYear:2026,months});
+ assert.throws(()=>reconcileOfficerHousingCorporateTaxItems({
+   annualHousing:year,recordedBookExpenseTaxItems:[]}));
+ const duplicated={entityId:"corp",taxYear:2026,category:"corporate",
+  kind:"deductibleExpense",amount:144000,source:"officerHousingBookedBenefitExpense"};
+ assert.throws(()=>reconcileOfficerHousingCorporateTaxItems({
+   annualHousing:year,recordedBookExpenseTaxItems:[duplicated,duplicated]}));
+});
+test("B-T14 deductible officer economic benefit expense can lower corporate tax only with booked proof",()=>{
+ const months=Array.from({length:12},(_,i)=>calculateOfficerHousingTaxMonth({
+  ...args(`2026-${String(i+1).padStart(2,"0")}`),
+  corporateExpenseTreatment:"deductibleReviewed",bookedOfficerBenefitExpense:12000
+ }));
+ const year=summarizeOfficerHousingTaxYear({corporationId:"corp",officerId:"officer",
+  taxYear:2026,months});
+ assert.equal(year.corporateAddback,0);
+ const body=reconcileOfficerHousingCorporateTaxItems({annualHousing:year,
+  recordedBookExpenseTaxItems:[{entityId:"corp",taxYear:2026,category:"corporate",
+   kind:"deductibleExpense",amount:144000,source:"officerHousingBookedBenefitExpense"}]});
+ assert.equal(body.netTaxableProfitAdjustment,-144000);
+ const c=assessCorporateYear({entityId:"corp",taxYear:2026,
+  baselineCorporateProfit:3000000,projectTaxItems:body.projectTaxItems,
+  openingLossesWithProject:[],openingLossesWithoutProject:[],taxRule:corpRule});
+ near(c.incrementalAssessment,-28800);
 });
