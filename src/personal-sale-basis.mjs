@@ -77,7 +77,7 @@ export function calculateMixedUseIndividualSaleBasis({
  buildingAcquisitionCost,statutoryUsefulLifeYears,
  oldStraightLineUsefulLifeYears,oldStraightLineRate,rule,
  businessDepreciationLedger,consecutiveBusinessCoverageReviewed,
- nonBusinessAfterConversion=false
+ fiscalYearEndMonth,nonBusinessAfterConversion=false
 }){
  required(buildingId,"buildingId");required(ownerEntityId,"ownerEntityId");
  const conversion=calculatePrivateUseReduction({acquiredAt,convertedAt,
@@ -86,6 +86,12 @@ export function calculateMixedUseIndividualSaleBasis({
  const sold=iso(soldAt,"soldAt");
  if(sold<=iso(convertedAt,"convertedAt"))throw new RangeError("sale must postdate business conversion");
  if(nonBusinessAfterConversion!==false)throw new RangeError("post-conversion private-only periods need another adjustment path");
+ if(!Number.isInteger(fiscalYearEndMonth)||fiscalYearEndMonth<1||fiscalYearEndMonth>12)
+   throw new RangeError("explicit owner fiscal-year end month required");
+ const fiscalYearOf=date=>date.getUTCFullYear()+
+   (date.getUTCMonth()+1>fiscalYearEndMonth?1:0);
+ const firstBusinessTaxYear=fiscalYearOf(iso(convertedAt,"convertedAt"));
+ const lastBusinessTaxYear=fiscalYearOf(sold);
  if(consecutiveBusinessCoverageReviewed!==true)throw new RangeError("business use periods not independently covered");
  if(!Array.isArray(businessDepreciationLedger)||!businessDepreciationLedger.length)
    throw new RangeError("business-period depreciation details required");
@@ -107,6 +113,10 @@ export function calculateMixedUseIndividualSaleBasis({
   totalDeductible+=entry.businessDeduction;
  }
  const orderedYears=[...ids].sort((a,b)=>a-b);
+ if(orderedYears.length!==lastBusinessTaxYear-firstBusinessTaxYear+1||
+   orderedYears[0]!==firstBusinessTaxYear||
+   orderedYears[orderedYears.length-1]!==lastBusinessTaxYear)
+     throw new RangeError("disposal tax basis requires every business fiscal year through sale");
  for(let i=1;i<orderedYears.length;i++)
   if(orderedYears[i]!==orderedYears[i-1]+1)
    throw new RangeError("noncontiguous business tax years");
