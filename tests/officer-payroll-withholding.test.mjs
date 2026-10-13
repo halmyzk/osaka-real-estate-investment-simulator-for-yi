@@ -95,3 +95,16 @@ test("Unverified personal annual refund stays incomplete and never creates cash 
  assert.throws(()=>reconcileAnnualPayrollPrepayment({...base,
   projectRemittanceEvidence:{...base.projectRemittanceEvidence,withholdingRemitted:false}}));
 });
+
+
+test("Unverified withholding lookup and corporate deduction never materialize payroll cash",()=>{
+ const uncertain=compileOfficerPayrollMonth({...arg,taxTableEvidence:{...arg.taxTableEvidence,
+  lookupStatus:"unverified"}});
+ assert.equal(uncertain.status,"incomplete");
+ assert.deepEqual(uncertain.cashEvents,[]);
+ const expenseUnknown=compileOfficerPayrollMonth({...arg,employerExpenseDeductibility:"unknown"});
+ assert.equal(expenseUnknown.status,"incomplete");
+ assert.deepEqual(expenseUnknown.cashEvents,[]);
+ assert.throws(()=>payrollCorporateTaxItems({payrollMonths:[uncertain],
+  taxYear:2027,employerEntityId:"corp"}));
+});
