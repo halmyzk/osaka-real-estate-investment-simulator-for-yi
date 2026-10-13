@@ -94,3 +94,13 @@ test("B missing taxable income does not become favorable zero",()=>{
  assert.throws(()=>nationalPersonalIncomeTax({taxYear:2026,taxableIncome:null}));
  assert.throws(()=>corporateNationalTax({taxYear:2026,taxableIncome:1000000,eligibleSmallCompany:null}));
 });
+
+test("misc income gains and losses net within category before affecting ordinary taxable income",()=>{
+ const r=applyIndividualIncomeCategories({baselineOrdinaryTaxableIncome:4000000,
+   projectCategories:[{category:"miscellaneous",amount:100000},{category:"miscellaneous",amount:-200000}]});
+ assert.equal(r.adjustedTaxableIncome,4000000);
+ assert.equal(r.unappliedLoss,100000);
+ const positive=applyIndividualIncomeCategories({baselineOrdinaryTaxableIncome:4000000,
+   projectCategories:[{category:"miscellaneous",amount:200000},{category:"miscellaneous",amount:-100000}]});
+ assert.equal(positive.adjustedTaxableIncome,4100000);
+});
