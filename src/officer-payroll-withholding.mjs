@@ -66,8 +66,13 @@ export function compileOfficerPayrollMonth({
  }
  if(!["reviewedDeductible","reviewedNotDeductible","unknown"].includes(employerExpenseDeductibility))
    throw new RangeError("corporate officer remuneration deduction requires explicit legal treatment");
+ // An official table row is not enough: 甲欄 requires the taxpayer's
+ // declared withholding category and reviewed dependent count.
+ const officialEligibilityReviewed=taxTableEvidence.declarationSubmitted===true&&
+   taxTableEvidence.dependentCountReviewed===true;
  const cashReady=(["scenarioAssumption","externallyReviewed"].includes(taxTableEvidence.lookupStatus)||
-     (taxTableEvidence.lookupStatus==="officialTableVerified"&&officialRow?.status==="officialRowVerified"))&&
+     (taxTableEvidence.lookupStatus==="officialTableVerified"&&
+       officialRow?.status==="officialRowVerified"&&officialEligibilityReviewed))&&
      employerExpenseDeductibility!=="unknown";
  const net=gross-insurance-withholding;
  const cashEvents=[
@@ -88,6 +93,8 @@ export function compileOfficerPayrollMonth({
   cashEvents:cashReady?cashEvents:[],status:cashReady?"estimated":"incomplete",
   expenseTreatment:employerExpenseDeductibility,
   sourceUrl:taxTableEvidence.sourceUrl,officialRow,
+  officialEligibilityReviewed:taxTableEvidence.lookupStatus==="officialTableVerified"?
+    officialEligibilityReviewed:null,
   tableVerificationStatus:taxTableEvidence.lookupStatus==="officialTableVerified"?
     (officialRow?.status??"incomplete"):taxTableEvidence.lookupStatus,
   note:"No cash created for housing benefit; employer+officer cash transfer cancels at group level; withholding is employee prepayment"};
