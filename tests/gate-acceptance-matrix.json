@@ -1,5 +1,5 @@
 {
-  "traceVersion": "2026-10-13-gate-acceptance-3",
+  "traceVersion": "2026-10-13-gate-acceptance-4",
   "target": "docs/v1.1-design-change-spec.md §§13.9,14.11",
   "definition": {
     "exampleVerified": "Specific illustrative expected outcome tested; not full legal or boundary coverage",
@@ -113,9 +113,10 @@
       "status": "partial",
       "evidence": [
         "tests/tax.test.mjs",
-        "tests/officer-housing-tax.test.mjs"
+        "tests/officer-housing-tax.test.mjs",
+        "tests/officer-housing-exceptions.test.mjs"
       ],
-      "gap": "NTA No.2600の小規模・一般自社所有／借上・豪華社宅算式を独立期待値で検算。各分類の実地適格性、共有部の面積、例外の自動判定は未実装。"
+      "gap": "公式賃貸料相当額の算式は独立検算済み。住宅手当・役員本人の直接賃借・豪華社宅判定の例外分岐を追加。実物件の区分判定と給与申告・源泉徴収は未完成。"
     },
     {
       "id": "B-T13",
@@ -146,9 +147,11 @@
       "status": "partial",
       "evidence": [
         "tests/reconciliation.test.mjs",
-        "tests/officer-housing-tax.test.mjs"
+        "tests/officer-housing-tax.test.mjs",
+        "tests/officer-housing-exceptions.test.mjs",
+        "tests/multi-entity-multiyear-tax.test.mjs"
       ],
-      "gap": "役員個人の給与課税、法人の帳簿費用・損金不算入調整、鏡写しの家賃現金を独立確認。法人の法定損金要件判定と源泉税精算の全体連携は未実装。"
+      "gap": "実賃料や住宅手当の両側現金移動を照合し、役員給与の法人側損金処理は12月の定額性等のレビュー要件を別管理。実際の法的適格性・源泉徴収は未検証。"
     },
     {
       "id": "B-T15",
@@ -156,18 +159,20 @@
       "evidence": [
         "tests/tax-detail.test.mjs",
         "tests/cash-adapter.test.mjs",
-        "tests/vat-restrictions.test.mjs"
+        "tests/vat-restrictions.test.mjs",
+        "tests/vat-building-adjustment.test.mjs"
       ],
-      "gap": "VAT classification and net/gross matching tested with illustrative transaction lines"
+      "gap": "宿泊課税／賃貸非課税に加え住宅賃貸建物の仕入控除後年度調整を取得時制限と分離。課税売上割合・複数物件・VAT法定申告様式は未完成。"
     },
     {
       "id": "B-T16",
       "status": "partial",
       "evidence": [
         "tests/tax-detail.test.mjs",
-        "tests/vat-restrictions.test.mjs"
+        "tests/vat-restrictions.test.mjs",
+        "tests/vat-building-adjustment.test.mjs"
       ],
-      "gap": "Exempt entity input-credit refund rejected; complex taxpayer status determination incomplete"
+      "gap": "制限された建物取得消費税は自動還付しない。後年度の税額調整800／900の公式算例でも実際の還付確定とは分離。課税事業者要件の全区分は未実装。"
     },
     {
       "id": "B-T17",
@@ -175,9 +180,10 @@
       "evidence": [
         "tests/tax.test.mjs",
         "tests/tax-detail.test.mjs",
-        "tests/vat-restrictions.test.mjs"
+        "tests/vat-restrictions.test.mjs",
+        "tests/vat-building-adjustment.test.mjs"
       ],
-      "gap": "Simplified vs general conceptual arithmetic; eligibility and mixed use limits incomplete"
+      "gap": "第三年度保有の課税賃貸は取得VAT×課税賃貸対価÷全賃貸対価、調整期間中売却は取得VAT×(課税賃貸対価+建物売却対価)÷(全賃貸対価+売却対価)を再現。一般/簡易の特殊要件は未完成。"
     },
     {
       "id": "B-T18",
@@ -189,11 +195,13 @@
     },
     {
       "id": "B-T19",
-      "status": "partial",
+      "status": "exampleVerified",
       "evidence": [
-        "tests/tax-rules.test.mjs"
+        "tests/tax-rules.test.mjs",
+        "tests/personal-sale-basis.test.mjs",
+        "tests/multi-entity-multiyear-tax.test.mjs"
       ],
-      "gap": "Adjusted acquisition basis is an input; private-use historical statutory basis calc missing"
+      "gap": "国税庁No.2108の非業務用期間（1,000万円×0.9×0.031×7年=195.3万円）、No.3261の譲渡取得費減額と翌年譲渡課税を計算例で独立検証。連続した私用→事業転用のみ。事業・居住同時利用や再転用、中古取得費の特殊規定は未実装。"
     },
     {
       "id": "B-T20",
@@ -201,9 +209,11 @@
       "evidence": [
         "tests/tax-schedule.test.mjs",
         "tests/portfolio.test.mjs",
-        "tests/annual-income-tax.test.mjs"
+        "tests/annual-income-tax.test.mjs",
+        "tests/personal-sale-basis.test.mjs",
+        "tests/multi-entity-multiyear-tax.test.mjs"
       ],
-      "gap": "Post-disposal payment year included in portfolio series"
+      "gap": "2026年譲渡税の翌年納付、2027年課税に起因する住民税の2029年1月納付を含む複数年度CFを照合。法定納期限延長・源泉徴収・中間納付は詳細モード未完了。"
     },
     {
       "id": "B-T21",
@@ -242,9 +252,13 @@
         "tests/acceptance.test.mjs",
         "tests/tax-rules.test.mjs",
         "tests/annual-income-tax.test.mjs",
-        "tests/vat-restrictions.test.mjs"
+        "tests/vat-restrictions.test.mjs",
+        "tests/personal-sale-basis.test.mjs",
+        "tests/vat-building-adjustment.test.mjs",
+        "tests/officer-housing-exceptions.test.mjs",
+        "tests/multi-entity-multiyear-tax.test.mjs"
       ],
-      "gap": "Unknown rules block tax numeric result when readiness checked; broader end-to-end enforcement incomplete"
+      "gap": "非業務用履歴欠損、年度償却欠落、未確認VAT還付、役員社宅の契約区分未確認をブロック。全税務要件の包括的な網羅判定は依然未実装。"
     }
   ],
   "gateA": [
@@ -291,5 +305,5 @@
       "gap": "Grouped line references and VAT trace improved; multi-entity full ledger reconciliation still needed"
     }
   ],
-  "acceptanceNotice": "One narrow criterion (B-T13) has independently verified numerical evidence; the tax engine as a whole is not accepted. Personal/corporate legal eligibility, tax calendar and other 23 cases require further review."
+  "acceptanceNotice": "One narrowly verified criterion B-T13; NTA mixed-use conversion/depreciation B-T19 independently verified as a specific example, NOT full statutory eligibility or acceptance. Retained/disposed VAT 800/900 examples and multi-entity multi-year cash tested; Gate B overall still not accepted."
 }
