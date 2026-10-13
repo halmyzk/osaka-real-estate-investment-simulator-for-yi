@@ -33,7 +33,7 @@ export function compileOfficerPayrollMonth({
  if(!taxTableEvidence||taxTableEvidence.taxYear!==Number(payMonth.slice(0,4))||
    !["monthly","daily","bonus"].includes(taxTableEvidence.payPeriod)||
    !["ko","otsu","hei","bonus"].includes(taxTableEvidence.tableColumn)||
-   !["reviewedScenario","unverified"].includes(taxTableEvidence.lookupStatus)||
+   !["scenarioAssumption","externallyReviewed","unverified"].includes(taxTableEvidence.lookupStatus)||
    !name(taxTableEvidence.version,"table version")||
    ![nta,table2027].includes(taxTableEvidence.sourceUrl))
    throw new RangeError("evidence of correct NTA tax-year table missing");
@@ -63,7 +63,7 @@ export function compileOfficerPayrollMonth({
   grossCashSalary:gross,noncashHousingBenefit:housing,
   employerEconomicGrossCost:gross,employeeCashReceipt:net,
   incomeTaxPrepayment:withholding,employeeSocialInsurance:insurance,
-  cashEvents,status:taxTableEvidence.lookupStatus==="reviewedScenario" &&
+  cashEvents,status:["scenarioAssumption","externallyReviewed"].includes(taxTableEvidence.lookupStatus) &&
     employerExpenseDeductibility!=="unknown"?"estimated":"incomplete",
   expenseTreatment:employerExpenseDeductibility,
   sourceUrl:taxTableEvidence.sourceUrl,
