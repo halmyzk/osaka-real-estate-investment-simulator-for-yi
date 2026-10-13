@@ -1,0 +1,188 @@
+{
+  "fixtureVersion": "1.1-foundation-2026-10-13",
+  "purpose": "Independent arithmetic truth values, not calculated by production simulator",
+  "unit": "JPY nominal",
+  "rounding": "Internal unrounded; display JPY nearest integer",
+  "cases": [
+    {
+      "id": "case1",
+      "model": "M1",
+      "tenure": "own",
+      "taxpayerType": "corporation",
+      "inputs": {
+        "availableRoomNights": 20,
+        "occupancy": 0.5,
+        "adr": 20000,
+        "otaRate": 0.1,
+        "cleanings": 2,
+        "cleaningUnitCost": 5000,
+        "otherLodgingOperatingExpense": 40000
+      },
+      "expected": {
+        "soldNights": 10,
+        "lodgingRevenue": 200000,
+        "otaFee": 20000,
+        "cleaningCost": 10000,
+        "lodgingGOP": 130000
+      }
+    },
+    {
+      "id": "case2",
+      "model": "M2",
+      "tenure": "lease",
+      "taxpayerType": "individual",
+      "inputs": {
+        "daysInMonth": 30,
+        "lodgingAllocationDays": 15,
+        "rentalAllocationDays": 10,
+        "unusedAndChangeoverDays": 5,
+        "adr": 30000,
+        "lodgingOccupancy": 0.6,
+        "monthlyRent": 300000,
+        "rentalOccupancy": 0.8
+      },
+      "expected": {
+        "lodgingSoldRoomNights": 9,
+        "lodgingRevenue": 270000,
+        "rentalRevenue": 80000,
+        "totalOperatingRevenue": 350000,
+        "allocatedDaysTotal": 30
+      }
+    },
+    {
+      "id": "case3",
+      "model": "M3",
+      "taxpayerType": "individual",
+      "units": [
+        {
+          "name": "Osaka A",
+          "allocatedLodgingDays": 180,
+          "occupancy": 0.5,
+          "adr": 20000
+        },
+        {
+          "name": "Tokyo B",
+          "allocatedLodgingDays": 180,
+          "occupancy": 0.5,
+          "adr": 20000
+        }
+      ],
+      "inputs": {
+        "rampFactor": 1
+      },
+      "expected": {
+        "allocatedUnitDays": 360,
+        "soldNightsPerUnit": 90,
+        "revenuePerUnit": 1800000,
+        "totalRevenue": 3600000,
+        "uniqueCoverageDays": "unknown without daily dates"
+      }
+    },
+    {
+      "id": "case4",
+      "model": "M3",
+      "tenure": "own",
+      "taxpayerType": "corporation",
+      "inputs": {
+        "fitOutCashPaidAtT0": 20000000
+      },
+      "expected": {
+        "fitOutInvestingCFCash": -20000000,
+        "depreciationCashOutflow": 0,
+        "fullFirstYearTaxDeduction": "not valid without asset-level tax ledger",
+        "officerBenefit": "incomplete until housing class and rent equivalent set"
+      },
+      "acceptanceBlockers": [
+        "independent depreciation ledger by asset",
+        "officer housing inputs and corporate add-back",
+        "input VAT classification and tax years",
+        "expected tax payment dates"
+      ]
+    },
+    {
+      "id": "case5",
+      "model": "M4",
+      "tenure": "own",
+      "taxpayerType": "individual",
+      "inputs": {
+        "monthlyRent": 300000,
+        "occupancy": 0.9,
+        "rentalMonths": 12,
+        "salePrice": 11000000,
+        "adjustedTaxBasis": 9500000,
+        "sellingCosts": 500000
+      },
+      "expected": {
+        "annualRentRevenue": 3240000,
+        "preReliefTaxableGain": 1000000,
+        "exitTaxCashFlow": "incomplete without sale year and tax status"
+      }
+    },
+    {
+      "id": "unit_irr_npv",
+      "inputs": {
+        "cashFlows": [
+          -1000000,
+          1100000
+        ],
+        "annualDiscountRate": 0.08
+      },
+      "expected": {
+        "IRR": 0.1,
+        "NPV": 18518.5185185185
+      }
+    },
+    {
+      "id": "business_apportionment",
+      "inputs": {
+        "annualSharedUtilities": 240000,
+        "businessArea": 60,
+        "totalArea": 180,
+        "actualGuestNights": 90,
+        "yearDays": 365
+      },
+      "expected": {
+        "deductibleUtilities": 19726.02739726027,
+        "roundedJPY": 19726
+      }
+    },
+    {
+      "id": "no_debt",
+      "inputs": {
+        "loanDrawdown": 0,
+        "principal": 0,
+        "interest": 0
+      },
+      "expected": {
+        "debtService": 0,
+        "DSCR": "notApplicable"
+      }
+    },
+    {
+      "id": "lodging_limit",
+      "inputs": {
+        "model": "M3",
+        "allocatedDaysByYear": [
+          180,
+          181
+        ]
+      },
+      "expected": {
+        "status": [
+          "valid",
+          "error"
+        ]
+      }
+    },
+    {
+      "id": "exit_settlement_after_holding",
+      "inputs": {
+        "holdingYears": 10,
+        "exitTaxPaymentYearOffset": 1
+      },
+      "expected": {
+        "terminalCashFlowExistsInYear": 11
+      }
+    }
+  ]
+}
