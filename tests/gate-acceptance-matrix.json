@@ -1,5 +1,5 @@
 {
-  "traceVersion": "2026-10-13-gate-acceptance-1",
+  "traceVersion": "2026-10-13-gate-acceptance-2",
   "target": "docs/v1.1-design-change-spec.md §§13.9,14.11",
   "definition": {
     "exampleVerified": "Specific illustrative expected outcome tested; not full legal or boundary coverage",
@@ -11,7 +11,8 @@
       "id": "B-T01",
       "status": "partial",
       "evidence": [
-        "tests/tax.test.mjs"
+        "tests/tax.test.mjs",
+        "tests/annual-income-tax.test.mjs"
       ],
       "gap": "Miscellaneous losses not offset against salary in simple category model; complex tax offsets not complete"
     },
@@ -19,7 +20,8 @@
       "id": "B-T02",
       "status": "partial",
       "evidence": [
-        "tests/portfolio.test.mjs"
+        "tests/portfolio.test.mjs",
+        "tests/annual-income-tax.test.mjs"
       ],
       "gap": "Separation by category shown; legal category classification still assumption"
     },
@@ -45,7 +47,8 @@
       "status": "partial",
       "evidence": [
         "tests/portfolio.test.mjs",
-        "tests/end-to-end-finance.test.mjs"
+        "tests/end-to-end-finance.test.mjs",
+        "tests/annual-income-tax.test.mjs"
       ],
       "gap": "Multiple entities and portfolio grouping tested; full individual income tax offset not implemented"
     },
@@ -69,7 +72,8 @@
       "id": "B-T08",
       "status": "partial",
       "evidence": [
-        "tests/tax-rules.test.mjs"
+        "tests/tax-rules.test.mjs",
+        "tests/annual-income-tax.test.mjs"
       ],
       "gap": "Asset/year book roll-forward for straight line only; types and statutory rates incomplete"
     },
@@ -85,7 +89,8 @@
       "id": "B-T10",
       "status": "partial",
       "evidence": [
-        "tests/tax-rules.test.mjs"
+        "tests/tax-rules.test.mjs",
+        "tests/annual-income-tax.test.mjs"
       ],
       "gap": "Business share 50% to 30% changes depreciation; tax CF sensitivity is not integrated"
     },
@@ -126,7 +131,8 @@
       "status": "partial",
       "evidence": [
         "tests/tax-detail.test.mjs",
-        "tests/cash-adapter.test.mjs"
+        "tests/cash-adapter.test.mjs",
+        "tests/vat-restrictions.test.mjs"
       ],
       "gap": "VAT classification and net/gross matching tested with illustrative transaction lines"
     },
@@ -134,7 +140,8 @@
       "id": "B-T16",
       "status": "partial",
       "evidence": [
-        "tests/tax-detail.test.mjs"
+        "tests/tax-detail.test.mjs",
+        "tests/vat-restrictions.test.mjs"
       ],
       "gap": "Exempt entity input-credit refund rejected; complex taxpayer status determination incomplete"
     },
@@ -143,7 +150,8 @@
       "status": "partial",
       "evidence": [
         "tests/tax.test.mjs",
-        "tests/tax-detail.test.mjs"
+        "tests/tax-detail.test.mjs",
+        "tests/vat-restrictions.test.mjs"
       ],
       "gap": "Simplified vs general conceptual arithmetic; eligibility and mixed use limits incomplete"
     },
@@ -168,7 +176,8 @@
       "status": "exampleVerified",
       "evidence": [
         "tests/tax-schedule.test.mjs",
-        "tests/portfolio.test.mjs"
+        "tests/portfolio.test.mjs",
+        "tests/annual-income-tax.test.mjs"
       ],
       "gap": "Post-disposal payment year included in portfolio series"
     },
@@ -176,7 +185,8 @@
       "id": "B-T21",
       "status": "exampleVerified",
       "evidence": [
-        "tests/tax.test.mjs"
+        "tests/tax.test.mjs",
+        "tests/annual-income-tax.test.mjs"
       ],
       "gap": "Identical with/without project tax payments produce zero increment"
     },
@@ -185,7 +195,8 @@
       "status": "partial",
       "evidence": [
         "tests/tax.test.mjs",
-        "tests/finance.test.mjs"
+        "tests/finance.test.mjs",
+        "tests/annual-income-tax.test.mjs"
       ],
       "gap": "CapEx cash and noncash depreciation kept separate; no complete register integration"
     },
@@ -193,7 +204,8 @@
       "id": "B-T23",
       "status": "partial",
       "evidence": [
-        "tests/tax-detail.test.mjs"
+        "tests/tax-detail.test.mjs",
+        "tests/annual-income-tax.test.mjs"
       ],
       "gap": "Loss vintages, expiry, limit tested; statutory continuity and eligible-loss attributes incomplete"
     },
@@ -202,7 +214,9 @@
       "status": "partial",
       "evidence": [
         "tests/acceptance.test.mjs",
-        "tests/tax-rules.test.mjs"
+        "tests/tax-rules.test.mjs",
+        "tests/annual-income-tax.test.mjs",
+        "tests/vat-restrictions.test.mjs"
       ],
       "gap": "Unknown rules block tax numeric result when readiness checked; broader end-to-end enforcement incomplete"
     }
@@ -250,5 +264,6 @@
       ],
       "gap": "Grouped line references and VAT trace improved; multi-entity full ledger reconciliation still needed"
     }
-  ]
+  ],
+  "acceptanceNotice": "All 24 B tests are either exampleVerified or partial; none is fully legally and end-to-end accepted. Added scenario tax computation and VAT restriction checks do not change that."
 }
