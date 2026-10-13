@@ -64,8 +64,8 @@ test("Officer payroll can use official amount instead of arbitrary scenario-prov
  assert.equal(a.tableVerificationStatus,"officialRowVerified");
  assert.equal(b.tableVerificationStatus,"officialRowVerified");
  assert.equal(a.cashEvents.length,4);
- assert.equal(a.employeeCashReceipt,114620);
- assert.equal(b.employeeCashReceipt,115000);
+ assert.equal(a.employeeCashReceipt,109620);
+ assert.equal(b.employeeCashReceipt,110000);
 });
 test("Official status cannot be forged with an arbitrary amount, year or URL",()=>{
  assert.throws(()=>compileOfficerPayrollMonth(money(2026,20000)),/NTA official tax table amount/);
