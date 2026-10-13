@@ -59,6 +59,9 @@ footer{font-size:.8rem;color:#516a76;padding:20px 0}
  <fieldset id="edit-fields" class="field-grid" style="margin-top:18px"></fieldset>
  <p class="muted small">変更は現在の下書きに反映します。「保存」を押すまでブラウザには書き込みません。シナリオ差分がある場合は差分が優先されます。</p></section>
  <section class="card"><h3>暦年別の税引前キャッシュフロー</h3><div id="annual-table"></div></section>
+ <section class="card"><h3>納税主体別の税務計算用元帳（監査用）</h3>
+ <p class="muted small">営業売上・現金費用・取得支出・売却代金・借入／元本・利息を分類します。表の差額は税法上の課税所得ではありません。償却・VAT・家事按分・譲渡益の審査を別途要します。</p>
+ <div id="tax-crosswalk"></div></section>
  <section class="card"><h3>選択住戸の用途カレンダー（計算結果）</h3><div id="month-table"></div></section>
  <section class="card"><h3>入力不足・計算上の制限</h3><div id="limitations"></div></section>
 </main>
@@ -173,6 +176,17 @@ function renderAnnual(){
       tax?fmt(tax.postIncomeTaxEquityCF):"算定保留"];
   }));
 }
+function renderTaxCrosswalk(){
+ const rows=last?.taxSourceCrosswalk?.rows;
+ if(!Array.isArray(rows)){
+  $("tax-crosswalk").textContent="計算を完了してから主体別元帳を表示します。";return;
+ }
+ $("tax-crosswalk").innerHTML=simpleTable(
+  ["課税主体","暦年","宿泊売上","賃貸売上","営業現金費用","借入利息支払","取得現金支出","売却総額","課税所得"],
+  rows.map(x=>[x.entityId,x.taxYear,fmt(x.lodgingRevenue),fmt(x.rentalRevenue),
+    fmt(x.cashOperatingExpenseForReview),fmt(x.interestCashPaid),
+    fmt(x.purchaseCapitalCash),fmt(x.disposalGrossCash),"未算定"]));
+}
 function selected(){return data.units.find(x=>x.id===selectedUnit)??data.units[0]}
 function renderEditor(){
  const u=selected();const visible=u.modelId==="M4"?["R01","R02","A01","A06"]:
@@ -216,7 +230,7 @@ function render(){
  $("unit-choice").innerHTML=data.units.map(u=>'<option value="'+esc(u.id)+'">'+esc(u.name)+'</option>').join("");
  $("unit-choice").value=selectedUnit;
  calculate();
- renderBusiness();renderEvidence();renderKpis();renderAnnual();renderEditor();renderMonths();renderLimitations();
+ renderBusiness();renderEvidence();renderKpis();renderAnnual();renderTaxCrosswalk();renderEditor();renderMonths();renderLimitations();
 }
 function showTab(tab){
  activeTab=tab;
