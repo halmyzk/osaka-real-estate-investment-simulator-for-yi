@@ -136,3 +136,43 @@
 - 独立税額想定はテスト専用。税額体系の法定資格、複数住戸の課税売上割合・所得控除等の完全な申告連携は未完了。**全体のGate A/B受入・UI/公開は未承認**。
 
 受入マトリクス `tests/gate-acceptance-matrix.json` はB-T19を `exampleVerified` に変更し、公式資料・テスト・未完了要件を追記。**個別条件検証済みB-T13＝1件／公式算例確認等B-T19を含むexampleVerified＝5件／部分確認18件**。いずれもGate B全体の法的受入を意味しない。
+
+
+## 2026-10-13：同時居住・事業利用、役員給与の源泉徴収、消費税適格性／実納税CF
+
+### B-T19：同時居住と事業利用の譲渡取得費（**審査付き集計を追加／法定算式の全自動化未了**）
+
+- 一次資料：国税庁 No.3261 https://www.nta.go.jp/taxes/shiraberu/taxanswer/joto/3261.htm 、所得税基本通達38－3 https://www.nta.go.jp/law/tsutatsu/kihon/shotoku/05/18.htm 。
+- `src/mixed-use-sale-basis.mjs` は**取得から譲渡までの全月**に、事業利用割合・私用割合、事業対応の減価償却相当額、非業務用部分の減価相当額、実際の経費算入額、根拠URL・算定済みフラグを要求する。月や費目の欠落、重複、割合不整合、基礎価額超過はエラー。
+- 事業用の減価相当額が申告上の経費算入額と違っても、譲渡取得費への減額を混同しない。`adjustedBuildingBasis = AcquisitionBasis - ReviewedBusinessReduction - ReviewedNonBusinessReduction`。これは**証拠ある減額額の集計**であって、複雑な同時併用の法定減価償却額を面積率だけから自動計算したと断定しない。
+- 通達38－3の**所有期間を通じた非業務用部分90%以上**は別途の取扱い（採否・適用可否を審査）。面積比のみで自動選択しない。
+- `tests/mixed-use-sale-basis.test.mjs` と `tests/combined-tax-reconciliation.test.mjs` で、取得費・譲渡益・翌年税額の一貫性、月次証跡の欠落・90%境界を検算。2024〜2026年度間の法定端数・私用再転換・特別控除は引き続き受入未了。
+
+### B-T13/14：法人役員給与・給与源泉税・年次所得税前払の接続（**年度・納付主体を分離**）
+
+- 一次資料：国税庁 No.2511 https://www.nta.go.jp/taxes/shiraberu/taxanswer/gensen/2511.htm 、2027年分源泉徴収税額表 https://www.nta.go.jp/publication/pamph/gensen/zeigakuhyo2027/01.htm 。
+- `src/officer-payroll-withholding.mjs` は給与の現金支給・社宅経済的利益（非現金）・従業員負担社会保険料・源泉所得税・役員受取純額・法人から税務当局への納付予定を**別CF明細**にする。支給年の表版、区分、税額表の照合証跡が必要。未審査なら給与現金明細の作成を拒否。
+- 特に、2027年の源泉税表を2026年へ流用しない。`taxTableEvidence.lookupStatus="scenarioAssumption"` による税額は**試験用仮定**であり、国税庁表そのものの数値自動照合を終えたことは意味しない。
+- `src/payroll-tax-assessment-bridge.mjs` は `assessPersonalYear` による個人所得税額から、**実際に法人が預かり納付済みと証明した源泉税**を差し引いて翌年の追加納付額を作る。法人給与税の納付と個人年次所得税を二重に控除しない。源泉徴収が年税額を超える場合は還付未確定として`incomplete`にする。
+- `tests/officer-payroll-withholding.test.mjs`、`tests/payroll-tax-assessment-bridge.test.mjs`、`tests/combined-tax-reconciliation.test.mjs`で、法人⇔役員の現金移転、源泉税の外部流出、年度別税額差と税引後CFの整合を検算。役員賞与、給与所得控除の全要件、実額源泉徴収表、社保、源泉徴収の納期限特例等は別途実装。
+
+### B-T16/17/24：消費税納税義務と実納付・還付（**1,000万円だけで免税判定しない**）
+
+- 一次資料：国税庁 No.6501 https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6501.htm 、No.6503 https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6503.htm 、No.6613 https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6613.htm 。
+- `src/vat-taxpayer-settlement.mjs` で、基準期間・特定期間の税抜課税売上、給与支払額代替、インボイス登録、課税事業者選択、設立法人資本金、承継・高額特定資産の例外と、国外事業者の給与代替制限（2024-10以後）を個別確認。部分期間インボイス登録など計算未対応は`incomplete`。
+- `reconcileVATAssessmentAndSettlement` は、申告税額と**証憑で確認された実際の納付・還付明細**の一致を確認し、未納・還付未確定・重複明細は税金のキャッシュフローに組み込まない。一般/簡易の適格性と、高額資産取得時に簡易課税を選択できない場合を区分。
+- `tests/vat-taxpayer-settlement.test.mjs` は1,000万円境界、登録の有無、国外事業者、適格性の未知、免税事業者の架空還付、後年納付、過大還付・証憑欠落を検証。
+- **制限事項**：個別事業者の登録・届出書の取得を自動照会したわけではない。例外フラグはレビュー済みのシナリオ入力であり、真の法定適用確認・税務申告様式との完全照合は未実装。実納付の「確認」もこの時点ではモデル入力した証憑フラグを照合する方式で、銀行明細を自動取得したわけではない。
+
+### B-T21 狭義の計算受入（**criterionVerified へ変更**）
+
+- 設計根拠：`docs/v1.1-design-change-spec.md` §14.10/14.11 B-T21「増分税負担ゼロなら税引前後CF一致」。
+- `tests/gate-b-t21-acceptance.test.mjs` は、個人・法人の2課税年の税額が**プロジェクトあり／なしで同額**なら、すべての年次CFとNPV/IRRが厳密に一致することを検証。法人税1円増額の対照実験で、対応する税引後CFだけが1円減少することも独立確認。
+- 狭義の計算恒等式は外部税率の適用判定を要しないため、この範囲で`criterionVerified`。**確定税額が正しいこと、税務申告に使用できること、Gate B全24項目の完全な正式受入を意味しない。**
+
+### 今回の受入分類（最新・過去の件数記載に優先）
+
+- **criterionVerified（限定条件の数値検証）2件**：B-T13、B-T21
+- **exampleVerified（検算例のみ）4件**：B-T19を含む
+- **partial（未検証条件が残存）18件**
+- **Gate B全体の正式受入は未了**。次は個人所得税・地方税の年次法定要件、給与源泉税額表の独立数値照合、消費税の例外と還付確定の客観証拠、全CFをカバーする税務データ契約の補強が重要。
