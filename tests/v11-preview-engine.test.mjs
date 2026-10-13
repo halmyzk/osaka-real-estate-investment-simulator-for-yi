@@ -139,3 +139,80 @@ test("Optional interest rate P04 missing means NPV incomplete, not zero discount
  assert.equal(r.preTax.npvStatus,"incomplete");
  assert.ok(r.preTax.IRR!==null);
 });
+
+
+test("Gate C M4 rental days automatically follow real month length and annual growth when no use table",()=>{
+ const u=lease();
+ u.calendar=[];
+ u.exit.exitDate="2027-12-31";
+ u.exit.expectedDepositRefund=100000;
+ const d=doc([u]);d.portfolio.holdingYears=2;
+ const r=previewV11Scenario(d);
+ assert.equal(r.status,"estimated-pre-tax");
+ assert.equal(r.units[0].operating.length,24);
+ assert.equal(r.units[0].operating[1].result.calendarDays,28);
+ assert.equal(r.units[0].operating[12].result.calendarDays,31);
+ close(r.units[0].operating[0].result.operatingSurplus,39000);
+ close(r.units[0].operating[12].result.operatingSurplus,39880);
+ close(r.annual[0].operating,39000*12);
+ close(r.annual[1].operating,39880*12);
+});
+test("Scenario month override genuinely changes revenue while leaving other 11 months unchanged",()=>{
+ const d=doc([owned()]);
+ const baseline=previewV11Scenario(d);
+ d.scenarios[0].overrides=[{scope:"month",targetId:"own",year:2026,month:1,
+  fieldId:"H02",field:f(0,"percent")}];
+ const changed=previewV11Scenario(d);
+ assert.equal(changed.units[0].operating[0].result.lodging.revenue,0);
+ assert.equal(changed.units[0].operating[1].result.lodging.revenue,90000);
+ assert.equal(changed.preTax.cashFlows[1],baseline.preTax.cashFlows[1]-90000);
+});
+test("M2 combined lodging + rental month uses different calendar-day prorating, ADR and occupancy units",()=>{
+ const u=lease();
+ u.modelId="M2";
+ u.calendar=[{year:2026,month:1,lodgingDays:15,rentalDays:10,selfUseDays:0,
+    changeoverDays:2,idleDays:4}];
+ u.fields.H={H01:f(30000,"JPY_per_room_night"),H02:f(60,"percent")};
+ u.fields.R.R01=f(300000,"JPY_per_month");
+ u.fields.R.R02=f(80,"percent");
+ const r=previewV11Scenario(doc([u]));
+ const op=r.units[0].operating[0].result;
+ close(op.lodging.revenue,15*.6*.6*30000);
+ close(op.rental.revenue,300000*10/31*.8);
+ close(op.revenue,162000+300000*10/31*.8);
+ assert.equal(op.lodging.allocatedDays,15);
+ assert.equal(op.rental.allocatedDays,10);
+});
+test("Unsupported nonzero tax/financing assumptions, conflicting loan flags and scenario overrides are never silently ignored",()=>{
+ const d=doc();
+ d.units[0].fields.A.A04=f(100000,"JPY_per_year");
+ assert.throws(()=>previewV11Scenario(d),/A04/);
+ const d2=doc();d2.units[0].fields.F={F01:f(true,"boolean")};
+ assert.throws(()=>previewV11Scenario(d2),/F01/);
+ const d3=doc();d3.scenarios[0].overrides=[{scope:"portfolio",targetId:"portfolio",
+  fieldId:"P03",field:f(3,"years")}];
+ assert.throws(()=>previewV11Scenario(d3),/not yet supported/);
+});
+test("Documented null required rent stays incomplete, and unclassified K01 asset money blocks investment valuation",()=>{
+ const d=doc();
+ d.units[0].fields.R.R01=f(null,"JPY_per_month","unavailable");
+ assert.equal(previewV11Scenario(d).status,"incomplete");
+ const d2=doc();
+ d2.units[0].fields.K={K01:f(300000,"JPY")};
+ const result=previewV11Scenario(d2);
+ assert.equal(result.status,"incomplete");
+ assert.ok(result.missing.some(x=>x.fieldId==="K02"));
+});
+test("Separate tangible asset purchases enter initial financing CF0 exactly once and cannot include owned building twice",()=>{
+ const u=owned();
+ u.fields.K={K01:f(300000,"JPY")};
+ u.assets=[{id:"furn",ownerEntityId:"corp",category:"furniture",grossCost:300000,
+   taxBasis:300000,invoiceDate:"2026-01-01",inServiceDate:"2026-01-01",
+   depreciationMethod:"straightLine",businessUseRatioByYear:[],taxBookValue:300000}];
+ const r=previewV11Scenario(doc([u]));
+ assert.equal(r.status,"estimated-pre-tax");
+ assert.equal(r.CF0,-1300000);
+ assert.equal(r.preTax.cashFlows[1],2080000);
+ u.assets[0].category="building";
+ assert.throws(()=>previewV11Scenario(doc([u])),/land\/building/);
+});
