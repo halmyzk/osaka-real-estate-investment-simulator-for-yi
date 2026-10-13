@@ -53,7 +53,7 @@ footer{font-size:.8rem;color:#516a76;padding:20px 0}
 <main id="analysis" hidden>
  <section class="card"><h2>03 収支分析</h2>
   <div id="kpis" class="grid"></div>
-  <p class="muted small">IRR/NPVは税引前で、CF₀と暦年末のCFを使用。税引後指標は現在算定保留です。</p>
+  <p class="muted small">IRRは税引前です。参考NPVは、税引後自己資本割引率P04を税引前CFに適用した感応度にすぎません。CF₀と暦年末CFを使用し、正式な税引後NPV／IRRは算定保留です。</p>
  </section>
  <section class="card"><h3>標準入力（選択住戸）</h3><label for="unit-choice">住戸</label><select id="unit-choice"></select>
  <fieldset id="edit-fields" class="field-grid" style="margin-top:18px"></fieldset>
@@ -138,7 +138,7 @@ function renderKpis(){
  const r=last;
  const kpis=r?.status==="estimated-pre-tax"?[
   ["税引前CF₀",fmt(r.CF0)],["税引前IRR",pct(r.preTax.IRR)],
-  ["税引前NPV",fmt(r.preTax.NPV)],["税引後NPV／IRR","算定保留"],
+  ["参考NPV（税引前CFにP04適用）",fmt(r.preTax.NPV)],["税引後NPV／IRR","算定保留"],
   ["課税計算","未実装（0円ではありません）"]]:
   [["税引前・税引後評価","算定保留"]];
  $("kpis").innerHTML=kpis.map(x=>'<div class="kpi"><span class="muted small">'+
