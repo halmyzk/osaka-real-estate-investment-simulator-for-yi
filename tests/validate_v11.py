@@ -14,6 +14,7 @@ ROOT=Path(__file__).resolve().parents[1]
 SCHEMA=json.loads((ROOT/"schema/v1.1.schema.json").read_text(encoding="utf-8"))
 FIXTURES=json.loads((ROOT/"tests/fixtures/v1.1-schema-cases.json").read_text(encoding="utf-8"))
 NUMERICS=json.loads((ROOT/"tests/fixtures/v1.1-financial-cases.json").read_text(encoding="utf-8"))
+TAX=json.loads((ROOT/"tests/fixtures/v1.1-tax-cases.json").read_text(encoding="utf-8"))
 
 def semantic_errors(data):
     errors=[]
@@ -25,7 +26,6 @@ def semantic_errors(data):
     unique(data.get("entities",[]),"entity")
     unique(units,"unit")
     unique(data.get("scenarios",[]),"scenario")
-    dates={}
     for u in units:
         uid=u.get("id","?")
         if u.get("operatorEntityId") not in entities:errors.append(uid+": unknown operator entity")
@@ -101,6 +101,54 @@ def check_independent_arithmetic():
     assert abs(cf[0]+cf[1]/(1+r)-e["NPV"])<1e-8
     assert abs(-cf[0]/cf[1]-(1/(1+e["IRR"])))<1e-12
 
+def check_independent_tax_examples():
+    cases={c["id"]: c for c in TAX["fixtures"]}
+    a=cases["small_officer_housing_arithmetic"]
+    v=a["inputs"]; e=a["expected"]
+    assert abs(v["buildingFixedAssetTaxBase"]*0.002-e["buildingComponent"])<1e-8
+    assert abs(12*v["floorAreaSqm"]/3.3-e["areaComponent"])<1e-8
+    assert abs(v["landFixedAssetTaxBase"]*0.0022-e["landComponent"])<1e-8
+    assert abs(sum((e["buildingComponent"],e["areaComponent"],e["landComponent"]))-e["rentEquivalent"])<1e-8
+    assert abs(max(0,e["rentEquivalent"]-v["officerMonthlyRentPaid"])-e["officerTaxableBenefit"])<1e-8
+    a=cases["luxury_officer_housing_scenario"]; v=a["inputs"]; e=a["expected"]
+    assert max(0,v["assumedNormalMonthlyRent"]-v["officerActualMonthlyRent"])==e["officerTaxableBenefit"]
+    a=cases["illustrative_asset_depreciation"];v=a["inputs"];e=a["expected"]
+    gross=v["assetCost"]*v["annualIllustrativeDepreciationRate"]
+    assert gross==e["wholeAssetAccountingDepreciation"]
+    assert gross*v["businessUseShare"]==e["deductibleBusinessDepreciation"]
+    assert -v["year1CashCapex"]==e["capexCashFlowYear1"]
+    assert e["depreciationCashFlow"]==0
+    a=cases["mixed_utilities"];v=a["inputs"];e=a["expected"]
+    expense=v["grossExpense"]*(v["businessAreaSqm"]/v["totalAreaSqm"])*(v["actualGuestNights"]/v["yearDays"])
+    assert abs(expense-e["deductibleExpense"])<1e-8
+    assert round(expense)==e["roundedDisplayJPY"]
+    a=cases["year11_exit_tax_payment"]
+    assert a["inputs"]["individualTaxDueYear"]==a["inputs"]["saleYear"]+1
+    assert a["expected"]["taxPaymentYear"]==a["inputs"]["individualTaxDueYear"]
+
+
+def check_semantic_boundaries():
+    valid=copy.deepcopy(FIXTURES["positive"])
+    unit=valid["units"][0]
+    unit["calendar"]=[
+        {"year":2028,"month":2,"lodgingDays":15,"rentalDays":0,
+         "selfUseDays":13,"changeoverDays":1,"idleDays":0}
+    ]
+    assert semantic_errors(valid)==[],semantic_errors(valid)  # leap year: 29 days
+    unit["calendar"][0]["idleDays"]=1
+    assert any("calendar days" in e for e in semantic_errors(valid))
+    unit["calendar"]= [
+        {"year":2028,"month":m,"lodgingDays":15,
+         "rentalDays":0,"selfUseDays":0,"changeoverDays":0,
+         "idleDays":date(2028+int(m==12),(m%12)+1,1).toordinal()-date(2028,m,1).toordinal()-15}
+        for m in range(1,13)
+    ]
+    assert not semantic_errors(valid),semantic_errors(valid) # exactly 180 days
+    unit["calendar"][0]["lodgingDays"]=16
+    unit["calendar"][0]["idleDays"]-=1
+    assert any("180-day" in e for e in semantic_errors(valid)) # 181 days
+
+
 def main():
     Draft202012Validator.check_schema(SCHEMA)
     assert not semantic_errors(FIXTURES["positive"]),semantic_errors(FIXTURES["positive"])
@@ -114,6 +162,8 @@ def main():
         assert problems,(item["id"],"invalid case unexpectedly passed")
         print("PASS reject",item["id"],problems[0][:100])
     check_independent_arithmetic()
-    print("PASS",len(FIXTURES["negative"]),"invalid inputs rejected; valid input accepted; independent arithmetic checks passed")
+    check_independent_tax_examples()
+    check_semantic_boundaries()
+    print("PASS",len(FIXTURES["negative"]),"invalid inputs rejected; positive schema and semantic checks, tax arithmetic, leap-year and 180/181-day boundaries passed")
 
 if __name__=="__main__":main()
