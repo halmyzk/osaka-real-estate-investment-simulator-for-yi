@@ -72,7 +72,7 @@ test("Gate B cross-entity mixed-use disposal, payroll prepayment, VAT actual set
  });
  approximate(taxes.incrementalTaxCF,-341306.8);
  const eligible=reviewVATTaxpayerPeriod({entityId:"corp",taxPeriodStart:"2026-01-01",
-  taxPeriodEnd:"2026-12-31",taxpayerType:"corporation",
+  taxPeriodEnd:"2026-12-31",taxpayerType:"corporation",foreignTaxpayerClassification:"domestic",
   baselinePeriodTaxableSales:9000000,specificPeriodTaxableSales:8000000,
   specialPeriodAlternativePayrollAmount:8000000,specificPeriodTestBasis:"taxableSales",
   invoiceRegistration:"registeredWholePeriod",electedTaxableStatus:false,
