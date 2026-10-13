@@ -56,11 +56,17 @@ const matchesMonth=(s,year,month)=>s.year===year&&s.month===month;
 const allowedAssetCategory=new Set(["furniture","appliance","buildingEquipment","leaseholdImprovement","other"]);
 const incomeField=new Set(["H01","H02","H04","H05","H06","H07","H08","H09","H10","H11","H12","R01","R02","R05","R08","A01","A02","A05","A06","A07","A08","K01"]);
 function explicitUnsupportedFields(unit,lookup){
- const excluded=["A04","A09","A10","K06","R06","R07","R10","R11","S03","S04","S08"];
+ const excluded=["A04","A09","A10","K06","R06","R07","R10","R11","S03","S04","S08","F02","F03","F05","F06"];
  for(const fieldId of excluded){
   const r=lookup(fieldId,null);
   if(r.status==="available"&&typeof r.value==="number"&&r.value!==0)
    throw new RangeError(fieldId+" requires an advanced transaction/tax adapter; cannot ignore a nonzero value");
+ }
+ // F01 may be a UI financing summary, but cannot contradict the loan ledger.
+ const financeFlag=lookup("F01",null);
+ if(financeFlag.status==="available"&&typeof financeFlag.value==="boolean"){
+   if(financeFlag.value!==((unit.loans??[]).some(x=>x.principal>0)))
+     throw new RangeError("F01 loan-enabled flag differs from unit loan contracts");
  }
 }
 function resolveUnit(document,scenarioContext,unit,portfolio,assumptions){
@@ -107,8 +113,20 @@ function resolveUnit(document,scenarioContext,unit,portfolio,assumptions){
  const calcCapital=nominalCapital.status==="available"?number(nominalCapital,"K01",missing):null;
  const activeMonths=months(monthOf(open),monthOf(exit));
  const expectedActive=new Set(activeMonths);
- const allCalendar=unit.calendar??[];
- if(!Array.isArray(allCalendar))throw new TypeError("calendar array required");
+ const suppliedCalendar=unit.calendar??[];
+ if(!Array.isArray(suppliedCalendar))throw new TypeError("calendar array required");
+ // Gate C §15.4: M4 rents all otherwise available days by default. Only
+ // a user-provided M4 month overrides this calendar convention.
+ const allCalendar=[...suppliedCalendar];
+ if(unit.modelId==="M4"){
+  const suppliedKeys=new Set(allCalendar.map(r=>r.year+"-"+String(r.month).padStart(2,"0")));
+  for(const mo of activeMonths){
+    if(!suppliedKeys.has(mo))allCalendar.push({
+      year:Number(mo.slice(0,4)),month:Number(mo.slice(5,7)),
+      lodgingDays:0,rentalDays:daysOf(mo),selfUseDays:0,changeoverDays:0,idleDays:0
+    });
+  }
+ }
  const byMonth=new Map();
  for(const row of allCalendar){
   if(!Number.isInteger(row.year)||!Number.isInteger(row.month)||row.month<1||row.month>12)
@@ -232,12 +250,15 @@ function resolveUnit(document,scenarioContext,unit,portfolio,assumptions){
  const investing=[];
  const monthStart=monthOf(start),exitMonth=monthOf(exit);
  if(unit.tenure==="own"){
+  if(deposit!==0||leaseFee!==0||money(unit.exit.expectedDepositRefund,"expectedDepositRefund")!==0)
+    throw new RangeError("owned property cannot have leased refundable deposit or lease setup fee");
   if(purchase!==null)investing.push(...investingEvents({acquisitions:[
    {id:unit.id+"-purchase",month:monthStart,price:purchase,closingCosts:closing}]}));
   if(unit.exit.method!=="priceGrowth")
     throw new RangeError("sale cap reference and special exit modes not supported");
   if(unit.exit.applyResidentialRelief)throw new RangeError("sale tax relief requires reviewed Gate B");
-  const growth=unit.exit.priceGrowthRate??0;
+  const portfolioGrowth=get("P09");
+  const growth=unit.exit.priceGrowthRate??number(portfolioGrowth,"P09",missing);
   if(typeof growth!=="number"||!Number.isFinite(growth)||growth<=-100)
     throw new RangeError("exit price growth rate must be percentage > -100");
   const yrs=(index(exitMonth)-index(monthStart)+1)/12;
@@ -248,6 +269,7 @@ function resolveUnit(document,scenarioContext,unit,portfolio,assumptions){
     exitObligations:money(unit.exit.exitObligations,"exitObligations") }]}));
  }else{
   if(unit.exit.method!=="leaseSettlement")throw new RangeError("lease cannot sell underlying real estate");
+  if(money(unit.exit.sellingCosts,"sellingCosts")!==0)throw new RangeError("lease selling costs require documented lease closeout category");
   if(closing>0)throw new RangeError("lease closing costs require dedicated categorization");
   if(deposit>0)investing.push(...investingEvents({refundableDeposits:[
     {id:unit.id+"-deposit-paid",month:monthStart,action:"paid",amount:deposit}]}));
@@ -323,6 +345,17 @@ export function previewV11Scenario(document,{scenarioId}={}){
   id(u.id,"unit.id");if(unitIds.has(u.id))throw new RangeError("duplicate unit");unitIds.add(u.id);
  }
  const scenario=inspectScenarioOverrides({document,scenarioId:scenarioId??document.scenarios.find(x=>x.role==="base")?.id});
+ const previewSupportedOverrides=new Set([
+   "P04","P05","P06","P07","P09",
+   "H01","H02","H04","H05","H06","H07","H08","H09","H10","H11","H12",
+   "R01","R02","R05","R08",
+   "A01","A02","A05","A06","A07","A08","K01"
+ ]);
+ const selectedScenario=document.scenarios.find(x=>x.id===scenario.scenarioId);
+ for(const over of selectedScenario.overrides){
+   if(!previewSupportedOverrides.has(over.fieldId))
+     throw new RangeError("scenario override "+over.fieldId+" not yet supported by preview; cannot silently omit its effect");
+ }
  const resolvedDiscount=resolveV11Field({document,scenarioContext:scenario,fieldId:"P04"});
  let rate=null;
  if(resolvedDiscount.status==="available"){
