@@ -41,3 +41,11 @@
 - 最終確認時GitHub Actions：Node.js **91件合格・0件失敗**、Python JSON Schema検証成功。
 
 **引き続き受入ブロッカー**：取引の税務上の適格性・法定償却方法の検証、消費税の複雑な仕入控除と自動精算、納税主体ごとの完全な税計算、Gate A全境界／Gate B全24項目の独立期待値、UIデータ契約・移行の未実装。本コミットは開発ブランチ内の受入準備であり、公開や最終承認を意味しない。
+
+
+## 2026-10-13：DSCR・IRR境界と主体別納税CFの追加検証
+
+- `src/dscr.mjs`: 納税主体・月別 `PreTaxCFADS` → `AfterTaxCFADS` → `DSCR` の照合を追加。約定元本＋利息だけをDSCR分母とし、繰上返済額・手数料は返済後の現金余剰へ別計上する。返済分母0は `notApplicable`、CFADS赤字は負のDSCRで表示。
+- `tests/gate-boundaries.test.mjs`: 個人・法人の税務課税所得を混合しないこと、納税時点の違いを年次CFに反映すること、負のIRRと複数IRRパターンを確認。
+- 同時に既存の `tests/dscr.test.mjs` を含むGitHub ActionsのNode.jsテストは **102/102成功**、Python JSON Schemaの既存検証も合格。
+- **残る受入ブロッカー**：事業年度・現金納付月と税務計算の全連携、法定適用条件、消費税の特殊控除と調整、税引後アンレバード税再計算、複数IRRの高次・接線根、契約別DSCR、B-T01〜B-T24の法的独立検算。Gate A/B全体は未承認・未完了。
