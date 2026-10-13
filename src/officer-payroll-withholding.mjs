@@ -10,6 +10,7 @@
  * Withholding is a prepayment on OFFICER income tax, not a second corporation
  * income tax. Employee cash and employer cash must mirror exactly.
  */
+import {lookupNtaMonthlyWithholding,officialNtaTableSources} from "./nta-monthly-withholding.mjs";
 const nta="https://www.nta.go.jp/taxes/shiraberu/taxanswer/gensen/2511.htm";
 const table2027="https://www.nta.go.jp/publication/pamph/gensen/zeigakuhyo2027/01.htm";
 const num=(x,k,min=0)=>{if(typeof x!=="number"||!Number.isFinite(x)||x<min)throw new RangeError(k+" must be finite nonnegative");return x};
@@ -33,21 +34,40 @@ export function compileOfficerPayrollMonth({
  if(!taxTableEvidence||taxTableEvidence.taxYear!==Number(payMonth.slice(0,4))||
    !["monthly","daily","bonus"].includes(taxTableEvidence.payPeriod)||
    !["ko","otsu","hei","bonus"].includes(taxTableEvidence.tableColumn)||
-   !["scenarioAssumption","externallyReviewed","unverified"].includes(taxTableEvidence.lookupStatus)||
+   !["scenarioAssumption","externallyReviewed","unverified","officialTableVerified"].includes(taxTableEvidence.lookupStatus)||
    !name(taxTableEvidence.version,"table version")||
-   ![nta,table2027].includes(taxTableEvidence.sourceUrl))
+   ![nta,table2027,officialNtaTableSources[2026],officialNtaTableSources[2027]].includes(taxTableEvidence.sourceUrl))
    throw new RangeError("evidence of correct NTA tax-year table missing");
  const taxableSalaryBase=gross+housing-insurance;
  if(!near(taxableSalaryBase,taxTableEvidence.taxableMonthlyBase)||
     !near(withholding,taxTableEvidence.withholdingAmount))
    throw new RangeError("salary base or withheld amount differs from table lookup evidence");
- if(taxTableEvidence.taxYear===2027&&taxTableEvidence.sourceUrl!==table2027)
+ if(taxTableEvidence.taxYear===2027&&
+   ![table2027,officialNtaTableSources[2027]].includes(taxTableEvidence.sourceUrl))
    throw new RangeError("2027 taxes require 2027 withholding tax table");
- if(taxTableEvidence.taxYear!==2027&&taxTableEvidence.sourceUrl===table2027)
+ if(taxTableEvidence.taxYear!==2027&&
+    [table2027,officialNtaTableSources[2027]].includes(taxTableEvidence.sourceUrl))
    throw new RangeError("2027 withholding table cannot be reused for earlier/later tax years");
+ if(taxTableEvidence.taxYear!==2026&&taxTableEvidence.sourceUrl===officialNtaTableSources[2026])
+   throw new RangeError("2026 withholding table cannot be reused for other tax years");
+ let officialRow=null;
+ if(taxTableEvidence.lookupStatus==="officialTableVerified"){
+   officialRow=lookupNtaMonthlyWithholding({
+      taxYear:taxTableEvidence.taxYear,taxableMonthlyBase:taxableSalaryBase,
+      tableColumn:taxTableEvidence.tableColumn,
+      dependentCount:taxTableEvidence.dependentCount,
+      payPeriod:taxTableEvidence.payPeriod
+   });
+   if(officialRow.status==="officialRowVerified"&&
+      (taxTableEvidence.sourceUrl!==officialRow.sourceUrl||
+       taxTableEvidence.version!==officialRow.version||
+       !near(taxTableEvidence.withholdingAmount,officialRow.withholdingAmount)))
+     throw new RangeError("NTA official tax table amount/source/version mismatch");
+ }
  if(!["reviewedDeductible","reviewedNotDeductible","unknown"].includes(employerExpenseDeductibility))
    throw new RangeError("corporate officer remuneration deduction requires explicit legal treatment");
- const cashReady=["scenarioAssumption","externallyReviewed"].includes(taxTableEvidence.lookupStatus)&&
+ const cashReady=(["scenarioAssumption","externallyReviewed"].includes(taxTableEvidence.lookupStatus)||
+     (taxTableEvidence.lookupStatus==="officialTableVerified"&&officialRow?.status==="officialRowVerified"))&&
      employerExpenseDeductibility!=="unknown";
  const net=gross-insurance-withholding;
  const cashEvents=[
@@ -67,7 +87,9 @@ export function compileOfficerPayrollMonth({
   incomeTaxPrepayment:withholding,employeeSocialInsurance:insurance,
   cashEvents:cashReady?cashEvents:[],status:cashReady?"estimated":"incomplete",
   expenseTreatment:employerExpenseDeductibility,
-  sourceUrl:taxTableEvidence.sourceUrl,
+  sourceUrl:taxTableEvidence.sourceUrl,officialRow,
+  tableVerificationStatus:taxTableEvidence.lookupStatus==="officialTableVerified"?
+    (officialRow?.status??"incomplete"):taxTableEvidence.lookupStatus,
   note:"No cash created for housing benefit; employer+officer cash transfer cancels at group level; withholding is employee prepayment"};
 }
 /** Corporate salary cost is gross cash salary; do not also expense its cash
