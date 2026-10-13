@@ -74,11 +74,13 @@ footer{font-size:.8rem;color:#516a76;padding:20px 0}
   <button class="secondary" type="button" id="choose-import">v1.1 JSONを読み込む</button>
   <input class="sr-only" id="import-file" type="file" accept=".json,application/json">
  </div>
- <h3>税額資料の一時読込（開発専用）</h3>
- <p>税額は本アプリが自動確定したものではありません。<strong>投資あり／なしの各納税主体・年度の税額</strong>と納付月を外部で検証済みと仮定したサンプルだけを読込みます。保存下書きとは別管理し、明示保存されません。</p>
+ <h3>税務試算ルート（開発専用）</h3>
+ <p>（A）外部仮定の年次税額を納税CFに反映する従来ルートと、（B）<strong>営業元帳から所得区分・費用の算入割合・仮定税率を明示して年次税額を計算する限定ルート</strong>を区別します。購入物件・VAT・実際の申告適格性は未接続です。税務前提は一時読込のみで、下書きに自動保存しません。</p>
  <div class="actions">
-  <button type="button" class="secondary" id="load-demo-tax">架空のBase税額資料を読込む</button>
-  <button type="button" class="secondary" id="choose-tax-import">税額資料JSONを読込む</button>
+  <button type="button" class="secondary" id="load-demo-tax">外部税額の架空Base例を読込む</button>
+  <button type="button" class="secondary" id="choose-derived-demo">自動税額計算用の架空M4物件に切替</button>
+  <button type="button" class="secondary" id="load-derived-demo-tax">所得区分・仮定税率から自動試算</button>
+  <button type="button" class="secondary" id="choose-tax-import">税額／税額計算プランJSONを読込む</button>
   <button type="button" class="secondary" id="clear-tax">税額資料を解除</button>
   <input class="sr-only" id="tax-import-file" type="file" accept=".json,application/json">
  </div>
@@ -93,6 +95,7 @@ footer{font-size:.8rem;color:#516a76;padding:20px 0}
 import {previewV11Scenario} from "../src/v11-preview-engine.mjs";
 import {inspectV11Draft,parseV11Draft,saveV11Draft,restoreV11Draft,serializeV11Draft} from "../src/v11-draft-storage.mjs";
 import {compileV11IncomeTaxSidecar} from "../src/v11-income-tax-sidecar.mjs";
+import {deriveV11OrdinaryTax} from "../src/v11-derived-ordinary-tax.mjs";
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=v=>v===null||v===undefined?"算定保留":new Intl.NumberFormat("ja-JP",{maximumFractionDigits:0}).format(v)+"円";
@@ -109,7 +112,11 @@ function setDirty(value=true){dirty=value;$("save-indicator").textContent=value?
 function activeScenario(){return $("scenario").value||data?.scenarios?.[0]?.id;}
 function calculate(){
  if(!data)return null;
- try{last=previewV11Scenario(data,{scenarioId:activeScenario(),incomeTaxSidecar:taxSidecar});alertStatus(
+ try{
+  const auto=taxSidecar?.version==="v11-derived-ordinary-tax-plan-1";
+  last=previewV11Scenario(data,{scenarioId:activeScenario(),
+    ...(auto?{derivedTaxPlan:taxSidecar}:{incomeTaxSidecar:taxSidecar})});
+  alertStatus(
   last.status==="estimated-pre-tax"?
     "税引前試算が計算できました。所得税等の参考値は税額資料の照合結果を確認してください。正式な税引後指標は算定保留です。":
    "一部の計算を保留しました。入力不足欄を確認してください。",false);
@@ -155,7 +162,9 @@ function renderKpis(){
   ["参考NPV（税引前CFにP04適用）",fmt(r.preTax.NPV)],
   ["所得税等を差引いた参考NPV",fmt(r.afterIncomeTaxSensitivity?.NPV)],
   ["正式な税引後NPV／IRR","算定保留"],
-  ["所得税等の資料",r.incomeTaxStatus==="estimated"?"外部仮定値を納付月に接続":"未接続／不一致"],
+  ["所得税等の計算",r.incomeTaxStatus==="estimated"?
+      (r.incomeTaxCalculationBasis==="derivedFromUnitOperations"?
+       "営業収益・費用から試算（要税務審査）":"外部仮定値を納付月に接続"):"未接続／不一致"],
   ["消費税・申告適格性","未接続（0円ではありません）"]]:
   [["税引前・税引後評価","算定保留"]];
  $("kpis").innerHTML=kpis.map(x=>'<div class="kpi"><span class="muted small">'+
@@ -181,11 +190,22 @@ function renderTaxCrosswalk(){
  if(!Array.isArray(rows)){
   $("tax-crosswalk").textContent="計算を完了してから主体別元帳を表示します。";return;
  }
+ const reviewed=new Map();
+ if(last.incomeTaxCalculationBasis==="derivedFromUnitOperations"&&
+    last.incomeTaxStatus==="estimated"){
+   for(const x of last.derivedTaxItems??[]){
+     const k=x.entityId+"|"+x.taxYear;
+     reviewed.set(k,(reviewed.get(k)??0)+(x.kind==="revenue"?x.amount:
+       x.kind==="deductibleExpense"||x.kind==="depreciation"?-x.amount:x.amount));
+   }
+ }
  $("tax-crosswalk").innerHTML=simpleTable(
-  ["課税主体","暦年","宿泊売上","賃貸売上","営業現金費用","借入利息支払","取得現金支出","売却総額","課税所得"],
+  ["課税主体","暦年","宿泊売上","賃貸売上","営業現金費用","借入利息支払","取得現金支出","売却総額","税務審査後の通常所得（限定試算）"],
   rows.map(x=>[x.entityId,x.taxYear,fmt(x.lodgingRevenue),fmt(x.rentalRevenue),
     fmt(x.cashOperatingExpenseForReview),fmt(x.interestCashPaid),
-    fmt(x.purchaseCapitalCash),fmt(x.disposalGrossCash),"未算定"]));
+    fmt(x.purchaseCapitalCash),fmt(x.disposalGrossCash),
+    reviewed.has(x.entityId+"|"+x.taxYear)?
+      fmt(reviewed.get(x.entityId+"|"+x.taxYear)):"未算定"]));
 }
 function selected(){return data.units.find(x=>x.id===selectedUnit)??data.units[0]}
 function renderEditor(){
@@ -216,7 +236,9 @@ function renderLimitations(){
  last.status==="incomplete"?(last.missing??[]).map(x=>(x.unitId??"全体")+" "+(x.month??"")+
   " "+x.fieldId+" — "+x.reason):[...(last.limitations??[]),
   last.incomeTaxStatus==="incomplete"?"所得税等の資料： "+last.incomeTaxBlocker:
-    "所得税等の外部仮定値を納付月へ接続しました。消費税を含む正式な税引後評価ではありません。",
+    last.incomeTaxCalculationBasis==="derivedFromUnitOperations"?
+      "住戸営業データとレビュー済みの所得区分・費用按分・税率仮定から所得税等を試算しました。購入物件・償却・消費税を含む正式な税引後評価ではありません。":
+      "所得税等の外部仮定値を納付月へ接続しました。消費税を含む正式な税引後評価ではありません。",
   ...(last.incomeTaxWarnings??[]),
   "未入力の任意詳細値を0と解釈した箇所："+(last.inputWarnings?.length??0)+"件"];
  $("limitations").innerHTML="<ul>"+lines.map(x=>"<li>"+esc(x)+"</li>").join("")+"</ul>";
@@ -246,11 +268,17 @@ function assign(obj){
  setDirty();render();
 }
 function useTaxSidecar(value){
- const check=compileV11IncomeTaxSidecar({document:data,
-   scenarioId:activeScenario(),sidecar:value});
- if(check.status!=="estimated")throw new Error(check.reason??"税額資料がこの入力に適合しません");
+ const auto=value?.version==="v11-derived-ordinary-tax-plan-1";
+ if(!auto&&value?.version!=="v11-income-tax-sidecar-1")
+   throw new Error("対応していない税額資料／税額計算プラン形式です。");
+ const simulation=previewV11Scenario(data,{scenarioId:activeScenario(),
+   ...(auto?{derivedTaxPlan:value}:{incomeTaxSidecar:value})});
+ if(simulation.incomeTaxStatus!=="estimated")
+   throw new Error(simulation.incomeTaxBlocker??"税額資料が現在の入力に適合しません");
  taxSidecar=structuredClone(value);
- $("tax-import-status").textContent="外部仮定の税額資料を一時読込みました（保存されません）。";
+ $("tax-import-status").textContent=auto?
+   "実際の住戸営業元帳と所得区分／税率のレビュー済み仮定から、所得税等を試算しました（保存されません）。":
+   "外部仮定の税額資料を一時読込みました（保存されません）。";
  render();
 }
 async function fetchSample(){
@@ -325,6 +353,21 @@ $("load-demo-tax").addEventListener("click",async()=>{
   if(!response.ok)throw new Error("税額サンプルを取得できません");
   useTaxSidecar(await response.json());
  }catch(e){$("tax-import-status").textContent="税額資料の読込失敗： "+e.message;}
+});
+$("choose-derived-demo").addEventListener("click",async()=>{
+ try{
+  const r=await fetch("./v11-ordinary-income-sample.json",{cache:"no-store"});
+  if(!r.ok)throw new Error("税務自動試算用サンプルを取得できません");
+  assign(await r.json());$("scenario").value="base";setDirty();render();
+  $("tax-import-status").textContent="架空の賃借M4物件2住戸に切替えました。次に所得区分・仮定税率から試算できます。";
+ }catch(e){$("tax-import-status").textContent="サンプル切替失敗： "+e.message;}
+});
+$("load-derived-demo-tax").addEventListener("click",async()=>{
+ try{
+  const r=await fetch("./v11-derived-tax-plan-example.json",{cache:"no-store"});
+  if(!r.ok)throw new Error("所得区分・税率プランを取得できません");
+  useTaxSidecar(await r.json());
+ }catch(e){$("tax-import-status").textContent="自動税額計算の実行失敗： "+e.message;}
 });
 $("choose-tax-import").addEventListener("click",()=>$("tax-import-file").click());
 $("tax-import-file").addEventListener("change",async e=>{
