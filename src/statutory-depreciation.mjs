@@ -78,7 +78,7 @@ export function calculateStatutoryAssetSchedule({asset,methodRule,years}){
   const businessDeduction=depreciation*businessShare;
   lines.push({taxYear:y.taxYear,assetId:asset.assetId,ownerEntityId:asset.ownerEntityId,
    taxCategory:asset.taxCategory,openingBookValue,grossBookReduction:depreciation,
-   businessUseShare,businessDeduction,privateUseAllocation:depreciation-businessDeduction,
+   businessUseShare:businessShare,businessDeduction,privateUseAllocation:depreciation-businessDeduction,
    closingBookValue:book,calculationMethod,rateRuleVersion:methodRule.version,
    sourceUrl:methodRule.sourceUrl,allocationEvidenceUrl:y.allocationEvidenceUrl});
  }
