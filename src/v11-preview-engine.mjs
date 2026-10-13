@@ -12,6 +12,7 @@ import {inspectScenarioOverrides,resolveV11Field,requireResolvedNumber,numericPe
 import {calculateOperatingMonth,validateAnnualLodgingAllocation} from "./operations.mjs";
 import {investingEvents,ledgerFromLoan,compilePretaxLedger} from "./finance.mjs";
 import {evaluatePortfolio} from "./portfolio.mjs";
+import {compileV11IncomeTaxSidecar} from "./v11-income-tax-sidecar.mjs";
 const money=(n,k)=>{if(typeof n!=="number"||!Number.isFinite(n)||n<0)throw new RangeError(k+" must be nonnegative finite number");return n};
 const id=(s,k)=>{if(typeof s!=="string"||!s)throw new TypeError(k+" required");return s};
 const ISO=(s,k)=>{
@@ -326,7 +327,7 @@ function resolveUnit(document,scenarioContext,unit,portfolio,assumptions){
  return {unitId:unit.id,entityId:unit.operatorEntityId,status:"computed",
    missing,optionalZeroDefaults:[...defaults],operating,investing,financing,trace};
 }
-export function previewV11Scenario(document,{scenarioId}={}){
+export function previewV11Scenario(document,{scenarioId,incomeTaxSidecar=null}={}){
  if(document?.schemaVersion!=="1.1.0"||!Array.isArray(document.entities)||
  !Array.isArray(document.units)||!document.units.length)
   throw new TypeError("Complete v1.1 portfolio/entities/units document required");
@@ -395,22 +396,47 @@ export function previewV11Scenario(document,{scenarioId}={}){
     financing:bucket.financing.filter(x=>!isInitial(x))
    })});
  }
+ const year=Number(p.baseDate.slice(0,4));
  const report=evaluatePortfolio({
-  entityLedgers:ledgers,timeZero:t0,baseCalendarYear:Number(p.baseDate.slice(0,4)),
+  entityLedgers:ledgers,timeZero:t0,baseCalendarYear:year,
   holdingYears:p.holdingYears,discountRate:rate,
   taxCoverage:[...entityIds].map(entityId=>({entityId,status:"incomplete"}))
  });
+ // An externally prepared assessment sidecar can connect annual income-tax
+ // assessments to actual payment-calendar years; it NEVER certifies VAT or
+ // full after-tax investor valuation. Stale sidecars cannot be reused.
+ const tax=compileV11IncomeTaxSidecar({
+    document,scenarioId:scenario.scenarioId,sidecar:incomeTaxSidecar
+ });
+ const incomeTaxReport=tax.status==="estimated"?evaluatePortfolio({
+    entityLedgers:ledgers,timeZero:t0,baseCalendarYear:year,
+    holdingYears:p.holdingYears,discountRate:rate,taxes:tax.entries,
+    taxCoverage:[...entityIds].map(entityId=>({entityId,status:"estimated"}))
+ }):null;
  return {status:"estimated-pre-tax",scenarioId:scenario.scenarioId,units:unitResults,
   preTax:report.preTax,afterTax:null,CF0:report.CF0,
+  afterIncomeTaxSensitivity:incomeTaxReport?.afterTax??null,
+  incomeTaxCashEvents:tax.status==="estimated"?tax.entries:[],
+  incomeTaxStatus:tax.status,
+  incomeTaxBlocker:tax.status==="incomplete"?tax.reason:null,
+  incomeTaxAudit:tax.status==="estimated"?tax.audit:[],
+  incomeTaxWarnings:tax.status==="estimated"?tax.warnings:[],
   referenceDiscountRateBasis:rate===null?null:
    "P04 is the user's AFTER-TAX equity required return. Pre-tax NPV at that same rate is only a sensitivity reference, not an accepted after-tax investment valuation.",
-  annual:report.annual.map(x=>({year:x.year,operating:x.operating,
-     investing:x.investing,financing:x.financing,preTaxEquityCF:x.preTaxEquityCF})),
+  annual:report.annual.map(x=>({
+     year:x.year,operating:x.operating,
+     investing:x.investing,financing:x.financing,preTaxEquityCF:x.preTaxEquityCF
+  })),
+  annualIncomeTaxSensitivity:incomeTaxReport?.annual.map(x=>({
+     year:x.year,incrementalTaxCashFlow:x.taxCashFlow,
+     postIncomeTaxEquityCF:x.afterTaxEquityCF
+  }))??null,
   inputWarnings:unitResults.flatMap(x=>x.optionalZeroDefaults.map(fieldId=>({
     unitId:x.unitId,fieldId,reason:"Optional detail absent, interpreted as zero for this restricted forecast"}))),
   taxStatus:"incomplete",
   limitations:[
-    "Tax, VAT, depreciation, internal owner/operator transfers and after-tax NPV/IRR are NOT evaluated",
+    "VAT, complete taxable income/depreciation derivation, inter-entity transfers and FULL after-tax NPV/IRR are NOT evaluated",
+    "An optional external income-tax sidecar produces a provisional post-income-tax sensitivity only; it is not full after-tax cash flow",
     "The pre-tax NPV is a reference sensitivity using P04 after-tax equity discount rate, not a tax-adjusted investor NPV",
     "Full-month acquisitions/openings and month-end exit only; no arbitrary-date partial revenue",
     "Initial transaction amounts in base month belong to CF0 and are not duplicated in year 1",
