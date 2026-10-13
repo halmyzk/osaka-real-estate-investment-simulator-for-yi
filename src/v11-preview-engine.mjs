@@ -402,6 +402,8 @@ export function previewV11Scenario(document,{scenarioId}={}){
  });
  return {status:"estimated-pre-tax",scenarioId:scenario.scenarioId,units:unitResults,
   preTax:report.preTax,afterTax:null,CF0:report.CF0,
+  referenceDiscountRateBasis:rate===null?null:
+   "P04 is the user's AFTER-TAX equity required return. Pre-tax NPV at that same rate is only a sensitivity reference, not an accepted after-tax investment valuation.",
   annual:report.annual.map(x=>({year:x.year,operating:x.operating,
      investing:x.investing,financing:x.financing,preTaxEquityCF:x.preTaxEquityCF})),
   inputWarnings:unitResults.flatMap(x=>x.optionalZeroDefaults.map(fieldId=>({
@@ -409,6 +411,7 @@ export function previewV11Scenario(document,{scenarioId}={}){
   taxStatus:"incomplete",
   limitations:[
     "Tax, VAT, depreciation, internal owner/operator transfers and after-tax NPV/IRR are NOT evaluated",
+    "The pre-tax NPV is a reference sensitivity using P04 after-tax equity discount rate, not a tax-adjusted investor NPV",
     "Full-month acquisitions/openings and month-end exit only; no arbitrary-date partial revenue",
     "Initial transaction amounts in base month belong to CF0 and are not duplicated in year 1",
     "Only evidenced operating inputs and supported acquisition/lease/asset/loan/exit flows are shown",
