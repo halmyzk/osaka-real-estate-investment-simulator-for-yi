@@ -47,6 +47,8 @@ export function compileOfficerPayrollMonth({
    throw new RangeError("2027 withholding table cannot be reused for earlier/later tax years");
  if(!["reviewedDeductible","reviewedNotDeductible","unknown"].includes(employerExpenseDeductibility))
    throw new RangeError("corporate officer remuneration deduction requires explicit legal treatment");
+ const cashReady=["scenarioAssumption","externallyReviewed"].includes(taxTableEvidence.lookupStatus)&&
+     employerExpenseDeductibility!=="unknown";
  const net=gross-insurance-withholding;
  const cashEvents=[
   {id:payrollId+":employerSalary",entityId:employerEntityId,month:payMonth,
@@ -63,8 +65,7 @@ export function compileOfficerPayrollMonth({
   grossCashSalary:gross,noncashHousingBenefit:housing,
   employerEconomicGrossCost:gross,employeeCashReceipt:net,
   incomeTaxPrepayment:withholding,employeeSocialInsurance:insurance,
-  cashEvents,status:["scenarioAssumption","externallyReviewed"].includes(taxTableEvidence.lookupStatus) &&
-    employerExpenseDeductibility!=="unknown"?"estimated":"incomplete",
+  cashEvents:cashReady?cashEvents:[],status:cashReady?"estimated":"incomplete",
   expenseTreatment:employerExpenseDeductibility,
   sourceUrl:taxTableEvidence.sourceUrl,
   note:"No cash created for housing benefit; employer+officer cash transfer cancels at group level; withholding is employee prepayment"};
