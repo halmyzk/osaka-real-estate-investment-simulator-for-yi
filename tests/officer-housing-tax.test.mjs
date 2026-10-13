@@ -124,3 +124,18 @@ test("Deductible treatment does not double deduct, and unbooked benefit creates 
  assert.equal(deductible.corporateNondeductibleAddback,0);
  assert.throws(()=>calculateOfficerHousingTaxMonth({...args(),bookedOfficerBenefitExpense:12000}));
 });
+
+
+test("B-T13 independent zero-rent statutory examples: all eligible classified officer housing is nonzero",()=>{
+ const small=calculateOfficerHousingTaxMonth(args());
+ const owned=calculateOfficerHousingTaxMonth({...args(),classification:"ordinary",totalFloorAreaSqm:150});
+ const leased=calculateOfficerHousingTaxMonth({...args(),classification:"ordinary",totalFloorAreaSqm:150,
+  companyTenure:"leased",landlordRentPaidByCorporation:120000});
+ const luxury=calculateOfficerHousingTaxMonth({...args(),classification:"luxury",
+  excludedLuxuryStatus:"reviewedLuxury",normalMarketRent:350000});
+ near(small.imputedSalaryBenefit,15360);
+ near(owned.imputedSalaryBenefit,41666.66666666667);
+ near(leased.imputedSalaryBenefit,60000);
+ near(luxury.imputedSalaryBenefit,350000);
+ for(const x of [small,owned,leased,luxury])assert.ok(x.imputedSalaryBenefit>0);
+});
