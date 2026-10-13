@@ -7,7 +7,7 @@ import {evaluatePortfolio} from "./portfolio.mjs";
  */
 export function verifyAssessmentCoverage({entities,assessmentYears,requiredKinds,withProject,withoutProject}){
  if(!Array.isArray(entities)||!entities.length||!Array.isArray(assessmentYears)||!assessmentYears.length ||
- !Array.isArray(requiredKinds)||!Array.isArray(withProject)||!Array.isArray(withoutProject))
+ (!requiredKinds||typeof requiredKinds!=="object"||Array.isArray(requiredKinds))||!Array.isArray(withProject)||!Array.isArray(withoutProject))
    throw new TypeError("nonempty entities/years plus required kinds and scenario arrays");
  const entitySet=new Set(),yearSet=new Set();
  for(const e of entities){
