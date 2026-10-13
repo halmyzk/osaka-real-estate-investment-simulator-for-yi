@@ -130,7 +130,7 @@ export function assessCorporateYear({
  if(!Number.isInteger(taxYear)||taxYear<1900)throw new RangeError("tax year");
  const rule=taxRule?.corporate;meta(rule,taxYear);
  const localRule=taxRule?.local;meta(localRule,taxYear);
- if(!Array.isArray(localRule.paymentMonths)||!localRule.paymentMonths.length||localRule.paymentMonths.some(m=>!/^\\d{4}-(0[1-9]|1[0-2])$/.test(m)))throw new RangeError("explicit local corporate tax payment months required");
+ if(!Array.isArray(localRule.paymentMonths)||!localRule.paymentMonths.length||localRule.paymentMonths.some(m=>!/^\d{4}-(0[1-9]|1[0-2])$/.test(m)))throw new RangeError("explicit local corporate tax payment months required");
  number(baselineCorporateProfit,"baselineCorporateProfit");
  if(!Array.isArray(openingLossesWithProject)||!Array.isArray(openingLossesWithoutProject))
    throw new TypeError("both counterfactual loss registers required, including empty");
