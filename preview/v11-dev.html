@@ -123,9 +123,10 @@ function renderBusiness(){
 function renderEvidence(){
  const rows=[];
  const walk=(obj,subject)=>{
-  for(const [grp,fields] of Object.entries(obj?.fields??{})){
-   for(const [id,f] of Object.entries(fields??{})){
-    rows.push([subject,id,String(f.value??"未設定"),f.unit??"",f.sourceType??"",f.sourceUrl??"—"]);
+  for(const [key,fields] of Object.entries(obj?.fields??{})){
+   const entries=/^(P|E)\d{2}$/.test(key)?[[key,fields]]:Object.entries(fields??{});
+   for(const [fieldId,f] of entries){
+    rows.push([subject,fieldId,String(f?.value??"未設定"),f?.unit??"",f?.sourceType??"",f?.sourceUrl??"—"]);
    }
   }
  };
