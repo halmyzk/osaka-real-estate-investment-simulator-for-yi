@@ -78,6 +78,8 @@ export function assessPersonalYear({
  const rule=taxRule?.personal;meta(rule,taxYear);
  number(baselineTaxableIncome,"baselineTaxableIncome",{min:0});
  number(rule.residenceRate,"residenceRate",{min:0,max:1});
+ if(!Array.isArray(rule.brackets)||rule.brackets.length!==7)throw new RangeError("seven configured income brackets required");
+ rule.brackets.forEach((b,i)=>{if(!Array.isArray(b)||b.length!==3||typeof b[0]!=="number"||!(b[0]>0)||typeof b[1]!=="number"||b[1]<0||b[1]>1||typeof b[2]!=="number"||b[2]<0)throw new RangeError("invalid tax bracket "+i);if(i&&b[0]<=rule.brackets[i-1][0])throw new RangeError("tax bracket upper bounds must increase");});
  number(rule.residenceBaseAdjustment,"residenceBaseAdjustment");
  actual(rule.realEstateLossOffsetAllowed,"realEstateLossOffsetAllowed");
  actual(rule.businessLossOffsetAllowed,"businessLossOffsetAllowed");
@@ -86,7 +88,7 @@ export function assessPersonalYear({
    throw new RangeError("individual cannot use corporate income category");
  const breakdown=allocation(rows);
  const baseline=nationalPersonalIncomeTax({
-  taxYear,taxableIncome:baselineTaxableIncome,baseRounding:rule.baseRounding});
+  taxYear,taxableIncome:baselineTaxableIncome,baseRounding:rule.baseRounding,brackets:rule.brackets});
  const adjusted=applyIndividualIncomeCategories({
   baselineOrdinaryTaxableIncome:baselineTaxableIncome,
   projectCategories:Object.entries(breakdown).map(([category,amount])=>({category,amount})),
@@ -94,7 +96,7 @@ export function assessPersonalYear({
   eligibleBusinessLossOffset:rule.businessLossOffsetAllowed
  });
  const projected=nationalPersonalIncomeTax({
-  taxYear,taxableIncome:adjusted.adjustedTaxableIncome,baseRounding:rule.baseRounding});
+  taxYear,taxableIncome:adjusted.adjustedTaxableIncome,baseRounding:rule.baseRounding,brackets:rule.brackets});
  const residence=(ordinary)=>Math.max(0,ordinary+rule.residenceBaseAdjustment)*rule.residenceRate;
  const residenceWithout=residence(baselineTaxableIncome);
  const residenceWith=residence(adjusted.adjustedTaxableIncome);
@@ -128,6 +130,7 @@ export function assessCorporateYear({
  if(!Number.isInteger(taxYear)||taxYear<1900)throw new RangeError("tax year");
  const rule=taxRule?.corporate;meta(rule,taxYear);
  const localRule=taxRule?.local;meta(localRule,taxYear);
+ if(!Array.isArray(localRule.paymentMonths)||!localRule.paymentMonths.length||localRule.paymentMonths.some(m=>!/^\\d{4}-(0[1-9]|1[0-2])$/.test(m)))throw new RangeError("explicit local corporate tax payment months required");
  number(baselineCorporateProfit,"baselineCorporateProfit");
  if(!Array.isArray(openingLossesWithProject)||!Array.isArray(openingLossesWithoutProject))
    throw new TypeError("both counterfactual loss registers required, including empty");
@@ -162,12 +165,12 @@ export function assessCorporateYear({
  const assessmentsWithProject=[
   tag("corp-"+entityId+"-"+taxYear,entityId,taxYear,"corporateTax",
    withProject.national.corporateTaxTotalExcludingLocal,rule),
-  tag("local-"+entityId+"-"+taxYear,entityId,taxYear,"otherTax",withProject.local.total,localRule)
+  {...tag("local-"+entityId+"-"+taxYear,entityId,taxYear,"otherTax",withProject.local.total,localRule),paymentMonths:localRule.paymentMonths}
  ];
  const assessmentsWithoutProject=[
   tag("corp-"+entityId+"-"+taxYear,entityId,taxYear,"corporateTax",
    without.national.corporateTaxTotalExcludingLocal,rule),
-  tag("local-"+entityId+"-"+taxYear,entityId,taxYear,"otherTax",without.local.total,localRule)
+  {...tag("local-"+entityId+"-"+taxYear,entityId,taxYear,"otherTax",without.local.total,localRule),paymentMonths:localRule.paymentMonths}
  ];
  return {entityId,entityType:"corporation",taxYear,status:"estimated",projectProfit,
   baseline:without,withProject,incrementalAssessment:withProject.total-without.total,
