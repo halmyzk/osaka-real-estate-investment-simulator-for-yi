@@ -71,12 +71,17 @@ const allocation=groups=>Object.fromEntries(["business","realEstate","miscellane
  * not an assertion that individual income and municipal tax bases are equal.
  */
 export function assessPersonalYear({
- entityId,taxYear,baselineTaxableIncome,projectTaxItems,taxRule
+ entityId,taxYear,baselineTaxableIncome,projectTaxItems,taxRule,
+ officerSalaryBenefitWithProject=0,officerSalaryBenefitWithoutProject=0
 }){
  required(entityId,"entityId");
  if(!Number.isInteger(taxYear)||taxYear<1900)throw new RangeError("tax year");
  const rule=taxRule?.personal;meta(rule,taxYear);
  number(baselineTaxableIncome,"baselineTaxableIncome",{min:0});
+ number(officerSalaryBenefitWithProject,"officerSalaryBenefitWithProject",{min:0});
+ number(officerSalaryBenefitWithoutProject,"officerSalaryBenefitWithoutProject",{min:0});
+ const noProjectTaxableIncome=baselineTaxableIncome+officerSalaryBenefitWithoutProject;
+ const withProjectSalaryBase=baselineTaxableIncome+officerSalaryBenefitWithProject;
  number(rule.residenceRate,"residenceRate",{min:0,max:1});
  if(!Array.isArray(rule.brackets)||rule.brackets.length!==7)throw new RangeError("seven configured income brackets required");
  rule.brackets.forEach((b,i)=>{if(!Array.isArray(b)||b.length!==3||typeof b[0]!=="number"||!(b[0]>0)||typeof b[1]!=="number"||b[1]<0||b[1]>1||typeof b[2]!=="number"||b[2]<0)throw new RangeError("invalid tax bracket "+i);if(i&&b[0]<=rule.brackets[i-1][0])throw new RangeError("tax bracket upper bounds must increase");});
@@ -88,9 +93,9 @@ export function assessPersonalYear({
    throw new RangeError("individual cannot use corporate income category");
  const breakdown=allocation(rows);
  const baseline=nationalPersonalIncomeTax({
-  taxYear,taxableIncome:baselineTaxableIncome,baseRounding:rule.baseRounding,brackets:rule.brackets});
+  taxYear,taxableIncome:noProjectTaxableIncome,baseRounding:rule.baseRounding,brackets:rule.brackets});
  const adjusted=applyIndividualIncomeCategories({
-  baselineOrdinaryTaxableIncome:baselineTaxableIncome,
+  baselineOrdinaryTaxableIncome:withProjectSalaryBase,
   projectCategories:Object.entries(breakdown).map(([category,amount])=>({category,amount})),
   eligibleRealEstateLossOffset:rule.realEstateLossOffsetAllowed,
   eligibleBusinessLossOffset:rule.businessLossOffsetAllowed
@@ -98,7 +103,7 @@ export function assessPersonalYear({
  const projected=nationalPersonalIncomeTax({
   taxYear,taxableIncome:adjusted.adjustedTaxableIncome,baseRounding:rule.baseRounding,brackets:rule.brackets});
  const residence=(ordinary)=>Math.max(0,ordinary+rule.residenceBaseAdjustment)*rule.residenceRate;
- const residenceWithout=residence(baselineTaxableIncome);
+ const residenceWithout=residence(noProjectTaxableIncome);
  const residenceWith=residence(adjusted.adjustedTaxableIncome);
  const assessmentsWithProject=[
   tag("income-"+entityId+"-"+taxYear,entityId,taxYear,"incomeTax",projected.totalNationalTax,rule),
@@ -110,11 +115,13 @@ export function assessPersonalYear({
  ];
  return {entityId,entityType:"individual",taxYear,status:"estimated",breakdown,
   individualLossOffset:adjusted,baselineNational:baseline,projectNational:projected,
+  officerSalaryBenefitWithProject,officerSalaryBenefitWithoutProject,
   incomeTaxDelta:projected.totalNationalTax-baseline.totalNationalTax,
   residenceTaxDelta:residenceWith-residenceWithout,
   assessmentsWithProject,assessmentsWithoutProject,
   notes:["Residence-tax rate and base adjustment are user-supplied estimates",
    "Pre-project income tax baseline and category offsets must be independently validated",
+   "Officer housing salary is additional ordinary income, not lodging or miscellaneous income",
    "Credits/withholding/estimated prepayment and sale taxes are not included"]};
 }
 /**
