@@ -35,6 +35,7 @@ export function auditOperatingVAT({operating, rows}) {
 }
 export function auditTaxCompleteness({entities, years, checks}) {
   if (!Array.isArray(entities) || !Array.isArray(years) || !Array.isArray(checks)) throw new TypeError("Arrays required");
+  if (entities.length === 0 || years.length === 0 || new Set(entities).size !== entities.length || new Set(years).size !== years.length || entities.some(x=>typeof x!=="string"||!x) || years.some(x=>!Number.isInteger(x)||x<1900)) throw new RangeError("Unique entities and tax years required");
   const required = ["income", "assets", "vat", "cashSchedule"];
   const results = [];
   for (const entityId of entities) for (const year of years) {
