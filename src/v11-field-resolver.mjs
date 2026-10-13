@@ -39,8 +39,8 @@ function metadata(value,fieldId){
    sourceUrl:value.sourceUrl??null,asOfDate:value.asOfDate??null,isOverride:value.isOverride===true};
 }
 function location(group,portfolio,entity,unit,month){
- if(group==="P")return portfolio?.fields?.P??{};
- if(group==="E")return entity?.fields?.E??{};
+ if(group==="P")return portfolio?.fields??{};
+ if(group==="E")return entity?.fields??{};
  if(unitGroup.has(group)){
   if(monthGroup.has(group)&&month?.fields?.[group])return month.fields[group];
   return unit?.fields?.[group]??{};
