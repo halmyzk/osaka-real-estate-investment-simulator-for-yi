@@ -103,3 +103,27 @@ test("B-T05: cannot silently ignore an unassessed entity/year or misclassify cor
   baselineCorporateProfit:1000000,projectTaxItems:[item("corp","miscellaneous","revenue",100000)],
   openingLossesWithProject:[],openingLossesWithoutProject:[],taxRule:corporateRule}));
 });
+
+
+test("B-T23 corporate loss vintages change taxable income and tax cash, not a fictitious refund",()=>{
+ const loss=[{id:"loss-2024",originYear:2024,expirationYear:2034,remainingAmount:1000000}];
+ const c=assessCorporateYear({entityId:"corp",taxYear:2026,baselineCorporateProfit:3000000,
+   projectTaxItems:[item("corp","corporate","revenue",1000000)],
+   openingLossesWithProject:loss,openingLossesWithoutProject:loss,taxRule:corporateRule});
+ assert.equal(c.baseline.offset.usedLoss,1000000);
+ assert.equal(c.baseline.offset.taxableIncome,2000000);
+ assert.equal(c.withProject.offset.taxableIncome,3000000);
+ assert.equal(c.incrementalAssessment,200000);
+ assert.equal(c.withProject.offset.closingLosses.length,0);
+ assert.equal(c.baseline.offset.closingLosses.length,0);
+ const lossMaking=assessCorporateYear({entityId:"corp",taxYear:2026,baselineCorporateProfit:500000,
+   projectTaxItems:[item("corp","corporate","deductibleExpense",700000)],
+   openingLossesWithProject:[],openingLossesWithoutProject:[],taxRule:corporateRule});
+ assert.equal(lossMaking.withProject.offset.taxableIncome,0);
+ assert.equal(lossMaking.withProject.offset.newLoss,200000);
+ assert.equal(lossMaking.withProject.offset.newLossAdded,200000);
+ assert.equal(lossMaking.withProject.national.corporateNationalTax,0);
+ assert.ok(lossMaking.incrementalAssessment<0);
+ // The tax saving is a lower expected payment versus baseline, not an
+ // automatic transfer/refund of the operating tax loss.
+});
