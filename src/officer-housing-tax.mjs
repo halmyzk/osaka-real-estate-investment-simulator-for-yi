@@ -97,9 +97,42 @@ export function summarizeOfficerHousingTaxYear({corporationId,officerId,taxYear,
  }
  const salaryBenefit=records.reduce((a,x)=>a+x.imputedSalaryBenefit,0);
  const corporateAddback=records.reduce((a,x)=>a+x.corporateNondeductibleAddback,0);
- return {corporationId,officerId,taxYear,salaryBenefit,corporateAddback,monthCount:records.length,
+ const corporateBookedExpense=records.reduce((a,x)=>a+x.bookedOfficerBenefitExpense,0);
+ return {corporationId,officerId,taxYear,salaryBenefit,corporateAddback,corporateBookedExpense,monthCount:records.length,
    corporateTaxItems:corporateAddback===0?[]:[{entityId:corporationId,taxYear,category:"corporate",
      kind:"adjustment",amount:corporateAddback,source:"officerHousingNondeductibleBookedBenefit"}],
    status:"estimated",sourceUrls:[officerSource,corporateSource],
    note:"Noncash officer salary and nondeductible addback only; any actual rent must already be booked in legal-entity taxable revenue/expense and cash ledgers"};
+}
+
+/**
+ * Require the actual expense in corporate tax items before posting an
+ * addback of a non-deductible officer remuneration expense.
+ *
+ * An addback alone (without the original book expense) would falsely
+ * increase tax over the project/no-project counterfactual.
+ * Does not insert or duplicate a separate cash expense.
+ */
+export function reconcileOfficerHousingCorporateTaxItems({
+  annualHousing,recordedBookExpenseTaxItems
+}){
+ if(annualHousing?.status!=="estimated"||!Array.isArray(recordedBookExpenseTaxItems))
+   throw new TypeError("verified annual housing and booked expense tax items required");
+ const expected=annualHousing.corporateBookedExpense;
+ n(expected,"corporateBookedExpense");
+ const found=recordedBookExpenseTaxItems.filter(x=>x.source==="officerHousingBookedBenefitExpense");
+ if(expected===0 && found.length!==0)throw new RangeError("nonexistent officer benefit book expense present");
+ if(expected>0 && found.length!==1)throw new RangeError("actual officer benefit book expense must be uniquely evidenced");
+ if(found.length){
+   const a=found[0];
+   if(a.entityId!==annualHousing.corporationId||a.taxYear!==annualHousing.taxYear||
+     a.kind!=="deductibleExpense"||a.category!=="corporate"||
+     !Number.isFinite(a.amount)||Math.abs(a.amount-expected)>1e-6)
+       throw new RangeError("officer benefit expense does not reconcile to annual books");
+ }
+ const items=[...recordedBookExpenseTaxItems,...annualHousing.corporateTaxItems];
+ return {corporationId:annualHousing.corporationId,taxYear:annualHousing.taxYear,
+  projectTaxItems:items,netTaxableProfitAdjustment:items.reduce((s,x)=>s+(x.kind==="adjustment"?x.amount:-x.amount),0),
+  originalBookExpense:expected,nondeductibleAddback:annualHousing.corporateAddback,
+  status:"estimated",note:"No new cash event; original book expense must be evidenced separately and non-deductible amount added back once"};
 }
