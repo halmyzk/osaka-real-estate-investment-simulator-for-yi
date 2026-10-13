@@ -31,6 +31,8 @@ export function calculateOfficerHousingTaxMonth({
  n(officerRentPaid,"officerRentPaid");
  n(landlordRentPaidByCorporation,"landlordRentPaidByCorporation");
  if(!["owned","leased"].includes(companyTenure))throw new RangeError("corporate housing tenure required");
+ if(companyTenure==="leased" && landlordRentPaidByCorporation<=0)
+   throw new RangeError("actual landlord rent must be supplied for leased officer housing");
  if(!["small","ordinary","luxury"].includes(classification))throw new RangeError("classification required");
  if(!classificationEvidenceUrl?.startsWith("https://"))throw new RangeError("classification evidence URL required");
  const smallLimit=buildingUsefulLifeYears<=30?132:99;
