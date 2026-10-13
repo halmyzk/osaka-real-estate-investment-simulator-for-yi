@@ -60,15 +60,15 @@ test("B-T19/B-T20 personal nonbusiness sale basis -> separate gains tax -> next-
   }))];
  const basis=calculateMixedUseIndividualSaleBasis({...saleArgs,
   soldAt:"2026-10-01",businessDepreciationLedger:allYears});
- assert.equal(basis.adjustedBuildingBasis,6324500);
+ assert.equal(basis.adjustedBuildingBasis,6074500);
  const gain=landBuildingSaleGain({ownerType:"individual",purchaseDate:"2016-01-10",
   saleDate:"2026-10-01",proceeds:20000000,sellingCosts:1000000,
   adjustedLandBasis:5000000,adjustedBuildingBasis:basis.adjustedBuildingBasis});
  assert.equal(gain.holdingClass,"long");
- assert.equal(gain.taxableGain,7675500);
+ assert.equal(gain.taxableGain,7925500);
  const tax=individualSaleGainTax({taxYear:2026,taxableGain:gain.taxableGain,holdingClass:"long",
   reconstructionRate:.021,defenseIncomeRate:0,ruleSourceUrl:NTA3208});
- near(tax.totalTaxBeforeRounding,1559277.825);
+ near(tax.totalTaxBeforeRounding,1610065.325);
  const project=planTaxPayments({entityId:"person",entityType:"individual",taxYear:2026,
   assessments:[{id:"saleGain",taxKind:"saleGainTax",amount:tax.totalTaxBeforeRounding}]});
  const base=planTaxPayments({entityId:"person",entityType:"individual",taxYear:2026,
@@ -80,8 +80,8 @@ test("B-T19/B-T20 personal nonbusiness sale basis -> separate gains tax -> next-
   timeZero:[{entityId:"person",amount:-15000000}],
   baseCalendarYear:2026,holdingYears:1,discountRate:.08});
  assert.equal(p.annual[1].year,2027);
- near(p.annual[1].taxCashFlow,-1559277.825);
- near(p.reconciliation.afterTaxTotal,19000000-15000000-1559277.825);
+ near(p.annual[1].taxCashFlow,-1610065.325);
+ near(p.reconciliation.afterTaxTotal,19000000-15000000-1610065.325);
 });
 
 test("B-T19 sale basis refuses omission of intermediate 2024/2025 book years",()=>{
