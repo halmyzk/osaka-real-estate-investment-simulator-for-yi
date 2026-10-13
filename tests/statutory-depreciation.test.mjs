@@ -45,16 +45,16 @@ test("B-T10 business use 50% to 30% changes noncash deductible expense, not gros
 test("Land has zero depreciation; building and post-2016 equipment cannot use declining",()=>{
  const landAsset={...asset("straightLine","land"),method:"nonDepreciable",assetId:"land-1"};
  const land=calculateStatutoryAssetSchedule({asset:landAsset,
-  methodRule:rule("nonDepreciable","land"),years:years(2012)});
+  methodRule:rule("nonDepreciable","land"),years:years(2013)});
  assert.ok(land.lines.every(x=>x.grossBookReduction===0));
  assert.equal(land.closingBookValue,1000000);
  assert.throws(()=>calculateStatutoryAssetSchedule({asset:asset("decliningBalance","building"),
-  methodRule:rule("decliningBalance","building"),years:years(2012)}));
+  methodRule:rule("decliningBalance","building"),years:years(2013)}));
  assert.throws(()=>calculateStatutoryAssetSchedule({asset:asset("decliningBalance","buildingEquipment","2026-04-01"),
   methodRule:rule("decliningBalance","buildingEquipment","2026-04-01"),years:years(2027)}));
 });
 test("Missing year's asset record or duplicate assets cannot silently zero annual taxable expense",()=>{
- const x=calculateStatutoryAssetSchedule({asset:asset("straightLine"),methodRule:rule("straightLine"),years:years(2012)});
+ const x=calculateStatutoryAssetSchedule({asset:asset("straightLine"),methodRule:rule("straightLine"),years:years(2013)});
  assert.throws(()=>depreciationTaxItems({assetSchedules:[x],taxYear:2040}));
  assert.throws(()=>depreciationTaxItems({assetSchedules:[x,x],taxYear:2013}));
 });
