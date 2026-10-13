@@ -58,3 +58,21 @@
 - `tests/tax-integrity.test.mjs`: 主体別の税額ゼロ明示、年次欠落、重複税目、独立アンレバードCF、レバード税額の流用禁止を検証。
 - 初回CIは入力形式検証の不具合で2件失敗し、修正後のGitHub ActionsでNode.js **111件合格・0件失敗**、既存のPython JSON Schema検証合格。
 - Gate B全24項目について正式な独立検算・法的受入はまだ完了していない。公開未承認。
+
+
+## 2026-10-13：年次税額算定・法人欠損金・居住用賃貸建物の消費税制限
+
+- `src/annual-income-tax.mjs` は、主体・年度別に個人の事業／不動産／雑所得区分と法人課税所得を集計し、所得税・復興特別所得税・防衛特別所得税・個人住民税の概算、法人税本税・防衛特別法人税・明示入力した法人地方税を**プロジェクトあり／なしの2シナリオ**で試算する。法人欠損金の発生年度別明細はそれぞれ独立入力とする。
+- 同年度税額は `src/income-tax-bridge.mjs` で納税月別CFに変換できる。個人住民税についてはモデル上の編集可能な税率・課税基準額調整を要求し、**自治体の確定税額として扱わない**。法人地方税も同様に設定明細・支払月を要求する。
+- `tests/annual-income-tax.test.mjs` は、雑所得赤字と給与所得の不当な相殺防止、法人の欠損金繰越、償却の事業利用割合が税額へ及ぼす影響、住民税の翌年度分割納付、同一ポートフォリオの納税CFへ反映できることを検証。
+- `src/vat-restrictions.mjs` は、居住用賃貸建物取得時の仕入税額控除制限と、住宅賃貸から一定期間内の課税賃貸（例：民泊）への用途変更による後年度税額調整を**異なる処理**として管理。適用未確認なら `incomplete`、調整税額は自動的な現金還付としない。建物の譲渡による調整は未実装のため算定保留。
+- 国税庁参照（2026-10-13確認）：
+  - https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm
+  - https://www.nta.go.jp/publication/pamph/gensen/2026kaisei.pdf
+  - https://www.nta.go.jp/taxes/shiraberu/taxanswer/hojin/5410.htm
+  - https://www.nta.go.jp/law/shitsugi/shohi/19/22.htm
+  - https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6451.htm
+- `tests/gate-acceptance-matrix.json` の関連テスト証跡を更新。**Gate B全24項目の最終受入は依然0件**（各項目は検算例確認・部分確認段階）。
+- 最新GitHub Actions：Node.js **124件合格・失敗0件**、Python JSON Schema検証成功。
+
+**残る主なブロッカー**：国税・地方税の法定適用資格と確定税額の端数／税額控除、償却資産の法定償却方法と取得費調整、住宅賃貸建物の消費税譲渡調整・仕入控除制限と税込CFの完全統合、役員社宅の給与・法人損金処理、全納税主体・全年度の独立期待値およびB-T01〜B-T24の正式受入。税務上の数値を申告精度として表示しない。
