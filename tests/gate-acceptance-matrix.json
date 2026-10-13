@@ -1,10 +1,11 @@
 {
-  "traceVersion": "2026-10-13-gate-acceptance-2",
+  "traceVersion": "2026-10-13-gate-acceptance-3",
   "target": "docs/v1.1-design-change-spec.md §§13.9,14.11",
   "definition": {
     "exampleVerified": "Specific illustrative expected outcome tested; not full legal or boundary coverage",
     "partial": "Related code has tests but entire acceptance criterion not proven",
-    "notImplemented": "No suitable verified implementation"
+    "notImplemented": "No suitable verified implementation",
+    "criterionVerified": "Specific original acceptance assertion independently verified against identified primary law and numeric fixture; narrower than full Gate B clearance or actual taxpayer qualification"
   },
   "gateB": [
     {
@@ -73,26 +74,31 @@
       "status": "partial",
       "evidence": [
         "tests/tax-rules.test.mjs",
-        "tests/annual-income-tax.test.mjs"
+        "tests/annual-income-tax.test.mjs",
+        "tests/statutory-depreciation.test.mjs",
+        "tests/depreciation-income-tax.test.mjs"
       ],
-      "gap": "Asset/year book roll-forward for straight line only; types and statutory rates incomplete"
+      "gap": "NTA No.5410の定額8年・定率8年の公表表を独立再現。建物／造作／家具の分類、個人家事混在、全年度の取得費調整と法定適格性は未検証。"
     },
     {
       "id": "B-T09",
       "status": "partial",
       "evidence": [
-        "tests/tax.test.mjs"
+        "tests/tax.test.mjs",
+        "tests/depreciation-income-tax.test.mjs"
       ],
-      "gap": "Capital spending does not automatically create deductible expense"
+      "gap": "取得価額100万円の支払CFと償却12.5万円の課税所得控除を別計上。大型内装工事の分類・特例と全資産台帳への統合は未完了。"
     },
     {
       "id": "B-T10",
       "status": "partial",
       "evidence": [
         "tests/tax-rules.test.mjs",
-        "tests/annual-income-tax.test.mjs"
+        "tests/annual-income-tax.test.mjs",
+        "tests/statutory-depreciation.test.mjs",
+        "tests/depreciation-income-tax.test.mjs"
       ],
-      "gap": "Business share 50% to 30% changes depreciation; tax CF sensitivity is not integrated"
+      "gap": "事業割合50%→30%の年別控除額と法人税への反映を検証。個人・費目別の全適用、差異に対応する納税CFの一気通貫シナリオ拡充が必要。"
     },
     {
       "id": "B-T11",
@@ -106,25 +112,43 @@
       "id": "B-T12",
       "status": "partial",
       "evidence": [
-        "tests/tax.test.mjs"
+        "tests/tax.test.mjs",
+        "tests/officer-housing-tax.test.mjs"
       ],
-      "gap": "Basic small/luxury calculations; eligibility and general owned housing statutory method incomplete"
+      "gap": "NTA No.2600の小規模・一般自社所有／借上・豪華社宅算式を独立期待値で検算。各分類の実地適格性、共有部の面積、例外の自動判定は未実装。"
     },
     {
       "id": "B-T13",
-      "status": "partial",
+      "status": "criterionVerified",
       "evidence": [
-        "tests/tax.test.mjs"
+        "tests/tax.test.mjs",
+        "tests/officer-housing-tax.test.mjs"
       ],
-      "gap": "Zero officer rent creates taxable benefit in model; person/corp payroll tax integration incomplete"
+      "gap": "役員無償社宅の給与課税効果0円への誤認防止をNTA No.2600の数値例で確認。社宅区分の法的適格性は個別条件として別途判定する。",
+      "criterionVerification": {
+        "primarySourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/gensen/2600.htm",
+        "corroboratingSourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/hojin/5202.htm",
+        "independentExpectedMonthlyYen": {
+          "smallFree": 15360,
+          "ordinaryOwnedFree": "500000/12",
+          "ordinaryLeasedFree": 60000,
+          "luxuryFree": 350000
+        },
+        "evidenceTests": [
+          "tests/officer-housing-tax.test.mjs"
+        ],
+        "verifiedQuestion": "Provided the housing class and bases are explicitly reviewed, free officer use is NOT treated as zero taxable salary.",
+        "scopeLimit": "Scenario arithmetic verification only; tax-law eligibility of particular property, local taxes and payroll withholding remain unresolved."
+      }
     },
     {
       "id": "B-T14",
       "status": "partial",
       "evidence": [
-        "tests/reconciliation.test.mjs"
+        "tests/reconciliation.test.mjs",
+        "tests/officer-housing-tax.test.mjs"
       ],
-      "gap": "Inter-entity cash pair validated; officer payroll and corp deduction tax effects missing"
+      "gap": "役員個人の給与課税、法人の帳簿費用・損金不算入調整、鏡写しの家賃現金を独立確認。法人の法定損金要件判定と源泉税精算の全体連携は未実装。"
     },
     {
       "id": "B-T15",
@@ -196,9 +220,11 @@
       "evidence": [
         "tests/tax.test.mjs",
         "tests/finance.test.mjs",
-        "tests/annual-income-tax.test.mjs"
+        "tests/annual-income-tax.test.mjs",
+        "tests/statutory-depreciation.test.mjs",
+        "tests/depreciation-income-tax.test.mjs"
       ],
-      "gap": "CapEx cash and noncash depreciation kept separate; no complete register integration"
+      "gap": "家具の取得支出は現金CFに1回、法定償却は非現金で翌年税額に反映。内装改修工事20百万円の分類・資産台帳と完全接続は未完了。"
     },
     {
       "id": "B-T23",
@@ -265,5 +291,5 @@
       "gap": "Grouped line references and VAT trace improved; multi-entity full ledger reconciliation still needed"
     }
   ],
-  "acceptanceNotice": "All 24 B tests are either exampleVerified or partial; none is fully legally and end-to-end accepted. Added scenario tax computation and VAT restriction checks do not change that."
+  "acceptanceNotice": "One narrow criterion (B-T13) has independently verified numerical evidence; the tax engine as a whole is not accepted. Personal/corporate legal eligibility, tax calendar and other 23 cases require further review."
 }
