@@ -17,7 +17,7 @@ const nonempty=(s,k)=>{if(typeof s!=="string"||!s)throw new TypeError(k+" requir
 const date=(s,k)=>{nonempty(s,k);if(!/^\d{4}-\d{2}-\d{2}$/.test(s))throw new RangeError(k+" YYYY-MM-DD required");const d=new Date(s+"T00:00:00Z");if(!Number.isFinite(+d)||d.toISOString().slice(0,10)!==s)throw new RangeError(k+" invalid date");return s;};
 const boolOrUnknown=x=>x===true||x===false||x==="unknown";
 export function reviewVATTaxpayerPeriod({
- entityId,taxPeriodStart,taxPeriodEnd,taxpayerType,
+ entityId,taxPeriodStart,taxPeriodEnd,taxpayerType,foreignTaxpayerClassification,
  baselinePeriodTaxableSales,specificPeriodTaxableSales,
  specialPeriodAlternativePayrollAmount,specificPeriodTestBasis,
  invoiceRegistration,electedTaxableStatus,
@@ -31,6 +31,8 @@ export function reviewVATTaxpayerPeriod({
  if(end<start)throw new RangeError("VAT tax period inverted");
  if(!["individual","corporation"].includes(taxpayerType))
    throw new RangeError("taxpayer type required");
+ if(!["domestic","foreign","unknown"].includes(foreignTaxpayerClassification))
+   throw new RangeError("foreign taxpayer classification required");
  if(!taxRule||taxRule.sourceUrl!==NTA||!nonempty(taxRule.ruleVersion,"ruleVersion")||
    taxRule.applicabilityReviewed!==true)
    throw new RangeError("versioned VAT statutory classification review required");
@@ -51,6 +53,13 @@ export function reviewVATTaxpayerPeriod({
    num(specialPeriodAlternativePayrollAmount,"specialPeriodAlternativePayrollAmount");
  if(newCorporationCapital!==null)num(newCorporationCapital,"newCorporationCapital");
  const issues=[];
+ if(foreignTaxpayerClassification==="unknown")
+   issues.push("Domestic/foreign taxpayer status unknown");
+ if(foreignTaxpayerClassification==="foreign"&&
+    start>="2024-10-01"&&specificPeriodTestBasis==="payrollAlternative")
+   issues.push("Foreign taxpayer may not use payroll special-period alternative after 2024-10-01");
+ if(method==="simplified"&&largeAssetTaxationRestriction===true)
+   issues.push("Qualifying high-value capital asset may prohibit simplified tax method");
  if(invoiceRegistration==="registeredPartPeriod")
    issues.push("Partial-period invoice registration needs dated split before net VAT assessment");
  if(invoiceRegistration==="unknown"||electedTaxableStatus==="unknown"||
@@ -83,7 +92,7 @@ export function reviewVATTaxpayerPeriod({
   status:"estimated",taxpayerStatus:unavoidableTaxable?"taxable":"exempt",
   method,sourceUrl:NTA,ruleVersion:taxRule.ruleVersion,
   evidence:{basePeriodSales:baselinePeriodTaxableSales,
-    specificPeriodTestBasis,invoiceRegistration,newCorporation},
+    specificPeriodTestBasis,invoiceRegistration,newCorporation,foreignTaxpayerClassification},
   note:"Scenario classification only: full statutory exceptions and filing eligibility need independent tax professional review"};
 }
 /**
