@@ -1,0 +1,87 @@
+{
+  "fixtureVersion": "1.1-tax-foundation",
+  "note": "Independent arithmetic examples only. Tax rate eligibility and expensive housing classification are external legally conditioned inputs; no automatic tax-law determination.",
+  "fixtures": [
+    {
+      "id": "small_officer_housing_arithmetic",
+      "regime": "Small officer housing only if eligible; not luxury",
+      "inputs": {
+        "buildingFixedAssetTaxBase": 2000000,
+        "landFixedAssetTaxBase": 5000000,
+        "floorAreaSqm": 99,
+        "officerMonthlyRentPaid": 10000
+      },
+      "expected": {
+        "buildingComponent": 4000,
+        "areaComponent": 360,
+        "landComponent": 11000,
+        "rentEquivalent": 15360,
+        "officerTaxableBenefit": 5360
+      },
+      "rules": [
+        "buildingTaxBase * 0.002",
+        "12 * floorAreaSqm / 3.3",
+        "landTaxBase * 0.0022",
+        "max(0,rentEquivalent-actualRent)"
+      ]
+    },
+    {
+      "id": "luxury_officer_housing_scenario",
+      "regime": "Assumed luxury housing; ordinary arms-length rent entered manually",
+      "inputs": {
+        "assumedNormalMonthlyRent": 450000,
+        "officerActualMonthlyRent": 200000
+      },
+      "expected": {
+        "officerTaxableBenefit": 250000
+      },
+      "warnings": [
+        "No automatic corporate salary deductibility",
+        "Market rent is a user assumption",
+        "Monthly partial stay treatment remains explicit assumption"
+      ]
+    },
+    {
+      "id": "illustrative_asset_depreciation",
+      "regime": "Artificial arithmetic test; 10-year straight-line at 10%, not claiming legal classification",
+      "inputs": {
+        "assetCost": 12000000,
+        "annualIllustrativeDepreciationRate": 0.1,
+        "businessUseShare": 0.5,
+        "year1CashCapex": 12000000
+      },
+      "expected": {
+        "wholeAssetAccountingDepreciation": 1200000,
+        "deductibleBusinessDepreciation": 600000,
+        "capexCashFlowYear1": -12000000,
+        "depreciationCashFlow": 0
+      }
+    },
+    {
+      "id": "mixed_utilities",
+      "inputs": {
+        "grossExpense": 240000,
+        "businessAreaSqm": 60,
+        "totalAreaSqm": 180,
+        "actualGuestNights": 90,
+        "yearDays": 365
+      },
+      "expected": {
+        "deductibleExpense": 19726.02739726027,
+        "roundedDisplayJPY": 19726
+      }
+    },
+    {
+      "id": "year11_exit_tax_payment",
+      "inputs": {
+        "saleYear": 2035,
+        "individualTaxDueYear": 2036
+      },
+      "expected": {
+        "saleProceedsYear": 2035,
+        "taxPaymentYear": 2036,
+        "year11CashFlowComponentRequired": true
+      }
+    }
+  ]
+}
