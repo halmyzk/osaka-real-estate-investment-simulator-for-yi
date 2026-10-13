@@ -24,6 +24,7 @@ const num=(v,k,{min=-Infinity,max=Infinity}={})=>{
 };
 const text=(v,k)=>{if(typeof v!=="string"||!v)throw new TypeError(k+" required");return v;};
 const ratio=(v,k)=>num(v,k,{min:0,max:1});
+const sum=rows=>rows.reduce((total,x)=>total+x,0);
 const reason=(message,more={})=>({status:"incomplete",reason:message,
  taxItems:[],annualAssessments:[],incomeTaxEvents:[],...more});
 const groupBy=(arr,k)=>{const m=new Map();for(const x of arr){const id=k(x);
