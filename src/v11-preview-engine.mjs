@@ -13,6 +13,7 @@ import {calculateOperatingMonth,validateAnnualLodgingAllocation} from "./operati
 import {investingEvents,ledgerFromLoan,compilePretaxLedger} from "./finance.mjs";
 import {evaluatePortfolio} from "./portfolio.mjs";
 import {compileV11IncomeTaxSidecar} from "./v11-income-tax-sidecar.mjs";
+import {buildV11TaxSourceCrosswalk} from "./v11-tax-source-crosswalk.mjs";
 const money=(n,k)=>{if(typeof n!=="number"||!Number.isFinite(n)||n<0)throw new RangeError(k+" must be nonnegative finite number");return n};
 const id=(s,k)=>{if(typeof s!=="string"||!s)throw new TypeError(k+" required");return s};
 const ISO=(s,k)=>{
@@ -370,6 +371,7 @@ export function previewV11Scenario(document,{scenarioId,incomeTaxSidecar=null}={
    missing,units:unitResults,preTax:null,afterTax:null,
    reason:"All required fields and every active calendar month must be completed before evaluating investment KPIs"};
  }
+ const taxSourceCrosswalk=buildV11TaxSourceCrosswalk({document,unitResults});
  const byEntity=new Map([...entityIds].map(x=>[x,{operatingMonths:[],investing:[],financing:[]}]));
  for(const u of unitResults){
   const bucket=byEntity.get(u.entityId);
@@ -421,6 +423,7 @@ export function previewV11Scenario(document,{scenarioId,incomeTaxSidecar=null}={
   incomeTaxBlocker:tax.status==="incomplete"?tax.reason:null,
   incomeTaxAudit:tax.status==="estimated"?tax.audit:[],
   incomeTaxWarnings:tax.status==="estimated"?tax.warnings:[],
+  taxSourceCrosswalk,
   referenceDiscountRateBasis:rate===null?null:
    "P04 is the user's AFTER-TAX equity required return. Pre-tax NPV at that same rate is only a sensitivity reference, not an accepted after-tax investment valuation.",
   annual:report.annual.map(x=>({
