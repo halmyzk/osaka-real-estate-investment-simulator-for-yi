@@ -27,6 +27,10 @@ export function calculateStatutoryAssetSchedule({asset,methodRule,years}){
  if(category!=="land"&&method==="nonDepreciable")throw new RangeError("non-land asset requires reviewed non-depreciable reason");
  if(method==="decliningBalance" && (category==="building" || (category==="buildingEquipment"&&acquired>="2016-04-01")))
   throw new RangeError("declining-balance method prohibited for acquisition/category");
+ const fiscalYearEndMonth=asset.fiscalYearEndMonth;
+ if(!Number.isInteger(fiscalYearEndMonth)||fiscalYearEndMonth<1||fiscalYearEndMonth>12)
+   throw new RangeError("explicit owner fiscal-year end month required");
+ const firstFiscalYear=Number(service.slice(0,4))+(Number(service.slice(5,7))>fiscalYearEndMonth?1:0);
  const basis=val(asset.acquisitionBasis,"acquisitionBasis");
  if(!Number.isSafeInteger(basis))throw new RangeError("yen acquisition basis must be safe integer");
  if(!isTaxCategory.has(asset.taxCategory))throw new RangeError("tax category required");
@@ -51,7 +55,7 @@ export function calculateStatutoryAssetSchedule({asset,methodRule,years}){
  let previousYear=0,book=basis, revisedBasis=null;
  const lines=[];
  for(const y of years){
-  if(!Number.isInteger(y.taxYear)||y.taxYear<Number(service.slice(0,4))||
+  if(!Number.isInteger(y.taxYear)||(previousYear===0 && y.taxYear!==firstFiscalYear)||
      (previousYear && y.taxYear!==previousYear+1))throw new RangeError("continuous service-year records required");
   previousYear=y.taxYear;
   if(!Number.isInteger(y.inServiceMonths)||y.inServiceMonths<0||y.inServiceMonths>12)
@@ -85,7 +89,7 @@ export function calculateStatutoryAssetSchedule({asset,methodRule,years}){
  return {assetId:asset.assetId,ownerEntityId:asset.ownerEntityId,unitId:asset.unitId,
   category,method,acquisitionBasis:basis,closingBookValue:book,lines,
   status:"estimated",sourceUrl:methodRule.sourceUrl,
-  note:"Scenario deduction uses a business-use fraction; personal non-business disposal basis is not determined here. Depreciation is NONCASH."};
+  note:"taxYear labels fiscal year end. Explicit service-month count is scenario input. Personal non-business disposal basis is excluded; depreciation is NONCASH."};
 }
 export function depreciationTaxItems({assetSchedules,taxYear}){
  if(!Array.isArray(assetSchedules)||!Number.isInteger(taxYear))throw new TypeError("asset schedules and tax year required");
