@@ -29,12 +29,12 @@ test("Gate A VAT operating-to-cash is replacement, not net plus gross",()=>{
  const a=r.ledger.series.find(x=>x.month==="2026-04");
  assert.equal(a.operating,377000-(20000+2000+5000+5000+150000)-2000);
  assert.equal(a.investing,-11000);
- assert.equal(a.pretaxEquityCF,193000);
+ assert.equal(a.pretaxEquityCF,182000);
  const b=r.ledger.series.find(x=>x.month==="2027-03");
  assert.equal(b.pretaxEquityCF,-24000);
  const p=evaluatePortfolio({entityLedgers:[r],baseCalendarYear:2026,holdingYears:1,discountRate:.08,
   taxCoverage:[{entityId:"person",status:"estimated"}]});
- assert.deepEqual(p.preTax.cashFlows,[0,193000,-24000]);
+ assert.deepEqual(p.preTax.cashFlows,[0,182000,-24000]);
 });
 test("Gate A misses an invoice, source mismatch or repeated unit-month, refuses evaluation",()=>{
  assert.throws(()=>buildReconciledEntityCash({entityId:"person",unitMonths:[{...unitMonths[0],invoices:invoices.slice(1)}],vatCoverageStatus:"estimated"}));
@@ -50,5 +50,5 @@ test("Gate A cash ledger can include independent acquisition and finance, withou
  investing:[{kind:"investing",month:"2026-03",category:"acquisitionPrice",amount:-1000000,reference:"unit"}],
  financing:[{kind:"financing",month:"2026-03",category:"loanDrawdown",amount:700000,reference:"loan"}]});
  assert.equal(r.ledger.series[0].pretaxEquityCF,-300000);
- assert.equal(r.ledger.series[1].pretaxEquityCF,193000);
+ assert.equal(r.ledger.series[1].pretaxEquityCF,182000);
 });
