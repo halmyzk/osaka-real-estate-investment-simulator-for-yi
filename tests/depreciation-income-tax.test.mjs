@@ -18,7 +18,7 @@ const taxRule={
 const fullYear=calculateStatutoryAssetSchedule({
  asset:{assetId:"furniture-1",ownerEntityId:"corp",unitId:"unit-1",
   acquisitionDate:"2026-01-01",inServiceDate:"2026-01-01",category:"furniture",
-  method:"straightLine",taxCategory:"corporate",acquisitionBasis:1000000,usefulLifeYears:8},
+  method:"straightLine",taxCategory:"corporate",fiscalYearEndMonth:12,acquisitionBasis:1000000,usefulLifeYears:8},
  methodRule:{version:"rate-fixture-2026",sourceUrl:nta,method:"straightLine",
   assetCategory:"furniture",eligibility:"scenarioAssumption",
   annualRate:.125,validFrom:"2026-01-01",validUntil:"2026-12-31"},
