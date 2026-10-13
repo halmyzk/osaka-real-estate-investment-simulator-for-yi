@@ -205,6 +205,59 @@ export function applyIndividualIncomeCategories({baselineOrdinaryTaxableIncome,p
     unappliedLoss:unoffsetLoss,status:"estimated",
     notes:"Deduction ordering, intra-category miscellaneous aggregation and statutory offset restrictions require category-specific detail"};
 }
+
+/**
+ * An annual assessment is not an actual tax payment. This planner allocates
+ * *estimated* payments to months, with overrideable dates. Its events must be
+ * confirmed or explicitly accepted as projection assumptions before they are
+ * booked into forecast cash flow.
+ *
+ * Periodicity is an illustrative default schedule, not a statutory due-date
+ * certification; assess case-specific extension, prepayment and local rules.
+ */
+export function planTaxPayments({entityId,entityType,taxYear,fiscalYearEndMonth=12,assessments,
+   residenceTaxMonths=null,corporateTaxDelayMonths=2}){
+ if(typeof entityId!=="string"||!entityId)throw new TypeError("entityId required");
+ if(!["individual","corporation"].includes(entityType))throw new RangeError("entityType");
+ integer(taxYear,"taxYear");
+ integer(fiscalYearEndMonth,"fiscalYearEndMonth");
+ if(fiscalYearEndMonth<1||fiscalYearEndMonth>12)throw new RangeError("fiscalYearEndMonth range");
+ integer(corporateTaxDelayMonths,"corporateTaxDelayMonths");
+ if(corporateTaxDelayMonths<0)throw new RangeError("corporateTaxDelayMonths negative");
+ if(!Array.isArray(assessments))throw new TypeError("assessments array required");
+ const entries=[],seen=new Set();
+ const yearMonth=(y,m)=>y+"-"+String(m).padStart(2,"0");
+ for(const a of assessments){
+   if(typeof a.id!=="string"||!a.id||seen.has(a.id))throw new RangeError("unique assessment id required");
+   seen.add(a.id);
+   const value=amount(a.amount,"assessed amount");
+   if(value<0&&a.refundConfirmed!==true)throw new RangeError("Unconfirmed tax refund not scheduled");
+   if(!["incomeTax","residenceTax","corporateTax","consumptionTax","saleGainTax","otherTax"].includes(a.taxKind))
+     throw new RangeError("tax kind invalid");
+   let months;
+   if(a.paymentMonths!==undefined){
+     if(!Array.isArray(a.paymentMonths)||a.paymentMonths.length===0)throw new TypeError("paymentMonths must be nonempty array");
+     months=a.paymentMonths.map(validMonth);
+   }else if(entityType==="individual"){
+     if(a.taxKind==="incomeTax"||a.taxKind==="saleGainTax"||a.taxKind==="consumptionTax")months=[yearMonth(taxYear+1,3)];
+     else if(a.taxKind==="residenceTax"){
+       months=residenceTaxMonths??[yearMonth(taxYear+1,6),yearMonth(taxYear+1,8),yearMonth(taxYear+1,10),yearMonth(taxYear+2,1)];
+       if(!Array.isArray(months)||months.length!==4)throw new RangeError("resident tax schedule requires four payments");
+       months=months.map(validMonth);
+     }else throw new RangeError("individual tax payment month must be explicitly configured");
+   }else if(["corporateTax","consumptionTax"].includes(a.taxKind)){
+     months=[plusMonths(yearMonth(taxYear,fiscalYearEndMonth),corporateTaxDelayMonths)];
+   }else throw new RangeError("corporate local or special tax needs explicitly configured payment months");
+   const weights=a.paymentWeights??Array(months.length).fill(1/months.length);
+   if(!Array.isArray(weights)||weights.length!==months.length)throw new RangeError("payment weights count mismatch");
+   weights.forEach((w,i)=>ratio(w,"paymentWeights["+i+"]"));
+   if(Math.abs(sum(weights)-1)>1e-9)throw new RangeError("payment weights must total one");
+   months.forEach((month,i)=>entries.push({id:a.id+"-payment-"+i,entityId,month,taxYear,
+      taxKind:a.taxKind,amount:value*weights[i],refundConfirmed:value<0&&a.refundConfirmed===true,
+      status:"estimated",assessmentId:a.id}));
+ }
+ return {entries,status:"estimated",notes:"Forecast schedule only; validate statutory due dates, withholding and interim payments"};
+}
 /**
  * Cash tax events are explicit. Positive amount is payment, negative is actual
  * refund; only confirmed refunds may enter cash ledger. Use without-project
