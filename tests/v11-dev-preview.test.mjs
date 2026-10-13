@@ -31,7 +31,10 @@ test("Four-tab prototype references real module, preserves legacy storage and ha
  for(const id of ["business","evidence","analysis","appendix"])
   assert.match(html,new RegExp('<main id="'+id+'"'));
  assert.match(html,/import \{previewV11Scenario\} from "\.\.\/src\/v11-preview-engine\.mjs"/);
- assert.match(html,/const STORAGE_KEY="premium_re_investment_v11"/);
+ assert.match(html,/import \{inspectV11Draft,parseV11Draft,saveV11Draft,restoreV11Draft,serializeV11Draft\} from "\.\.\/src\/v11-draft-storage\.mjs"/);
+ assert.match(html,/saveV11Draft\(localStorage,data\)/);
+ assert.match(html,/restoreV11Draft\(localStorage\)/);
+ assert.match(html,/compileV11IncomeTaxSidecar/);
  assert.doesNotMatch(html,/localStorage\.(getItem|setItem|removeItem|clear)\s*\(\s*["']osaka_premium_stay_v/);
  const match=html.match(/<script type="module">([\s\S]*?)<\/script>/);
  assert.ok(match,"developer HTML must provide runnable module script");
