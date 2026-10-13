@@ -53,7 +53,7 @@ footer{font-size:.8rem;color:#516a76;padding:20px 0}
 <main id="analysis" hidden>
  <section class="card"><h2>03 収支分析</h2>
   <div id="kpis" class="grid"></div>
-  <p class="muted small">IRRは税引前です。参考NPVは、税引後自己資本割引率P04を税引前CFに適用した感応度にすぎません。CF₀と暦年末CFを使用し、正式な税引後NPV／IRRは算定保留です。</p>
+  <p class="muted small">IRRは税引前。税引前NPVは税引後自己資本割引率P04を使った参考感応度です。任意の税額サイドカーを読込むと所得税等控除後の参考値を別表示しますが、消費税・償却・申告適格性との接続が未完了のため正式な税引後NPV／IRRは算定保留です。</p>
  </section>
  <section class="card"><h3>標準入力（選択住戸）</h3><label for="unit-choice">住戸</label><select id="unit-choice"></select>
  <fieldset id="edit-fields" class="field-grid" style="margin-top:18px"></fieldset>
@@ -71,7 +71,16 @@ footer{font-size:.8rem;color:#516a76;padding:20px 0}
   <button class="secondary" type="button" id="choose-import">v1.1 JSONを読み込む</button>
   <input class="sr-only" id="import-file" type="file" accept=".json,application/json">
  </div>
- <p class="muted small">JSON読込は別の下書きへ反映します。保存・旧形式の移行・正式スキーマ検証は別工程です。ブラウザ保存に失敗した場合はJSONでバックアップしてください。</p>
+ <h3>税額資料の一時読込（開発専用）</h3>
+ <p>税額は本アプリが自動確定したものではありません。<strong>投資あり／なしの各納税主体・年度の税額</strong>と納付月を外部で検証済みと仮定したサンプルだけを読込みます。保存下書きとは別管理し、明示保存されません。</p>
+ <div class="actions">
+  <button type="button" class="secondary" id="load-demo-tax">架空のBase税額資料を読込む</button>
+  <button type="button" class="secondary" id="choose-tax-import">税額資料JSONを読込む</button>
+  <button type="button" class="secondary" id="clear-tax">税額資料を解除</button>
+  <input class="sr-only" id="tax-import-file" type="file" accept=".json,application/json">
+ </div>
+ <p id="tax-import-status" class="muted small" aria-live="polite">税額資料なし：所得税等控除後の参考評価は算定保留。</p>
+ <p class="muted small">JSON読込・復元はv1.1構造と主要参照を事前検証してから下書きに反映します。完全なDraft 2020-12スキーマ検証と旧形式の移行は別工程です。ブラウザ保存は専用キーのみ使用し、読戻し照合に失敗した場合はJSONでバックアップしてください。</p>
  <h3>計算範囲</h3><p>月次GOP／NOI／税引前CFADS、買収・内装・借入・売却・敷金、暦年CF、税引前IRR／NPV。税額は0円とみなさず未算定にします。</p>
  <div class="actions"><button type="button" class="secondary" id="reset-demo">架空サンプルを読み直す（下書きのみ）</button></div>
 </section></main>
@@ -79,12 +88,13 @@ footer{font-size:.8rem;color:#516a76;padding:20px 0}
 </div>
 <script type="module">
 import {previewV11Scenario} from "../src/v11-preview-engine.mjs";
-const STORAGE_KEY="premium_re_investment_v11";
+import {inspectV11Draft,parseV11Draft,saveV11Draft,restoreV11Draft,serializeV11Draft} from "../src/v11-draft-storage.mjs";
+import {compileV11IncomeTaxSidecar} from "../src/v11-income-tax-sidecar.mjs";
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=v=>v===null||v===undefined?"算定保留":new Intl.NumberFormat("ja-JP",{maximumFractionDigits:0}).format(v)+"円";
 const pct=v=>v===null||v===undefined?"算定保留":(v*100).toFixed(2)+"%";
-let data=null,last=null,selectedUnit=null,dirty=false,activeTab="business",sample=null;
+let data=null,last=null,selectedUnit=null,dirty=false,activeTab="business",sample=null,taxSidecar=null;
 const fields=[
  ["H01","ADR（円／室泊）","JPY_per_room_night"],["H02","宿泊稼働率（％）","percent"],
  ["R01","基準月額賃料（円）","JPY_per_month"],["R02","賃貸入居率（％）","percent"],
@@ -96,8 +106,9 @@ function setDirty(value=true){dirty=value;$("save-indicator").textContent=value?
 function activeScenario(){return $("scenario").value||data?.scenarios?.[0]?.id;}
 function calculate(){
  if(!data)return null;
- try{last=previewV11Scenario(data,{scenarioId:activeScenario()});alertStatus(
-  last.status==="estimated-pre-tax"?"税引前試算が計算できました。税引後指標は算定保留です。":
+ try{last=previewV11Scenario(data,{scenarioId:activeScenario(),incomeTaxSidecar:taxSidecar});alertStatus(
+  last.status==="estimated-pre-tax"?
+    "税引前試算が計算できました。所得税等の参考値は税額資料の照合結果を確認してください。正式な税引後指標は算定保留です。":
    "一部の計算を保留しました。入力不足欄を確認してください。",false);
  }catch(e){last={status:"error",error:String(e?.message??e)};
  alertStatus("計算エラー："+last.error,true);}
@@ -138,17 +149,29 @@ function renderKpis(){
  const r=last;
  const kpis=r?.status==="estimated-pre-tax"?[
   ["税引前CF₀",fmt(r.CF0)],["税引前IRR",pct(r.preTax.IRR)],
-  ["参考NPV（税引前CFにP04適用）",fmt(r.preTax.NPV)],["税引後NPV／IRR","算定保留"],
-  ["課税計算","未実装（0円ではありません）"]]:
+  ["参考NPV（税引前CFにP04適用）",fmt(r.preTax.NPV)],
+  ["所得税等を差引いた参考NPV",fmt(r.afterIncomeTaxSensitivity?.NPV)],
+  ["正式な税引後NPV／IRR","算定保留"],
+  ["所得税等の資料",r.incomeTaxStatus==="estimated"?"外部仮定値を納付月に接続":"未接続／不一致"],
+  ["消費税・申告適格性","未接続（0円ではありません）"]]:
   [["税引前・税引後評価","算定保留"]];
  $("kpis").innerHTML=kpis.map(x=>'<div class="kpi"><span class="muted small">'+
  esc(x[0])+'</span><strong>'+esc(x[1])+'</strong></div>').join("");
 }
 function renderAnnual(){
  if(last?.status!=="estimated-pre-tax"){$("annual-table").textContent="入力の検証が完了するまで算定保留。";return}
+ const baseline=new Map(last.annual.map(x=>[x.year,x]));
+ const taxed=new Map((last.annualIncomeTaxSensitivity??[]).map(x=>[x.year,x]));
+ const years=[...new Set([...baseline.keys(),...taxed.keys()])].sort();
  $("annual-table").innerHTML=simpleTable(
-  ["暦年","営業CF","投資CF","金融CF","税引前自己資本CF"],
-  last.annual.map(x=>[x.year,fmt(x.operating),fmt(x.investing),fmt(x.financing),fmt(x.preTaxEquityCF)]));
+  ["暦年","営業CF","投資CF","金融CF","税引前自己資本CF","所得税等の増分納税CF","所得税等控除後CF（参考）"],
+  years.map(year=>{
+   const x=baseline.get(year),tax=taxed.get(year);
+   return [year,fmt(x?.operating??0),fmt(x?.investing??0),
+      fmt(x?.financing??0),fmt(x?.preTaxEquityCF??0),
+      tax?fmt(tax.incrementalTaxCashFlow):"算定保留",
+      tax?fmt(tax.postIncomeTaxEquityCF):"算定保留"];
+  }));
 }
 function selected(){return data.units.find(x=>x.id===selectedUnit)??data.units[0]}
 function renderEditor(){
@@ -178,6 +201,9 @@ function renderLimitations(){
  const lines=last.status==="error"?[last.error]:
  last.status==="incomplete"?(last.missing??[]).map(x=>(x.unitId??"全体")+" "+(x.month??"")+
   " "+x.fieldId+" — "+x.reason):[...(last.limitations??[]),
+  last.incomeTaxStatus==="incomplete"?"所得税等の資料： "+last.incomeTaxBlocker:
+    "所得税等の外部仮定値を納付月へ接続しました。消費税を含む正式な税引後評価ではありません。",
+  ...(last.incomeTaxWarnings??[]),
   "未入力の任意詳細値を0と解釈した箇所："+(last.inputWarnings?.length??0)+"件"];
  $("limitations").innerHTML="<ul>"+lines.map(x=>"<li>"+esc(x)+"</li>").join("")+"</ul>";
 }
@@ -198,12 +224,21 @@ function showTab(tab){
  for(const btn of document.querySelectorAll("[data-tab]"))
   btn.setAttribute("aria-selected",String(btn.dataset.tab===tab));
 }
-function validDocument(o){
- return o?.schemaVersion==="1.1.0"&&o?.portfolio?.currency==="JPY"&&
-  Array.isArray(o.units)&&Array.isArray(o.entities)&&Array.isArray(o.scenarios);
+function assign(obj){
+ inspectV11Draft(obj); // browser structural + reference check, NOT full JSON Schema
+ const replacement=structuredClone(obj);
+ data=replacement;taxSidecar=null;selectedUnit=data.units[0]?.id??null;
+ $("tax-import-status").textContent="税額資料を解除しました。入力変更後は別途税額の再計算が必要です。";
+ setDirty();render();
 }
-function assign(obj){if(!validDocument(obj))throw new Error("v1.1形式でないか主要配列が不足しています");
- data=structuredClone(obj);selectedUnit=data.units[0]?.id??null;setDirty();render();}
+function useTaxSidecar(value){
+ const check=compileV11IncomeTaxSidecar({document:data,
+   scenarioId:activeScenario(),sidecar:value});
+ if(check.status!=="estimated")throw new Error(check.reason??"税額資料がこの入力に適合しません");
+ taxSidecar=structuredClone(value);
+ $("tax-import-status").textContent="外部仮定の税額資料を一時読込みました（保存されません）。";
+ render();
+}
 async function fetchSample(){
  const response=await fetch("./v11-sample.json",{cache:"no-store"});
  if(!response.ok)throw new Error("サンプルJSONを読み込めません。静的HTTPサーバーから開いてください。");
@@ -231,19 +266,27 @@ $("edit-fields").addEventListener("change",e=>{
 });
 $("save").addEventListener("click",()=>{
  if(!data)return;
- try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));setDirty(false);
-  alertStatus("v1.1専用キーへの保存に成功しました。")}
+ try{
+  const saved=saveV11Draft(localStorage,data);
+  setDirty(false);
+  alertStatus("v1.1専用キーへの保存と読戻し照合に成功しました（"+saved.length+"文字）。");
+ }
  catch(e){alertStatus("保存に失敗しました。JSONファイルでバックアップしてください："+e.message,true)}
 });
 $("restore").addEventListener("click",()=>{
- try{const raw=localStorage.getItem(STORAGE_KEY);
-  if(!raw){alertStatus("v1.1専用キーに保存された下書きはありません。");return}
-  assign(JSON.parse(raw));setDirty(false);alertStatus("v1.1下書きを復元しました。");}
+ try{
+  const restored=restoreV11Draft(localStorage);
+  if(restored.status==="notFound"){alertStatus("v1.1専用キーに保存された下書きはありません。");return}
+  assign(restored.document);setDirty(false);
+  alertStatus("v1.1下書きを検証して復元しました。");
+ }
  catch(e){alertStatus("復元できませんでした："+e.message,true)}
 });
 $("export").addEventListener("click",()=>{
  if(!data)return;
- const blob=new Blob([JSON.stringify(data,null,2)+"\n"],{type:"application/json"});
+ let serialized;
+ try{serialized=serializeV11Draft(data)}catch(e){alertStatus("バックアップ検証失敗："+e.message,true);return}
+ const blob=new Blob([JSON.stringify(JSON.parse(serialized),null,2)+"\n"],{type:"application/json"});
  const url=URL.createObjectURL(blob),a=document.createElement("a");
  a.href=url;a.download="premium-re-v11-draft.json";a.click();
  setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -251,12 +294,35 @@ $("export").addEventListener("click",()=>{
 $("choose-import").addEventListener("click",()=>$("import-file").click());
 $("import-file").addEventListener("change",async e=>{
  const file=e.target.files?.[0];if(!file)return;
- try{assign(JSON.parse(await file.text()));alertStatus("v1.1 JSONを下書きに読み込みました。正式スキーマ検証は未実装です。")}
+ try{
+  const parsed=parseV11Draft(await file.text());
+  assign(parsed.document);
+  alertStatus("v1.1 JSONを構造・参照事前検証して下書きに読込みました（完全スキーマ検証は別工程）。");
+ }
  catch(error){alertStatus("取込できませんでした："+error.message,true)}
  finally{e.target.value=""}
 });
 $("reset-demo").addEventListener("click",()=>{
  if(sample){assign(sample);alertStatus("開発サンプルに戻しました。保存済みデータは変更していません。")}
+});
+$("load-demo-tax").addEventListener("click",async()=>{
+ try{
+  const response=await fetch("./v11-tax-sidecar-example.json",{cache:"no-store"});
+  if(!response.ok)throw new Error("税額サンプルを取得できません");
+  useTaxSidecar(await response.json());
+ }catch(e){$("tax-import-status").textContent="税額資料の読込失敗： "+e.message;}
+});
+$("choose-tax-import").addEventListener("click",()=>$("tax-import-file").click());
+$("tax-import-file").addEventListener("change",async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ try{useTaxSidecar(JSON.parse(await file.text()))}
+ catch(error){$("tax-import-status").textContent="税額資料の読込失敗： "+error.message}
+ finally{e.target.value=""}
+});
+$("clear-tax").addEventListener("click",()=>{
+ taxSidecar=null;
+ $("tax-import-status").textContent="税額資料を解除しました。";
+ render();
 });
 fetchSample().catch(e=>alertStatus(e.message,true));
 </script>
