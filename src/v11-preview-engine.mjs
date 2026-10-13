@@ -165,8 +165,16 @@ function resolveUnit(document,scenarioContext,unit,portfolio,assumptions){
       throw new RangeError("master rent included twice: A06 plus headRent expense");
     costs.masterRent+=masterRent;
   }
-  const yearOffset=Number(mo.slice(0,4))-Number(monthOf(open).slice(0,4));
-  const revenueGrowth=1; // Yearly sensitivity requires an explicit full-year input policy.
+  const monthSinceStart=index(mo)-index(monthOf(open));
+  const elapsedYears=Math.floor(monthSinceStart/12);
+  const pg=number(get("P05"),"P05",missing),pc=number(get("P06"),"P06",missing);
+  const revenueGrowth=pg===null?null:Math.pow(1+pg/100,elapsedYears);
+  const operatingCostGrowth=pc===null?null:Math.pow(1+pc/100,elapsedYears);
+  if(operatingCostGrowth!==null){
+    // Contract head rent and explicitly dated actual expense lines are never
+    // escalated here; nominal field-derived recurring costs alone are.
+    costs.propertyOperating+=holding*(operatingCostGrowth-1);
+  }
   const lodgingDays=allocation.lodgingDays;
   const rentalDays=allocation.rentalDays;
   let lodging=null,rental=null;
@@ -187,13 +195,12 @@ function resolveUnit(document,scenarioContext,unit,portfolio,assumptions){
     const occFactor=get("H06",allocation);
     const af=number(adrFactor,"H05",missing),of=number(occFactor,"H06",missing);
     const ramp=get("P07"); const rampRatio=pctToRatio(ramp,"P07",missing);
-    const monthSinceStart=index(mo)-index(monthOf(open));
     const ratio=occ!==null&&of!==null&&rampRatio!==null?
       occ*of*(monthSinceStart<12?rampRatio:1):null;
     if(ratio!==null&&ratio>1)throw new RangeError("effective lodging occupancy exceeds 100%");
     const ancillary=getOptional("H11",allocation);
     lodging={unavailableDays:unavailable,occupancy:ratio??0,
-      adr:adr===null||af===null?0:adr*af*revenueGrowth,
+      adr:adr===null||af===null||revenueGrowth===null?0:adr*af*revenueGrowth,
       ancillaryRevenue:ancillary};
     const rooms=lodgingDays-unavailable;
     const expectedSold=ratio===null?0:rooms*ratio;
@@ -203,14 +210,15 @@ function resolveUnit(document,scenarioContext,unit,portfolio,assumptions){
     const avgStay=h07.status==="available"?number(h07,"H07",missing):null;
     if(h09!==0&&(avgStay===null||avgStay<=0))
       missing.push({fieldId:"H07",month:mo,reason:"Positive cleaning unit cost requires average stay"});
-    costs.lodgingOperating+= (adr===null||af===null?0:expectedSold*adr*af)*h08/100+
-      (h09===0||!avgStay?0:expectedSold/avgStay*h09)+
-      getOptional("H10",allocation)+getOptional("H12",allocation);
+    costs.lodgingOperating+= (adr===null||af===null||revenueGrowth===null?0:expectedSold*adr*af*revenueGrowth)*h08/100+
+      (h09===0||!avgStay||operatingCostGrowth===null?0:expectedSold/avgStay*h09*operatingCostGrowth)+
+      (getOptional("H10",allocation)+getOptional("H12",allocation))*(operatingCostGrowth??0);
   }
   if(rentalDays>0){
     const mr=getRequired("R01",allocation),occ=getPercent("R02",allocation);
-    rental={mode:"forecast",monthlyRent:mr??0,occupancy:occ??0,otherRevenue:0};
-    costs.rentalOperating+=getOptional("R05",allocation)+getOptional("R08",allocation);
+    rental={mode:"forecast",monthlyRent:mr===null||revenueGrowth===null?0:mr*revenueGrowth,
+      occupancy:occ??0,otherRevenue:0};
+    costs.rentalOperating+=(getOptional("R05",allocation)+getOptional("R08",allocation))*(operatingCostGrowth??0);
   }
   if(!isOpen && record)throw new RangeError("operating allocation before operationStartDate");
   const result=calculateOperatingMonth({
@@ -338,12 +346,20 @@ export function previewV11Scenario(document,{scenarioId}={}){
  const t0=[],ledgers=[];
  const baseMonth=monthOf(p.baseDate);
  for(const [entityId,bucket] of byEntity){
-  const initial=[...bucket.investing,...bucket.financing].filter(x=>x.month===baseMonth);
+  // CF0 is initial equity funding, not every event in the initial month.
+  // Disposal receipts and exit debt payoff in that same calendar month belong
+  // to year-1 CF, otherwise the return can be materially misrepresented.
+  const initInvest=new Set(["acquisitionPrice","closingCosts","initialCapEx"]);
+  const initFinance=new Set(["loanDrawdown","financingFee"]);
+  const isInitial=x=>x.month===baseMonth&&
+    (x.kind==="investing"?initInvest.has(x.category)||
+      (x.category==="refundableDeposit"&&x.amount<0):initFinance.has(x.category));
+  const initial=[...bucket.investing,...bucket.financing].filter(isInitial);
   if(initial.length)t0.push({entityId,amount:initial.reduce((a,x)=>a+x.amount,0)});
   ledgers.push({entityId,ledger:compilePretaxLedger({
     operatingMonths:bucket.operatingMonths,
-    investing:bucket.investing.filter(x=>x.month!==baseMonth),
-    financing:bucket.financing.filter(x=>x.month!==baseMonth)
+    investing:bucket.investing.filter(x=>!isInitial(x)),
+    financing:bucket.financing.filter(x=>!isInitial(x))
    })});
  }
  const report=evaluatePortfolio({
@@ -364,6 +380,6 @@ export function previewV11Scenario(document,{scenarioId}={}){
     "Initial transaction amounts in base month belong to CF0 and are not duplicated in year 1",
     "Only evidenced operating inputs and supported acquisition/lease/asset/loan/exit flows are shown",
     "First-year lodging occupancy uses default 60% ramp unless P07 is explicitly 100%",
-    "Revenue and expense annual escalation beyond explicit field assumptions is not implemented in this slice"
+    "P05 annual nominal revenue growth and P06 field recurring expense growth apply after each 12 months; explicit dated expenses and contract master rent are not automatically escalated"
   ]};
 }
