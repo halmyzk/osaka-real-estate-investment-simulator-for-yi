@@ -191,21 +191,25 @@ export function applyIndividualIncomeCategories({baselineOrdinaryTaxableIncome,p
  eligibleRealEstateLossOffset=false,eligibleBusinessLossOffset=false}){
  nonneg(baselineOrdinaryTaxableIncome,"baselineOrdinaryTaxableIncome");
  if(!Array.isArray(projectCategories))throw new TypeError("projectCategories required");
- let offset=0,unoffsetLoss=0;
+ const grouped={business:0,realEstate:0,miscellaneous:0};
  for(const x of projectCategories){
    amount(x.amount,"category amount");
-   if(!["business","realEstate","miscellaneous"].includes(x.category))throw new RangeError("unrecognized income category");
-   if(x.amount>=0){if(x.category!=="miscellaneous")offset+=x.amount;
-     else offset+=x.amount; /* positive misc income is taxable; losses within category handled elsewhere */
-   }else if((x.category==="realEstate"&&eligibleRealEstateLossOffset)||(x.category==="business"&&eligibleBusinessLossOffset)){
-     offset+=x.amount;
-   }else unoffsetLoss+=-x.amount;
+   if(!Object.hasOwn(grouped,x.category))throw new RangeError("unrecognized income category");
+   grouped[x.category]+=x.amount;
  }
+ // Losses are netted within their own category first. Negative miscellaneous
+ // income cannot reduce salary/business/real-estate taxable income.
+ const positiveMisc=Math.max(0,grouped.miscellaneous);
+ const offset=positiveMisc+
+   (grouped.business<0&&!eligibleBusinessLossOffset?0:grouped.business)+
+   (grouped.realEstate<0&&!eligibleRealEstateLossOffset?0:grouped.realEstate);
+ const unoffsetLoss=Math.max(0,-grouped.miscellaneous)+
+   (eligibleBusinessLossOffset?0:Math.max(0,-grouped.business))+
+   (eligibleRealEstateLossOffset?0:Math.max(0,-grouped.realEstate));
  return {adjustedTaxableIncome:Math.max(0,baselineOrdinaryTaxableIncome+offset),
-    unappliedLoss:unoffsetLoss,status:"estimated",
-    notes:"Deduction ordering, intra-category miscellaneous aggregation and statutory offset restrictions require category-specific detail"};
+   unappliedLoss:unoffsetLoss,grouped,status:"estimated",
+   notes:"Amounts within each category are netted first. Other income deductions and special statutory offset restrictions require further validation"};
 }
-
 /**
  * An annual assessment is not an actual tax payment. This planner allocates
  * *estimated* payments to months, with overrideable dates. Its events must be
