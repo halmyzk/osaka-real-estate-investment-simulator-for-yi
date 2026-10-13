@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>v1.1 Developer Preview | Investment Simulator</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;color:#142b38;background:#f3f6f8;color-scheme:light}
+*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed}
+.wrap{max-width:1120px;margin:auto;padding:16px}.top{background:#123044;color:white}.top .wrap{display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between;align-items:center}
+h1{font-size:1.3rem;margin:.3rem 0}.kicker{font-size:.78rem;color:#bcdce5;letter-spacing:.08em}h2{font-size:1.18rem;margin:0 0 16px}h3{font-size:1rem;margin:18px 0 8px}p{line-height:1.6}
+nav{display:flex;gap:4px;overflow-x:auto;margin:12px 0 18px;padding-bottom:4px}
+nav button{min-width:max-content;background:transparent;border:0;border-bottom:3px solid transparent;border-radius:0;padding:12px;color:#324d59}
+nav button[aria-selected="true"]{border-color:#0b6d79;color:#0a5963;font-weight:700}
+.card{background:white;border:1px solid #d9e3e7;border-radius:12px;padding:18px;margin:12px 0}
+.muted{color:#536e7b}.warning{color:#854c06;background:#fff3d8;border:1px solid #f1ca89;padding:10px;border-radius:8px}
+.error{color:#8d1b1b;background:#ffeded;border:1px solid #eab7b7;padding:10px;border-radius:8px}
+.good{color:#075e45}main[hidden]{display:none}label{display:block;font-weight:600;font-size:.9rem}
+select,input[type=number],input[type=text]{width:100%;max-width:350px;margin-top:6px;padding:10px;border:1px solid #93a9b4;border-radius:7px;background:white}
+:focus-visible{outline:3px solid #f29940;outline-offset:2px}
+button.primary{background:#006a74;color:white;border:0;border-radius:8px;padding:10px 14px}
+button.secondary{background:#fff;color:#235765;border:1px solid #9fb4bd;border-radius:8px;padding:10px 14px}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr));gap:12px}.kpi{border:1px solid #d8e5e8;border-radius:10px;padding:14px;background:#f9fcfd}.kpi strong{font-size:1.25rem;display:block;margin-top:6px}
+.small{font-size:.8rem}.pill{display:inline-block;background:#e5f3f3;padding:4px 8px;border-radius:30px;font-size:.77rem;color:#12646c}
+.table-scroll{max-width:100%;overflow-x:auto;border:1px solid #e1eaee;border-radius:8px}
+table{border-collapse:collapse;min-width:650px;width:100%;font-size:.9rem}td,th{text-align:right;padding:10px 12px;border-bottom:1px solid #e8eff2;white-space:nowrap}
+td:first-child,th:first-child{text-align:left}th{background:#e9f1f4}tr:last-child td{border-bottom:0}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+fieldset{border:0;padding:0;margin:0}.field-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:14px}
+.unit{border:1px solid #dbe5e9;border-radius:9px;padding:14px;margin:8px 0}
+footer{font-size:.8rem;color:#516a76;padding:20px 0}
+@media(max-width:375px){.wrap{padding:10px}.card{padding:12px}table{font-size:.8rem}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap"><div><div class="kicker">DEVELOPMENT BRANCH ONLY · NOT PUBLISHED v1.1</div><h1>不動産投資シミュレーター v1.1 試作画面</h1></div><span id="save-indicator">未保存の開発用サンプル</span></div></header>
+<div class="wrap">
+<p class="warning"><strong>開発検証用：</strong>税引後CF、消費税、詳細な資産償却と一部の日付・契約条件は未接続です。現時点の数値は税引前の限定試算です。公開v1や旧保存データは操作しません。</p>
+<nav aria-label="画面切替" id="tabnav">
+ <button type="button" data-tab="business" aria-selected="true">01 事業設計</button>
+ <button type="button" data-tab="evidence" aria-selected="false">02 前提・根拠</button>
+ <button type="button" data-tab="analysis" aria-selected="false">03 収支分析</button>
+ <button type="button" data-tab="appendix" aria-selected="false">Appendix</button>
+</nav>
+<div class="card">
+ <label for="scenario">分析シナリオ</label>
+ <select id="scenario"></select>
+ <div id="status" role="status" aria-live="polite" style="margin-top:10px"></div>
+</div>
+<main id="business"><section class="card"><h2>01 事業設計</h2><p>主体・住戸の関係を確認する開発用表示です。住戸追加・削除や複数年度の用途編集は未実装です。</p><div id="entity-list"></div><h3>住戸</h3><div id="unit-list"></div></section></main>
+<main id="evidence" hidden><section class="card"><h2>02 前提・根拠</h2><p>表示中の値が観測値か利用者仮定かを確認します。根拠URLのない値を市場実績として扱いません。</p><div id="evidence-list"></div></section></main>
+<main id="analysis" hidden>
+ <section class="card"><h2>03 収支分析</h2>
+  <div id="kpis" class="grid"></div>
+  <p class="muted small">IRR/NPVは税引前で、CF₀と暦年末のCFを使用。税引後指標は現在算定保留です。</p>
+ </section>
+ <section class="card"><h3>標準入力（選択住戸）</h3><label for="unit-choice">住戸</label><select id="unit-choice"></select>
+ <fieldset id="edit-fields" class="field-grid" style="margin-top:18px"></fieldset>
+ <p class="muted small">変更は現在の下書きに反映します。「保存」を押すまでブラウザには書き込みません。シナリオ差分がある場合は差分が優先されます。</p></section>
+ <section class="card"><h3>暦年別の税引前キャッシュフロー</h3><div id="annual-table"></div></section>
+ <section class="card"><h3>選択住戸の用途カレンダー（計算結果）</h3><div id="month-table"></div></section>
+ <section class="card"><h3>入力不足・計算上の制限</h3><div id="limitations"></div></section>
+</main>
+<main id="appendix" hidden><section class="card"><h2>Appendix · 保存とデータ移行</h2>
+ <p>保存キーは <code>premium_re_investment_v11</code> のみです。旧v1の <code>osaka_premium_stay_v3</code> 等を読み書き・削除しません。旧データの自動移行も行いません。</p>
+ <div class="actions">
+  <button class="primary" type="button" id="save">v1.1下書きを明示保存</button>
+  <button class="secondary" type="button" id="restore">v1.1下書きを復元</button>
+  <button class="secondary" type="button" id="export">v1.1 JSONを出力</button>
+  <button class="secondary" type="button" id="choose-import">v1.1 JSONを読み込む</button>
+  <input class="sr-only" id="import-file" type="file" accept=".json,application/json">
+ </div>
+ <p class="muted small">JSON読込は別の下書きへ反映します。保存・旧形式の移行・正式スキーマ検証は別工程です。ブラウザ保存に失敗した場合はJSONでバックアップしてください。</p>
+ <h3>計算範囲</h3><p>月次GOP／NOI／税引前CFADS、買収・内装・借入・売却・敷金、暦年CF、税引前IRR／NPV。税額は0円とみなさず未算定にします。</p>
+ <div class="actions"><button type="button" class="secondary" id="reset-demo">架空サンプルを読み直す（下書きのみ）</button></div>
+</section></main>
+<footer>架空データ・開発専用。公開版ではありません。GitHubの develop/v1.1-foundation でのみ管理。</footer>
+</div>
+<script type="module">
+import {previewV11Scenario} from "../src/v11-preview-engine.mjs";
+const STORAGE_KEY="premium_re_investment_v11";
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=v=>v===null||v===undefined?"算定保留":new Intl.NumberFormat("ja-JP",{maximumFractionDigits:0}).format(v)+"円";
+const pct=v=>v===null||v===undefined?"算定保留":(v*100).toFixed(2)+"%";
+let data=null,last=null,selectedUnit=null,dirty=false,activeTab="business",sample=null;
+const fields=[
+ ["H01","ADR（円／室泊）","JPY_per_room_night"],["H02","宿泊稼働率（％）","percent"],
+ ["R01","基準月額賃料（円）","JPY_per_month"],["R02","賃貸入居率（％）","percent"],
+ ["A01","購入価格（円）","JPY"],["A06","借上月額賃料（円）","JPY_per_month"]
+];
+const alertStatus=(message,isError=false)=>{$("status").className=isError?"error":"muted";$("status").textContent=message;};
+const fieldObject=(id,obj)=>obj?.fields?.[id[0]]?.[id]??null;
+function setDirty(value=true){dirty=value;$("save-indicator").textContent=value?"未保存の変更あり":"下書き（保存状態を確認）";}
+function activeScenario(){return $("scenario").value||data?.scenarios?.[0]?.id;}
+function calculate(){
+ if(!data)return null;
+ try{last=previewV11Scenario(data,{scenarioId:activeScenario()});alertStatus(
+  last.status==="estimated-pre-tax"?"税引前試算が計算できました。税引後指標は算定保留です。":
+   "一部の計算を保留しました。入力不足欄を確認してください。",false);
+ }catch(e){last={status:"error",error:String(e?.message??e)};
+ alertStatus("計算エラー："+last.error,true);}
+ return last;
+}
+function simpleTable(columns,rows){
+ let html='<div class="table-scroll"><table><thead><tr>';
+ for(const c of columns)html+="<th>"+esc(c)+"</th>";
+ html+="</tr></thead><tbody>";
+ for(const r of rows){html+="<tr>";for(const c of r)html+="<td>"+esc(c)+"</td>";html+="</tr>";}
+ return html+"</tbody></table></div>";
+}
+function renderBusiness(){
+ $("entity-list").innerHTML="<h3>事業・納税主体</h3>"+data.entities.map(e=>
+ '<div class="unit"><strong>'+esc(e.name)+'</strong> · '+esc(e.taxpayerType)+
+ ' · ID: '+esc(e.id)+'</div>').join("");
+ $("unit-list").innerHTML=data.units.map(u=>
+ '<div class="unit"><strong>'+esc(u.name)+'</strong> <span class="pill">'+
+ esc(u.modelId)+' / '+esc(u.tenure)+'</span><p class="small">主体 '+esc(u.operatorEntityId)+
+ '｜開始 '+esc(u.operationStartDate)+'｜終了 '+esc(u.exit.exitDate)+
+ '</p><button type="button" class="secondary" data-select-unit="'+esc(u.id)+'">03で編集</button></div>').join("");
+}
+function renderEvidence(){
+ const rows=[];
+ const walk=(obj,subject)=>{
+  for(const [grp,fields] of Object.entries(obj?.fields??{})){
+   for(const [id,f] of Object.entries(fields??{})){
+    rows.push([subject,id,String(f.value??"未設定"),f.unit??"",f.sourceType??"",f.sourceUrl??"—"]);
+   }
+  }
+ };
+ walk(data.portfolio,"ポートフォリオ");
+ for(const u of data.units)walk(u,u.name);
+ $("evidence-list").innerHTML=simpleTable(["対象","項目ID","値","単位","根拠種別","資料URL"],rows);
+}
+function renderKpis(){
+ const r=last;
+ const kpis=r?.status==="estimated-pre-tax"?[
+  ["税引前CF₀",fmt(r.CF0)],["税引前IRR",pct(r.preTax.IRR)],
+  ["税引前NPV",fmt(r.preTax.NPV)],["税引後NPV／IRR","算定保留"],
+  ["課税計算","未実装（0円ではありません）"]]:
+  [["税引前・税引後評価","算定保留"]];
+ $("kpis").innerHTML=kpis.map(x=>'<div class="kpi"><span class="muted small">'+
+ esc(x[0])+'</span><strong>'+esc(x[1])+'</strong></div>').join("");
+}
+function renderAnnual(){
+ if(last?.status!=="estimated-pre-tax"){$("annual-table").textContent="入力の検証が完了するまで算定保留。";return}
+ $("annual-table").innerHTML=simpleTable(
+  ["暦年","営業CF","投資CF","金融CF","税引前自己資本CF"],
+  last.annual.map(x=>[x.year,fmt(x.operating),fmt(x.investing),fmt(x.financing),fmt(x.preTaxEquityCF)]));
+}
+function selected(){return data.units.find(x=>x.id===selectedUnit)??data.units[0]}
+function renderEditor(){
+ const u=selected();const visible=u.modelId==="M4"?["R01","R02","A01","A06"]:
+ u.modelId==="M1"||u.modelId==="M3"?["H01","H02","A01","A06"]:
+ ["H01","H02","R01","R02","A01","A06"];
+ $("edit-fields").innerHTML=fields.filter(x=>visible.includes(x[0])).map(([id,title])=>{
+  const f=fieldObject(id,u),value=f?.value??"";
+  return '<label for="edit-'+esc(id)+'">'+esc(title)+'<input id="edit-'+esc(id)+
+   '" type="number" step="any" inputmode="decimal" data-edit-field="'+esc(id)+
+   '" value="'+esc(value)+'"></label>';
+ }).join("");
+}
+function renderMonths(){
+ const u=selected(),computed=last?.units?.find(x=>x.unitId===u.id);
+ if(!computed?.operating?.length){$("month-table").textContent="用途カレンダーを入力して計算してください。";return}
+ $("month-table").innerHTML=simpleTable(
+  ["月","暦日","宿泊割当","賃貸割当","自己居住","宿泊売上","賃貸売上","営業余剰"],
+  computed.operating.map(x=>[x.month,x.result.calendarDays,x.result.lodging.allocatedDays,
+   x.result.rental.allocatedDays,
+   (u.calendar.find(row=>row.year===Number(x.month.slice(0,4))&&
+      row.month===Number(x.month.slice(5,7)))?.selfUseDays??0),
+   fmt(x.result.lodging.revenue),fmt(x.result.rental.revenue),fmt(x.result.operatingSurplus)]));
+}
+function renderLimitations(){
+ if(!last){$("limitations").textContent="計算結果がありません。";return}
+ const lines=last.status==="error"?[last.error]:
+ last.status==="incomplete"?(last.missing??[]).map(x=>(x.unitId??"全体")+" "+(x.month??"")+
+  " "+x.fieldId+" — "+x.reason):[...(last.limitations??[]),
+  "未入力の任意詳細値を0と解釈した箇所："+(last.inputWarnings?.length??0)+"件"];
+ $("limitations").innerHTML="<ul>"+lines.map(x=>"<li>"+esc(x)+"</li>").join("")+"</ul>";
+}
+function render(){
+ if(!data)return;
+ const lastScenario=activeScenario();
+ $("scenario").innerHTML=data.scenarios.map(s=>'<option value="'+esc(s.id)+'">'+esc(s.name)+'</option>').join("");
+ $("scenario").value=data.scenarios.some(s=>s.id===lastScenario)?lastScenario:data.scenarios[0].id;
+ if(!data.units.some(x=>x.id===selectedUnit))selectedUnit=data.units[0]?.id??null;
+ $("unit-choice").innerHTML=data.units.map(u=>'<option value="'+esc(u.id)+'">'+esc(u.name)+'</option>').join("");
+ $("unit-choice").value=selectedUnit;
+ calculate();
+ renderBusiness();renderEvidence();renderKpis();renderAnnual();renderEditor();renderMonths();renderLimitations();
+}
+function showTab(tab){
+ activeTab=tab;
+ for(const main of document.querySelectorAll("main[id]"))main.hidden=main.id!==tab;
+ for(const btn of document.querySelectorAll("[data-tab]"))
+  btn.setAttribute("aria-selected",String(btn.dataset.tab===tab));
+}
+function validDocument(o){
+ return o?.schemaVersion==="1.1.0"&&o?.portfolio?.currency==="JPY"&&
+  Array.isArray(o.units)&&Array.isArray(o.entities)&&Array.isArray(o.scenarios);
+}
+function assign(obj){if(!validDocument(obj))throw new Error("v1.1形式でないか主要配列が不足しています");
+ data=structuredClone(obj);selectedUnit=data.units[0]?.id??null;setDirty();render();}
+async function fetchSample(){
+ const response=await fetch("./v11-sample.json",{cache:"no-store"});
+ if(!response.ok)throw new Error("サンプルJSONを読み込めません。静的HTTPサーバーから開いてください。");
+ sample=await response.json();assign(sample);setDirty(false);
+}
+$("tabnav").addEventListener("click",e=>{
+ const b=e.target.closest("[data-tab]");if(b)showTab(b.dataset.tab)
+});
+$("scenario").addEventListener("change",render);
+$("unit-choice").addEventListener("change",()=>{selectedUnit=$("unit-choice").value;render()});
+$("unit-list").addEventListener("click",e=>{
+ const b=e.target.closest("[data-select-unit]");if(!b)return;
+ selectedUnit=b.dataset.selectUnit;showTab("analysis");render();
+});
+$("edit-fields").addEventListener("change",e=>{
+ const input=e.target.closest("[data-edit-field]");if(!input)return;
+ const u=selected(),id=input.dataset.editField,meta=fields.find(x=>x[0]===id);
+ if(!meta)return;
+ const parsed=input.value.trim()===""?null:Number(input.value);
+ if(parsed!==null&&!Number.isFinite(parsed)){alertStatus("数値が不正です",true);return}
+ u.fields[id[0]]??={};
+ u.fields[id[0]][id]={value:parsed,unit:meta[2],
+    sourceType:"userAssumption",isOverride:true};
+ setDirty();render();
+});
+$("save").addEventListener("click",()=>{
+ if(!data)return;
+ try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));setDirty(false);
+  alertStatus("v1.1専用キーへの保存に成功しました。")}
+ catch(e){alertStatus("保存に失敗しました。JSONファイルでバックアップしてください："+e.message,true)}
+});
+$("restore").addEventListener("click",()=>{
+ try{const raw=localStorage.getItem(STORAGE_KEY);
+  if(!raw){alertStatus("v1.1専用キーに保存された下書きはありません。");return}
+  assign(JSON.parse(raw));setDirty(false);alertStatus("v1.1下書きを復元しました。");}
+ catch(e){alertStatus("復元できませんでした："+e.message,true)}
+});
+$("export").addEventListener("click",()=>{
+ if(!data)return;
+ const blob=new Blob([JSON.stringify(data,null,2)+"\n"],{type:"application/json"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download="premium-re-v11-draft.json";a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+$("choose-import").addEventListener("click",()=>$("import-file").click());
+$("import-file").addEventListener("change",async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ try{assign(JSON.parse(await file.text()));alertStatus("v1.1 JSONを下書きに読み込みました。正式スキーマ検証は未実装です。")}
+ catch(error){alertStatus("取込できませんでした："+error.message,true)}
+ finally{e.target.value=""}
+});
+$("reset-demo").addEventListener("click",()=>{
+ if(sample){assign(sample);alertStatus("開発サンプルに戻しました。保存済みデータは変更していません。")}
+});
+fetchSample().catch(e=>alertStatus(e.message,true));
+</script>
+</body>
+</html>
