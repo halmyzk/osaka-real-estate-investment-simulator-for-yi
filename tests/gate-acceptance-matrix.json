@@ -1,5 +1,5 @@
 {
-  "traceVersion": "2026-10-13-gate-acceptance-6",
+  "traceVersion": "2026-10-13-gate-acceptance-7",
   "target": "docs/v1.1-design-change-spec.md §§13.9,14.11",
   "definition": {
     "exampleVerified": "Specific illustrative expected outcome tested; not full legal or boundary coverage",
@@ -41,9 +41,10 @@
       "status": "partial",
       "evidence": [
         "tests/tax.test.mjs",
-        "tests/officer-payroll-withholding.test.mjs"
+        "tests/officer-payroll-withholding.test.mjs",
+        "tests/nta-monthly-withholding.test.mjs"
       ],
-      "gap": "2027年の給与源泉税額表を2026年へ流用禁止。2026/2027年の復興・防衛税区分・全月額表の独立検算は未完了。"
+      "gap": "2026/2027所得税の付加税目は別年度ルールを保持。加えて国税庁2026/2027年分給与源泉徴収月額表の一部実数値を独立照合（2026年105,000円、2027年111,000円の甲0人の0円境界）。税目別本税・付加税の完全法定端数と全年の源泉表は未受入。"
     },
     {
       "id": "B-T05",
@@ -128,9 +129,10 @@
         "tests/tax.test.mjs",
         "tests/officer-housing-tax.test.mjs",
         "tests/officer-payroll-withholding.test.mjs",
-        "tests/payroll-tax-assessment-bridge.test.mjs"
+        "tests/payroll-tax-assessment-bridge.test.mjs",
+        "tests/nta-monthly-withholding.test.mjs"
       ],
-      "gap": "役員の無償社宅課税が0でない狭義のNTA算例はcriterionVerified。給与源泉・年次精算も追加したが法定税額表の独立照合・給与所得控除等は未完了。",
+      "gap": "無償役員社宅の課税価値をゼロと誤認しない条件は狭義criterionVerified。関連する給与源泉税は2026/2027年の一部の甲欄公式額を照合可能。扶養控除等申告書・扶養人数確認がないと公式照合済みCFを拒否。実物件の法的認定は未完了。",
       "criterionVerification": {
         "primarySourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/gensen/2600.htm",
         "corroboratingSourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/hojin/5202.htm",
@@ -157,9 +159,10 @@
         "tests/multi-entity-multiyear-tax.test.mjs",
         "tests/officer-payroll-withholding.test.mjs",
         "tests/payroll-tax-assessment-bridge.test.mjs",
-        "tests/combined-tax-reconciliation.test.mjs"
+        "tests/combined-tax-reconciliation.test.mjs",
+        "tests/nta-monthly-withholding.test.mjs"
       ],
-      "gap": "役員現金給与は本人の受取と法人の支払を両側照合、源泉税は法人から外部納付し本人の年次所得税の前払として一度だけ差引き。役員報酬の税法適格性・社会保険・実際の源泉税額表の独立検証は未完了。"
+      "gap": "法人・役員間の現金使用料/給与、給与源泉税・社会保険料をそれぞれ記録。2026/2027年甲欄の限定給与帯はNTA公式表に対する独立照合と年度境界テスト追加。ただし賞与・乙欄・社会保険料の法定額と給与調整の通年包括判定は未完了。"
     },
     {
       "id": "B-T15",
@@ -293,9 +296,10 @@
         "tests/officer-payroll-withholding.test.mjs",
         "tests/payroll-tax-assessment-bridge.test.mjs",
         "tests/vat-taxpayer-settlement.test.mjs",
-        "tests/combined-tax-reconciliation.test.mjs"
+        "tests/combined-tax-reconciliation.test.mjs",
+        "tests/nta-monthly-withholding.test.mjs"
       ],
-      "gap": "同時利用の月別証跡欠落、源泉税額表の未確認、源泉税前払に対する未確定還付、VAT適格性未確認・未納付を数値CFへ流さない。なお未知税務要件の完全自動検出は未完成。"
+      "gap": "国税庁2026/2027年公式表で確認した一部の甲欄給与帯以外は自動計算せずincomplete。扶養控除等申告書・人数未審査、表年度不一致、表と金額不一致もCFへの連携を拒否。その他の未知税務入力への完全な網羅判定は未完成。"
     }
   ],
   "gateA": [
@@ -342,5 +346,5 @@
       "gap": "Grouped line references and VAT trace improved; multi-entity full ledger reconciliation still needed"
     }
   ],
-  "acceptanceNotice": "Two narrow criteria B-T13 and B-T21 criterionVerified; five exampleVerified (incl B-T19); seventeen partial. Neither tax law conformity nor overall Gate B acceptance granted."
+  "acceptanceNotice": "NTA official 2026 and 2027 monthly ko table verified subset; B-T13 and B-T21 narrow criterionVerified count remains 2, exampleVerified 4, partial 18. Year/beneficiary eligibility, complete source table and tax law case coverage not yet accepted."
 }
