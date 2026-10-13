@@ -32,4 +32,4 @@ jobs:
         with:
           node-version: '22'
       - name: Run Gate A operating model tests
-        run: node --test tests/operations.test.mjs
+        run: node --test tests/*.test.mjs
