@@ -8,9 +8,10 @@
  * Owned M4 full-business real-estate is supported only by a reviewed
  * land/building tax register, noncash straight-line building depreciation
  * and separate individual capital gain or corporate disposal gain.
- * Other owned models, capital additions/finance fees, private use,
- * withholding, VAT invoice cash, non-January fiscal years and unsettled
- * classification are deliberately blocked.
+ * M3 private-use/lodging apartments are supported only with separately
+ * reviewed monthly disposal basis equivalents and distinct utility/area
+ * expense allocation; other owned models, capital additions/finance fees,
+ * withholding, VAT cash and unsettled classifications remain blocked.
  * Missing tax inputs block the output; a blank input never means zero tax.
  *
  * All tax rules and expense/business shares are separately supplied reviewed
@@ -20,6 +21,7 @@ import {fingerprintV11Document} from "./v11-income-tax-sidecar.mjs";
 import {assessPersonalYear,assessCorporateYear,combineAnnualIncomeTaxResults} from "./annual-income-tax.mjs";
 import {connectAnnualTaxAssessments} from "./income-tax-bridge.mjs";
 import {deriveOwnedM4TaxRegister} from "./v11-owned-property-tax.mjs";
+import {deriveOwnedM3MixedTaxRegister} from "./v11-owned-m3-mixed-tax.mjs";
 
 const num=(v,k,{min=-Infinity,max=Infinity}={})=>{
  if(typeof v!=="number"||!Number.isFinite(v)||v<min||v>max)
@@ -63,9 +65,13 @@ function buildTaxItems(document,unitResults,plan){
    if(stored.tenure==="own"){
      if(plan.taxScope!=="ordinaryAndOwnedSale"||!ownedById.has(stored.id))
        throw new RangeError("Owned property requires separate land/building basis, depreciation and disposal tax computation, with reviewed evidence");
-     const reg=deriveOwnedM4TaxRegister({
-        unit:stored,unitResult:u,ownerType:entities.get(u.entityId).taxpayerType,
-        ownedReview:ownedById.get(stored.id)});
+     const args={unit:stored,unitResult:u,
+       ownerType:entities.get(u.entityId).taxpayerType,
+       ownedReview:ownedById.get(stored.id)};
+     const reg=stored.modelId==="M3"?
+       deriveOwnedM3MixedTaxRegister({...args,
+         unitYearReviews:(plan.unitYearReviews??[]).filter(x=>x.unitId===stored.id)}):
+       deriveOwnedM4TaxRegister(args);
      ownedRegisters.push(reg);
    }else if(stored.tenure==="lease"){
      if(stored.assets?.length)
