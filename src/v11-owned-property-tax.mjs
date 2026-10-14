@@ -93,10 +93,12 @@ export function deriveOwnedM4TaxRegister({unit,unitResult,ownerType,ownedReview}
  const proceeds=cash.filter(e=>e.category==="disposalProceeds");
  const closings=cash.filter(e=>e.category==="closingCosts");
  const saleCosts=cash.filter(e=>e.category==="saleCosts");
+ const allowedOwnedCash=new Set(["acquisitionPrice","disposalProceeds","saleCosts"]);
  if(purchases.length!==1||proceeds.length!==1||
-    closings.some(e=>e.amount!==0)||
-    cash.some(e=>["initialCapEx","expansionCapEx","maintenanceCapEx"].includes(e.category)&&e.amount!==0))
-   throw new RangeError("Single A01 purchase/sale only; capital work or capitalized closing cost must be separately reviewed");
+    cash.some(e=>!allowedOwnedCash.has(e.category)&&e.amount!==0)||
+    purchases[0].month!==start.slice(0,7)||
+    proceeds[0].month!==exit.slice(0,7))
+   throw new RangeError("Single A01 purchase and property sale only; capital work, closing cost and exit obligation need separate reviewed tax treatment");
  const purchase=yen(-purchases[0].amount,"acquisition cash");
  const price=yen(proceeds[0].amount,"gross sale cash");
  const costs=saleCosts.reduce((sum,e)=>sum+yen(-e.amount,"selling cash"),0);
