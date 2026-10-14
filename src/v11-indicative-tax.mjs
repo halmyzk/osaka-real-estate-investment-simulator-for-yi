@@ -160,6 +160,10 @@ export function estimateV11IndicativeTaxCash({document,unitResults,assumptions})
      u.entityId!==stored.get(u.unitId).operatorEntityId)
    throw new RangeError("All indicative unit reports must be computed for matching tax entities");
   const unit=stored.get(u.unitId),entity=entities.get(u.entityId);
+  const purchaseTotal=sum(u.investing.filter(e=>e.category==="acquisitionPrice")
+    .map(e=>-e.amount));
+  if(unit.tenure==="own"&&!(purchaseTotal>0))
+    throw new RangeError("Owned unit needs a positive acquisition basis");
   const registered=a.vatRegisteredByEntity[entity.id],monthsByYear=new Map();
   const expenses=["lodgingOperating","rentalOperating","propertyOperating"];
   for(const o of u.operating){
@@ -233,8 +237,8 @@ export function estimateV11IndicativeTaxCash({document,unitResults,assumptions})
    subtotal.financingInterestPaid+=interest;
    const deductibleInterest=interest*shares.depreciationShare;
    subtotal.deductibleInterest+=deductibleInterest;
-   const splitRevenue=subtotal.lodgingRevenue+subtotal.rentalRevenue; // entity-wide not unit-wide:
-   // Use this unit's annual stream allocation instead of another unit's.
+   // Allocate only this unit's interest to its own lodging/rental streams,
+   // not using the potentially mixed revenue of the entire legal entity.
    const unitLodging=sum(rows.map(x=>x.result.lodging.revenue));
    const unitRental=sum(rows.map(x=>x.result.rental.revenue));
    const lodgingFraction=unitLodging+unitRental>0?unitLodging/(unitLodging+unitRental):
@@ -244,8 +248,7 @@ export function estimateV11IndicativeTaxCash({document,unitResults,assumptions})
    subtotal.categoryProfit[lp]-=deductibleInterest*lodgingFraction;
    subtotal.categoryProfit[rp]-=deductibleInterest*(1-lodgingFraction);
    let depreciationGross=0,depreciationDeductible=0,buildingBasis=0;
-   const purchase=sum(u.investing.filter(e=>e.category==="acquisitionPrice")
-     .map(e=>-e.amount));
+   const purchase=purchaseTotal;
    if(unit.tenure==="own"){
     const buildings=(unit.assets??[]).filter(x=>x.category==="building");
     const land=(unit.assets??[]).filter(x=>x.category==="land");
@@ -275,7 +278,7 @@ export function estimateV11IndicativeTaxCash({document,unitResults,assumptions})
       assumedNoncashDepreciationDeducted:depreciationDeductible});
   }
   if(unit.tenure==="own"){
-    const purchase=sum(u.investing.filter(x=>x.category==="acquisitionPrice").map(x=>-x.amount));
+    const purchase=purchaseTotal;
     const grossSale=sum(u.investing.filter(x=>x.category==="disposalProceeds").map(x=>x.amount));
     const sellingCosts=sum(u.investing.filter(x=>x.category==="saleCosts").map(x=>-x.amount));
     const year=Number(unit.exit.exitDate.slice(0,4));
@@ -307,7 +310,6 @@ export function estimateV11IndicativeTaxCash({document,unitResults,assumptions})
    const candidate=registered?row.candidateInputVatCredit:0;
    const appliedCredit=Math.min(candidate,row.taxableVatOutput);
    const remainder=row.taxableVatOutput-appliedCredit;
-   const allocatedCreditFactor=candidate>0?appliedCredit/candidate:0;
    const creditToBusinessTax=appliedCredit; // all candidate credit relates to lodging/shared business costs
    row.categoryProfit[ row.entityType==="corporation"?"corporate":"miscellaneous"]+=0;
    // Input VAT capitalized into a deductible business expense only if not
@@ -320,7 +322,6 @@ export function estimateV11IndicativeTaxCash({document,unitResults,assumptions})
      const target=activeCategories.find(k=>row.categoryProfit[k]!==0)??activeCategories[0];
      row.categoryProfit[target]+=creditToBusinessTax;
    }
-   const profitTotal=sum(Object.values(row.categoryProfit));
    if(row.entityType==="corporation"){
       row.categoryProfit.corporate+=row.corporateSaleGain;
    }
