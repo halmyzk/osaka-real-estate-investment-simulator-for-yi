@@ -63,7 +63,7 @@ footer{font-size:.8rem;color:#516a76;padding:20px 0}
  <p class="muted small">営業売上・現金費用・取得支出・売却代金・借入／元本・利息を分類します。表の差額は税法上の課税所得ではありません。償却・VAT・家事按分・譲渡益の審査を別途要します。</p>
  <div id="tax-crosswalk"></div></section>
  <section class="card"><h3>購入物件の税務資産台帳・売却益（限定試算）</h3>
- <p class="muted small">土地・建物の取得価額、建物償却、売却時の調整後簿価と譲渡益を独立表示します。年次償却は非現金費用です。土地は償却しません。個人の譲渡税は通常所得と分離します。</p>
+ <p class="muted small">土地・建物の取得価額、償却（非現金）、売却時の調整後簿価と譲渡益を独立表示します。M3では180日宿泊割当と見込宿泊泊数を区別し、光熱費と建物償却の家事按分方法も分離します。売却取得費には審査済みの非業務用減価相当額を反映します。個人の譲渡税は通常所得と分離します。</p>
  <div id="owned-tax-register"></div>
 </section>
 <section class="card"><h3>選択住戸の用途カレンダー（計算結果）</h3><div id="month-table"></div></section>
@@ -79,13 +79,15 @@ footer{font-size:.8rem;color:#516a76;padding:20px 0}
   <input class="sr-only" id="import-file" type="file" accept=".json,application/json">
  </div>
  <h3>税務試算ルート（開発専用）</h3>
- <p>（A）外部仮定の年次税額を納税CFに反映するルートと、（B）<strong>営業元帳から所得区分・費用の算入割合・仮定税率を明示して年次税額を計算する限定ルート</strong>を区別します。（B）は新たに、購入M4の土地・建物台帳、建物償却、売却益・個人譲渡税も審査付きで対応します。自己居住併用、追加投資、VAT、正式な申告適格性は未接続です。税務前提は一時読込のみで、下書きに自動保存しません。</p>
+ <p>（A）外部仮定の年次税額を納税CFに反映するルートと、（B）<strong>営業元帳から所得区分・費用の算入割合・仮定税率を明示して年次税額を計算する限定ルート</strong>を区別します。（B）は購入M4に加え、宿泊・自己居住併用M3の<strong>宿泊枠日数・見込泊数・事業用面積／建物事業供用期間</strong>を区別した限定試算に対応します。M3の売却時非業務用減価相当額は独立の審査済み月次明細が必要です。追加投資、VAT、税務上の実際の適格性は未接続です。税務前提は一時読込のみで、下書きに自動保存しません。</p>
  <div class="actions">
   <button type="button" class="secondary" id="load-demo-tax">外部税額の架空Base例を読込む</button>
   <button type="button" class="secondary" id="choose-derived-demo">自動税額計算用の架空M4物件に切替</button>
   <button type="button" class="secondary" id="load-derived-demo-tax">所得区分・仮定税率から自動試算</button>
   <button type="button" class="secondary" id="choose-owned-demo">架空のM4購入＋賃借物件に切替</button>
   <button type="button" class="secondary" id="load-owned-demo-tax">購入物件の償却・売却税を自動試算</button>
+  <button type="button" class="secondary" id="choose-m3-demo">架空のM3宿泊＋自己居住に切替</button>
+  <button type="button" class="secondary" id="load-m3-demo-tax">M3の家事按分・償却・譲渡税を試算</button>
   <button type="button" class="secondary" id="choose-tax-import">税額／税額計算プランJSONを読込む</button>
   <button type="button" class="secondary" id="clear-tax">税額資料を解除</button>
   <input class="sr-only" id="tax-import-file" type="file" accept=".json,application/json">
@@ -230,6 +232,20 @@ function renderOwnedAssetTax(){
  }
  $("owned-tax-register").innerHTML=simpleTable(
   ["住戸","資産","種類","取得価額","累計償却（非現金）","売却時税務簿価","課税区分"],rows);
+ const mixed=registers.flatMap(r=>(r.annualUse??[]).map(y=>[
+    r.unitId,y.taxYear,y.lodgingAllocatedDays,y.forecastSoldNights,
+    pct(y.sharedUtilityExpenseShare),pct(y.buildingBusinessShare),
+    fmt(r.disposalEvidence?.businessBookReduction),
+    fmt(r.disposalEvidence?.nonbusinessBookReduction)
+ ]));
+ if(mixed.length){
+   const h=document.createElement("h3");h.textContent="M3・家事按分と譲渡原価の独立検算";$("owned-tax-register").append(h);
+   const area=document.createElement("div");
+   area.innerHTML=simpleTable(
+     ["住戸","暦年","宿泊割当日数","稼働率ベース見込泊数","共通光熱費の事業按分率",
+      "建物償却の事業按分率","譲渡時業務用減価相当","譲渡時非業務用減価相当"],mixed);
+   $("owned-tax-register").append(area);
+ }
  const exits=registers.map(r=>r.unitId+"：売却代金 "+fmt(r.grossSaleCash)+
     "／売却費用 "+fmt(r.disposalCosts)+
     "／土地・建物譲渡益 "+fmt(r.saleGain.gain)+
@@ -268,7 +284,7 @@ function renderLimitations(){
   " "+x.fieldId+" — "+x.reason):[...(last.limitations??[]),
   last.incomeTaxStatus==="incomplete"?"所得税等の資料： "+last.incomeTaxBlocker:
     last.incomeTaxCalculationBasis==="derivedFromUnitOperations"?
-      "住戸営業データとレビュー済みの所得区分・費用按分・税率仮定から所得税等を試算しました。M4購入物件の資産台帳・償却・売却も審査済みサンプルに限り対応。消費税・自己居住併用・申告適格性を含む正式な税引後評価ではありません。":
+      "住戸営業と審査済みの所得区分・費用配分・税率仮定から所得税等を試算しました。購入M4の他、購入M3の宿泊／私用・資産別償却・独立した私用減価相当額による譲渡益も限定対応。消費税・法定適格性を含む正式な税引後評価ではありません。":
       "所得税等の外部仮定値を納付月へ接続しました。消費税を含む正式な税引後評価ではありません。",
   ...(last.incomeTaxWarnings??[]),
   "未入力の任意詳細値を0と解釈した箇所："+(last.inputWarnings?.length??0)+"件"];
@@ -414,6 +430,21 @@ $("load-owned-demo-tax").addEventListener("click",async()=>{
   if(!response.ok)throw new Error("購入物件の資産・税務試算プランを取得できません");
   useTaxSidecar(await response.json());
  }catch(error){$("tax-import-status").textContent="購入物件税務の試算失敗："+error.message}
+});
+$("choose-m3-demo").addEventListener("click",async()=>{
+ try{
+  const r=await fetch("./v11-m3-mixed-use-sample.json",{cache:"no-store"});
+  if(!r.ok)throw new Error("M3兼用モデルを読み込めません");
+  assign(await r.json());$("scenario").value="base";setDirty();render();
+  $("tax-import-status").textContent="M3・宿泊と自己居住（180日枠／見込54泊）の架空モデルを読込みました。別途、家事按分・売却時税務プランを読み込んでください。";
+ }catch(e){$("tax-import-status").textContent="M3モデルの読込失敗："+e.message;}
+});
+$("load-m3-demo-tax").addEventListener("click",async()=>{
+ try{
+  const r=await fetch("./v11-m3-mixed-tax-plan.json",{cache:"no-store"});
+  if(!r.ok)throw new Error("M3税務プランを読み込めません");
+  useTaxSidecar(await r.json());
+ }catch(e){$("tax-import-status").textContent="M3家事按分・税務計算の実行失敗："+e.message;}
 });
 $("choose-tax-import").addEventListener("click",()=>$("tax-import-file").click());
 $("tax-import-file").addEventListener("change",async e=>{
