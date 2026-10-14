@@ -62,7 +62,11 @@ footer{font-size:.8rem;color:#516a76;padding:20px 0}
  <section class="card"><h3>納税主体別の税務計算用元帳（監査用）</h3>
  <p class="muted small">営業売上・現金費用・取得支出・売却代金・借入／元本・利息を分類します。表の差額は税法上の課税所得ではありません。償却・VAT・家事按分・譲渡益の審査を別途要します。</p>
  <div id="tax-crosswalk"></div></section>
- <section class="card"><h3>選択住戸の用途カレンダー（計算結果）</h3><div id="month-table"></div></section>
+ <section class="card"><h3>購入物件の税務資産台帳・売却益（限定試算）</h3>
+ <p class="muted small">土地・建物の取得価額、建物償却、売却時の調整後簿価と譲渡益を独立表示します。年次償却は非現金費用です。土地は償却しません。個人の譲渡税は通常所得と分離します。</p>
+ <div id="owned-tax-register"></div>
+</section>
+<section class="card"><h3>選択住戸の用途カレンダー（計算結果）</h3><div id="month-table"></div></section>
  <section class="card"><h3>入力不足・計算上の制限</h3><div id="limitations"></div></section>
 </main>
 <main id="appendix" hidden><section class="card"><h2>Appendix · 保存とデータ移行</h2>
@@ -75,11 +79,13 @@ footer{font-size:.8rem;color:#516a76;padding:20px 0}
   <input class="sr-only" id="import-file" type="file" accept=".json,application/json">
  </div>
  <h3>税務試算ルート（開発専用）</h3>
- <p>（A）外部仮定の年次税額を納税CFに反映する従来ルートと、（B）<strong>営業元帳から所得区分・費用の算入割合・仮定税率を明示して年次税額を計算する限定ルート</strong>を区別します。購入物件・VAT・実際の申告適格性は未接続です。税務前提は一時読込のみで、下書きに自動保存しません。</p>
+ <p>（A）外部仮定の年次税額を納税CFに反映するルートと、（B）<strong>営業元帳から所得区分・費用の算入割合・仮定税率を明示して年次税額を計算する限定ルート</strong>を区別します。（B）は新たに、購入M4の土地・建物台帳、建物償却、売却益・個人譲渡税も審査付きで対応します。自己居住併用、追加投資、VAT、正式な申告適格性は未接続です。税務前提は一時読込のみで、下書きに自動保存しません。</p>
  <div class="actions">
   <button type="button" class="secondary" id="load-demo-tax">外部税額の架空Base例を読込む</button>
   <button type="button" class="secondary" id="choose-derived-demo">自動税額計算用の架空M4物件に切替</button>
   <button type="button" class="secondary" id="load-derived-demo-tax">所得区分・仮定税率から自動試算</button>
+  <button type="button" class="secondary" id="choose-owned-demo">架空のM4購入＋賃借物件に切替</button>
+  <button type="button" class="secondary" id="load-owned-demo-tax">購入物件の償却・売却税を自動試算</button>
   <button type="button" class="secondary" id="choose-tax-import">税額／税額計算プランJSONを読込む</button>
   <button type="button" class="secondary" id="clear-tax">税額資料を解除</button>
   <input class="sr-only" id="tax-import-file" type="file" accept=".json,application/json">
@@ -207,6 +213,31 @@ function renderTaxCrosswalk(){
     reviewed.has(x.entityId+"|"+x.taxYear)?
       fmt(reviewed.get(x.entityId+"|"+x.taxYear)):"未算定"]));
 }
+function renderOwnedAssetTax(){
+ const registers=last?.ownedAssetTaxRegisters??[];
+ if(!registers.length){
+  $("owned-tax-register").textContent="税務台帳は未読込、または対応条件外です。";return;
+ }
+ const rows=[];
+ for(const reg of registers){
+  for(const asset of reg.assetLines){
+   rows.push([reg.unitId,asset.assetId,asset.category,
+      fmt(asset.acquisitionBasis),
+      fmt(asset.annual.reduce((s,x)=>s+x.grossBookReduction,0)),
+      fmt(asset.saleClosingBookValue),
+      reg.saleGain.holdingClass==="corporateIncome"?"法人通常課税":"個人分離譲渡課税"]);
+  }
+ }
+ $("owned-tax-register").innerHTML=simpleTable(
+  ["住戸","資産","種類","取得価額","累計償却（非現金）","売却時税務簿価","課税区分"],rows);
+ const exits=registers.map(r=>r.unitId+"：売却代金 "+fmt(r.grossSaleCash)+
+    "／売却費用 "+fmt(r.disposalCosts)+
+    "／土地・建物譲渡益 "+fmt(r.saleGain.gain)+
+    (r.individualSaleAssessment?"／個人譲渡税（概算） "+
+     fmt(r.individualSaleAssessment.amount):"／法人課税所得へ加算")).join("　");
+ const p=document.createElement("p");p.className="muted small";p.textContent=exits;
+ $("owned-tax-register").append(p);
+}
 function selected(){return data.units.find(x=>x.id===selectedUnit)??data.units[0]}
 function renderEditor(){
  const u=selected();const visible=u.modelId==="M4"?["R01","R02","A01","A06"]:
@@ -237,7 +268,7 @@ function renderLimitations(){
   " "+x.fieldId+" — "+x.reason):[...(last.limitations??[]),
   last.incomeTaxStatus==="incomplete"?"所得税等の資料： "+last.incomeTaxBlocker:
     last.incomeTaxCalculationBasis==="derivedFromUnitOperations"?
-      "住戸営業データとレビュー済みの所得区分・費用按分・税率仮定から所得税等を試算しました。購入物件・償却・消費税を含む正式な税引後評価ではありません。":
+      "住戸営業データとレビュー済みの所得区分・費用按分・税率仮定から所得税等を試算しました。M4購入物件の資産台帳・償却・売却も審査済みサンプルに限り対応。消費税・自己居住併用・申告適格性を含む正式な税引後評価ではありません。":
       "所得税等の外部仮定値を納付月へ接続しました。消費税を含む正式な税引後評価ではありません。",
   ...(last.incomeTaxWarnings??[]),
   "未入力の任意詳細値を0と解釈した箇所："+(last.inputWarnings?.length??0)+"件"];
@@ -252,7 +283,7 @@ function render(){
  $("unit-choice").innerHTML=data.units.map(u=>'<option value="'+esc(u.id)+'">'+esc(u.name)+'</option>').join("");
  $("unit-choice").value=selectedUnit;
  calculate();
- renderBusiness();renderEvidence();renderKpis();renderAnnual();renderTaxCrosswalk();renderEditor();renderMonths();renderLimitations();
+ renderBusiness();renderEvidence();renderKpis();renderAnnual();renderTaxCrosswalk();renderOwnedAssetTax();renderEditor();renderMonths();renderLimitations();
 }
 function showTab(tab){
  activeTab=tab;
@@ -368,6 +399,21 @@ $("load-derived-demo-tax").addEventListener("click",async()=>{
   if(!r.ok)throw new Error("所得区分・税率プランを取得できません");
   useTaxSidecar(await r.json());
  }catch(e){$("tax-import-status").textContent="自動税額計算の実行失敗： "+e.message;}
+});
+$("choose-owned-demo").addEventListener("click",async()=>{
+ try{
+  const response=await fetch("./v11-owned-property-sample.json",{cache:"no-store"});
+  if(!response.ok)throw new Error("購入物件税務サンプルを取得できません");
+  assign(await response.json());$("scenario").value="base";setDirty();render();
+  $("tax-import-status").textContent="架空の個人M4購入物件＋法人M4賃借物件を読込みました。続けて購入物件の税務試算を実行できます。";
+ }catch(error){$("tax-import-status").textContent="購入物件サンプルの読込失敗："+error.message}
+});
+$("load-owned-demo-tax").addEventListener("click",async()=>{
+ try{
+  const response=await fetch("./v11-owned-property-tax-plan.json",{cache:"no-store"});
+  if(!response.ok)throw new Error("購入物件の資産・税務試算プランを取得できません");
+  useTaxSidecar(await response.json());
+ }catch(error){$("tax-import-status").textContent="購入物件税務の試算失敗："+error.message}
 });
 $("choose-tax-import").addEventListener("click",()=>$("tax-import-file").click());
 $("tax-import-file").addEventListener("change",async e=>{
