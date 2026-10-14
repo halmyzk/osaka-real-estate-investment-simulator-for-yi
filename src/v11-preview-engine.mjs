@@ -470,6 +470,7 @@ export function previewV11Scenario(document,{
   indicativeVATRows:indicative?.vatRows??[],
   indicativeSaleRows:indicative?.saleRows??[],
   indicativeUnitProof:indicative?.unitProof??[],
+  indicativeExpenseProof:indicative?.expenseProof??[],
   indicativeWarnings:indicative?.warnings??[],
   indicativeCashReconciliation:indicative?.reconciliation??null,
   indicativeVATCashAdjustments:indicative?.vatCashAdjustments??[],
