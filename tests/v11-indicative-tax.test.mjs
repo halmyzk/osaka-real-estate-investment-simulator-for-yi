@@ -26,9 +26,11 @@ test("No assumptions means no guessed after-tax value: explicit scenario unlocks
  assert.equal(withPlan.afterTax,null);
  assert.equal(withPlan.CF0,-1100000);
  assert.equal(withPlan.indicativeAfterTax.npvStatus,"computed");
- assert.equal(withPlan.indicativeAfterTax.irrStatus,"computed");
+ // In a one-year sale with income/capital tax due in later years, the
+ // investor's cash flows can change signs multiple times. Do NOT force one IRR.
+ assert.equal(withPlan.indicativeAfterTax.irrStatus,"ambiguous");
+ assert.equal(withPlan.indicativeAfterTax.IRR,null);
  assert.ok(Number.isFinite(withPlan.indicativeAfterTax.NPV));
- assert.ok(Number.isFinite(withPlan.indicativeAfterTax.IRR));
  assert.equal(withPlan.annualIndicativeCashFlows.length,3);
  assert.equal(withPlan.annualIndicativeCashFlows.at(-1).year,2028);
  assert.ok(withPlan.indicativeWarnings.length>=5);
@@ -161,4 +163,18 @@ test("Both entity ledgers produce balanced VAT-adjusted cash once and reject dup
  assert.equal(once[0].ledger.series[1].pretaxEquityCF,-8);
  assert.equal(ledgers[0].ledger.series[0].pretaxEquityCF,80);
  assert.throws(()=>appendV11IndicativeVATToLedgers({entityLedgers:once,vatCashAdjustments:diff}),/already applied/);
+});
+
+test("UI exposes editable effective tax/VAT assumptions and keeps ambiguous IRR visibly unavailable, not fictional 0%",()=>{
+ const html=readFileSync(new URL("../preview/v11-dev.html",import.meta.url),"utf8");
+ assert.match(html,/id="enable-indicative"/);
+ assert.match(html,/id="clear-indicative"/);
+ assert.match(html,/id="indicative-settings"/);
+ assert.match(html,/data-approx-field/);
+ assert.match(html,/data-approx-vat/);
+ assert.match(html,/indicativeAssumptions/);
+ assert.match(html,/indicativeAfterTax\.IRR/);
+ assert.match(html,/fmt\(r\.indicativeAfterTax\.NPV\)/);
+ assert.match(html,/annualIndicativeCashFlows/);
+ assert.match(html,/概算税引後NPV/);
 });
