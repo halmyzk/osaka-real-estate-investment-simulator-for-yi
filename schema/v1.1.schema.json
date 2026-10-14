@@ -1,0 +1,3424 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/halmyzk/osaka-real-estate-investment-simulator-for-yi/blob/develop/v1.1-foundation/schema/v1.1.schema.json",
+  "title": "Premium real-estate v1.1 input schema",
+  "description": "Complete structural contract. Cross-reference, calendar, tax-scope and conditional requirements are validated by semantic validator per Gate C/D.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "assumptionsVersion",
+    "calculationVersion",
+    "portfolio",
+    "entities",
+    "units",
+    "scenarios"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.1.0"
+    },
+    "assumptionsVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "calculationVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "portfolio": {
+      "$ref": "#/$defs/portfolio"
+    },
+    "entities": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/entity"
+      }
+    },
+    "units": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/unit"
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/scenario"
+      }
+    },
+    "exportedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resultSnapshot": {
+      "type": "object",
+      "description": "Non-authoritative cached result, must be recalculated upon import"
+    }
+  },
+  "$defs": {
+    "field": {
+      "type": "object",
+      "required": [
+        "value",
+        "unit",
+        "sourceType"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "number",
+            "string",
+            "boolean",
+            "null"
+          ]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "sourceType": {
+          "type": "string",
+          "enum": [
+            "observed",
+            "sourcedEstimate",
+            "userAssumption",
+            "systemDefault",
+            "unavailable"
+          ]
+        },
+        "sourceUrl": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "sourceTitle": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "observedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "asOfDate": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "assumptionId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "isOverride": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "fieldsP": {
+      "type": "object",
+      "properties": {
+        "P01": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "P01: string, text"
+        },
+        "P02": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "date"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "P02: string, date"
+        },
+        "P03": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "years"
+                },
+                "value": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "P03: integer, years"
+        },
+        "P04": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "percent"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
+          ],
+          "description": "P04: number, percent"
+        },
+        "P05": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "percent"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
+          ],
+          "description": "P05: number, percent"
+        },
+        "P06": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "percent"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
+          ],
+          "description": "P06: number, percent"
+        },
+        "P07": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "percent"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
+          ],
+          "description": "P07: number, percent"
+        },
+        "P08": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "months"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "P08: number, months"
+        },
+        "P09": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "percent"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
+          ],
+          "description": "P09: number, percent"
+        },
+        "P10": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "percent"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
+          ],
+          "description": "P10: number, percent"
+        },
+        "P11": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "P11: string, text"
+        },
+        "P12": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "P12: string, JPY"
+        }
+      },
+      "additionalProperties": false
+    },
+    "fieldsU": {
+      "type": "object",
+      "properties": {
+        "U01": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "U01: string, text"
+        },
+        "U02": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "U02: string, text"
+        },
+        "U03": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "U03: string, text"
+        },
+        "U04": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "U04: string, text"
+        },
+        "U05": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "U05: string, text"
+        },
+        "U06": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "U06: string, text"
+        },
+        "U07": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "sqm"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "U07: number, sqm"
+        },
+        "U08": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "U08: string, text"
+        },
+        "U09": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "date"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "U09: string, date"
+        },
+        "U10": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "date"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "U10: string, date"
+        },
+        "U11": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "date"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "U11: string, date"
+        },
+        "U12": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "U12: string, text"
+        },
+        "U13": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "U13: string, text"
+        }
+      },
+      "additionalProperties": false
+    },
+    "fieldsA": {
+      "type": "object",
+      "properties": {
+        "A01": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "A01: number, JPY"
+        },
+        "A02": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "A02: number, JPY"
+        },
+        "A03": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "A03: number, JPY"
+        },
+        "A04": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY_per_year"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "A04: number, JPY_per_year"
+        },
+        "A05": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY_per_month"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "A05: number, JPY_per_month"
+        },
+        "A06": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY_per_month"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "A06: number, JPY_per_month"
+        },
+        "A07": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "A07: number, JPY"
+        },
+        "A08": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "A08: number, JPY"
+        },
+        "A09": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "A09: number, JPY"
+        },
+        "A10": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "A10: number, JPY"
+        }
+      },
+      "additionalProperties": false
+    },
+    "fieldsK": {
+      "type": "object",
+      "properties": {
+        "K01": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "K01: number, JPY"
+        },
+        "K02": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "K02: string, text"
+        },
+        "K03": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "date"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "K03: string, date"
+        },
+        "K04": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "K04: string, text"
+        },
+        "K05": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "percent"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
+          ],
+          "description": "K05: number, percent"
+        },
+        "K06": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "K06: number, JPY"
+        }
+      },
+      "additionalProperties": false
+    },
+    "fieldsF": {
+      "type": "object",
+      "properties": {
+        "F01": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "boolean"
+                },
+                "value": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "F01: boolean, boolean"
+        },
+        "F02": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "F02: number, JPY"
+        },
+        "F03": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "percent"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
+          ],
+          "description": "F03: number, percent"
+        },
+        "F04": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "months"
+                },
+                "value": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "F04: integer, months"
+        },
+        "F05": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "F05: number, JPY"
+        },
+        "F06": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "F06: number, JPY"
+        }
+      },
+      "additionalProperties": false
+    },
+    "fieldsH": {
+      "type": "object",
+      "properties": {
+        "H01": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY_per_room_night"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "H01: number, JPY_per_room_night"
+        },
+        "H02": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "percent"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
+          ],
+          "description": "H02: number, percent"
+        },
+        "H03": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "days"
+                },
+                "value": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "H03: integer, days"
+        },
+        "H04": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "days"
+                },
+                "value": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "H04: integer, days"
+        },
+        "H05": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "multiplier"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "H05: number, multiplier"
+        },
+        "H06": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "multiplier"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "H06: number, multiplier"
+        },
+        "H07": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "nights_per_booking"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "H07: number, nights_per_booking"
+        },
+        "H08": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "percent"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
+          ],
+          "description": "H08: number, percent"
+        },
+        "H09": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY_per_booking"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "H09: number, JPY_per_booking"
+        },
+        "H10": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "H10: number, JPY"
+        },
+        "H11": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "H11: number, JPY"
+        },
+        "H12": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "H12: number, JPY"
+        }
+      },
+      "additionalProperties": false
+    },
+    "fieldsR": {
+      "type": "object",
+      "properties": {
+        "R01": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY_per_month"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "R01: number, JPY_per_month"
+        },
+        "R02": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "percent"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
+          ],
+          "description": "R02: number, percent"
+        },
+        "R03": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "days"
+                },
+                "value": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "R03: integer, days"
+        },
+        "R04": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "days"
+                },
+                "value": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "R04: integer, days"
+        },
+        "R05": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY_per_month"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "R05: number, JPY_per_month"
+        },
+        "R06": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "R06: number, JPY"
+        },
+        "R07": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "R07: number, JPY"
+        },
+        "R08": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "R08: number, JPY"
+        },
+        "R09": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "days"
+                },
+                "value": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "R09: integer, days"
+        },
+        "R10": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "percent"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
+          ],
+          "description": "R10: number, percent"
+        },
+        "R11": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "R11: number, JPY"
+        }
+      },
+      "additionalProperties": false
+    },
+    "fieldsS": {
+      "type": "object",
+      "properties": {
+        "S01": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "days"
+                },
+                "value": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "S01: integer, days"
+        },
+        "S02": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "S02: string, text"
+        },
+        "S03": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "S03: number, JPY"
+        },
+        "S04": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "S04: number, JPY"
+        },
+        "S05": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "percent"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
+          ],
+          "description": "S05: number, percent"
+        },
+        "S06": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "percent"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
+          ],
+          "description": "S06: number, percent"
+        },
+        "S07": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "percent"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
+          ],
+          "description": "S07: number, percent"
+        },
+        "S08": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "S08: number, JPY"
+        },
+        "S09": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY_per_month"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "S09: number, JPY_per_month"
+        },
+        "S10": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "S10: string, text"
+        }
+      },
+      "additionalProperties": false
+    },
+    "fieldsE": {
+      "type": "object",
+      "properties": {
+        "E01": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "E01: string, text"
+        },
+        "E02": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "E02: string, text"
+        },
+        "E03": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "E03: number, JPY"
+        },
+        "E04": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "E04: number, JPY"
+        },
+        "E05": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "E05: string, text"
+        },
+        "E06": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "percent"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
+          ],
+          "description": "E06: number, percent"
+        },
+        "E07": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "E07: string, text"
+        },
+        "E08": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "E08: string, text"
+        },
+        "E09": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "E09: number, JPY"
+        },
+        "E10": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "E10: number, JPY"
+        },
+        "E11": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "E11: number, JPY"
+        },
+        "E12": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "E12: string, text"
+        }
+      },
+      "additionalProperties": false
+    },
+    "fieldsX": {
+      "type": "object",
+      "properties": {
+        "X01": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "percent"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
+          ],
+          "description": "X01: number, percent"
+        },
+        "X02": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "X02: number, JPY"
+        },
+        "X03": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "percent"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
+          ],
+          "description": "X03: number, percent"
+        },
+        "X04": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "X04: number, JPY"
+        },
+        "X05": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "JPY"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "description": "X05: number, JPY"
+        }
+      },
+      "additionalProperties": false
+    },
+    "fieldsSC": {
+      "type": "object",
+      "properties": {
+        "SC01": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "SC01: string, text"
+        },
+        "SC02": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/field"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "SC02: string, text"
+        }
+      },
+      "additionalProperties": false
+    },
+    "fieldMap": {
+      "type": "object",
+      "required": [],
+      "properties": {},
+      "additionalProperties": true
+    },
+    "portfolio": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "baseDate",
+        "holdingYears",
+        "currency",
+        "fields"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
+        },
+        "baseDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "holdingYears": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "currency": {
+          "const": "JPY"
+        },
+        "fields": {
+          "$ref": "#/$defs/fieldsP"
+        },
+        "investorEntityIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "entity": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "taxpayerType",
+        "fields"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "taxpayerType": {
+          "type": "string",
+          "enum": [
+            "individual",
+            "corporation"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "taxYearStartMonth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        },
+        "fields": {
+          "$ref": "#/$defs/fieldsE"
+        },
+        "taxRules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/taxRule"
+          }
+        },
+        "otherIncome": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/otherIncome"
+          }
+        },
+        "taxPayments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/taxPayment"
+          }
+        },
+        "lossCarryforwards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/lossCarryforward"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "taxRule": {
+      "type": "object",
+      "required": [
+        "id",
+        "year",
+        "taxKind",
+        "ruleVersion",
+        "mode",
+        "basis"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "year": {
+          "type": "integer"
+        },
+        "taxKind": {
+          "type": "string",
+          "enum": [
+            "income",
+            "corporate",
+            "localIncome",
+            "corporateLocal",
+            "consumption",
+            "saleGain",
+            "officerBenefit",
+            "other"
+          ]
+        },
+        "ruleVersion": {
+          "type": "string"
+        },
+        "sourceUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "standard",
+            "detailed"
+          ]
+        },
+        "basis": {
+          "type": "string",
+          "enum": [
+            "confirmed",
+            "assumption",
+            "unknown"
+          ]
+        },
+        "fields": {
+          "$ref": "#/$defs/fieldsE"
+        },
+        "settings": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "rate": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "deduction": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "taxMethod": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "otherIncome": {
+      "type": "object",
+      "required": [
+        "id",
+        "taxYear",
+        "category",
+        "amount",
+        "sourceType"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "taxYear": {
+          "type": "integer"
+        },
+        "category": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "number"
+        },
+        "sourceType": {
+          "type": "string",
+          "enum": [
+            "observed",
+            "sourcedEstimate",
+            "userAssumption",
+            "systemDefault"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "taxPayment": {
+      "type": "object",
+      "required": [
+        "id",
+        "taxKind",
+        "dueDate",
+        "amount",
+        "status",
+        "relatedTaxYear"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "taxKind": {
+          "type": "string"
+        },
+        "dueDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "paidDate": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "amount": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "planned",
+            "paid",
+            "refunded",
+            "estimated"
+          ]
+        },
+        "relatedTaxYear": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false
+    },
+    "lossCarryforward": {
+      "type": "object",
+      "required": [
+        "id",
+        "taxKind",
+        "originYear",
+        "remainingAmount",
+        "expirationYear"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "taxKind": {
+          "type": "string"
+        },
+        "originYear": {
+          "type": "integer"
+        },
+        "remainingAmount": {
+          "type": "number",
+          "minimum": 0
+        },
+        "expirationYear": {
+          "type": "integer"
+        },
+        "restriction": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "month": {
+      "type": "object",
+      "required": [
+        "year",
+        "month",
+        "lodgingDays",
+        "rentalDays",
+        "selfUseDays",
+        "changeoverDays",
+        "idleDays"
+      ],
+      "properties": {
+        "year": {
+          "type": "integer"
+        },
+        "month": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        },
+        "lodgingDays": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rentalDays": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "selfUseDays": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "changeoverDays": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "idleDays": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lodgingUnavailableWithinAllocationDays": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "realizedGuestNights": {
+          "type": "number",
+          "minimum": 0
+        },
+        "guestBookings": {
+          "type": "number",
+          "minimum": 0
+        },
+        "fields": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "H": {
+              "$ref": "#/$defs/fieldsH"
+            },
+            "R": {
+              "$ref": "#/$defs/fieldsR"
+            },
+            "S": {
+              "$ref": "#/$defs/fieldsS"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "expense": {
+      "type": "object",
+      "required": [
+        "id",
+        "entityId",
+        "category",
+        "amount",
+        "currency",
+        "periodStart",
+        "periodEnd",
+        "allocationMethod",
+        "taxTreatment"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "unitId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entityId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "lodgingOperating",
+            "rentalOperating",
+            "propertyOperating",
+            "headRent",
+            "private",
+            "financing",
+            "incomeTax",
+            "consumptionTax",
+            "other"
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "number"
+        },
+        "currency": {
+          "const": "JPY"
+        },
+        "periodStart": {
+          "type": "string",
+          "format": "date"
+        },
+        "periodEnd": {
+          "type": "string",
+          "format": "date"
+        },
+        "fixedOrVariable": {
+          "type": "string",
+          "enum": [
+            "fixed",
+            "variable",
+            "oneOff"
+          ]
+        },
+        "allocationMethod": {
+          "type": "string",
+          "enum": [
+            "direct",
+            "areaTimesGuestNights",
+            "areaTimesBusinessPeriod",
+            "specificUsage",
+            "customRatio",
+            "private"
+          ]
+        },
+        "businessUseRatio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "taxTreatment": {
+          "type": "string",
+          "enum": [
+            "deductible",
+            "capital",
+            "nonDeductible",
+            "pending"
+          ]
+        },
+        "cashDate": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "source": {
+          "$ref": "#/$defs/field"
+        }
+      },
+      "additionalProperties": false
+    },
+    "asset": {
+      "type": "object",
+      "required": [
+        "id",
+        "ownerEntityId",
+        "category",
+        "grossCost",
+        "taxBasis",
+        "invoiceDate",
+        "inServiceDate",
+        "depreciationMethod",
+        "businessUseRatioByYear",
+        "taxBookValue"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "unitId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ownerEntityId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "land",
+            "building",
+            "buildingEquipment",
+            "leaseholdImprovement",
+            "furniture",
+            "appliance",
+            "repair",
+            "other"
+          ]
+        },
+        "grossCost": {
+          "type": "number",
+          "minimum": 0
+        },
+        "taxBasis": {
+          "type": "number",
+          "minimum": 0
+        },
+        "invoiceDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "inServiceDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "usefulLifeYears": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        },
+        "depreciationMethod": {
+          "type": "string",
+          "enum": [
+            "straightLine",
+            "decliningBalance",
+            "immediateExpense",
+            "nonDepreciable",
+            "manual"
+          ]
+        },
+        "taxYear": {
+          "type": "integer"
+        },
+        "privateUseAdjustment": {
+          "type": "string",
+          "enum": [
+            "notApplicable",
+            "standard",
+            "detailed",
+            "unknown"
+          ]
+        },
+        "businessUseRatioByYear": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "year",
+              "ratio"
+            ],
+            "properties": {
+              "year": {
+                "type": "integer"
+              },
+              "ratio": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "priorAccumulatedDepreciation": {
+          "type": "number",
+          "minimum": 0
+        },
+        "taxBookValue": {
+          "type": "number",
+          "minimum": 0
+        },
+        "disposalDate": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "source": {
+          "$ref": "#/$defs/field"
+        }
+      },
+      "additionalProperties": false
+    },
+    "loan": {
+      "type": "object",
+      "required": [
+        "id",
+        "borrowerEntityId",
+        "drawDate",
+        "principal",
+        "annualInterestRate",
+        "termMonths",
+        "repaymentMethod"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "borrowerEntityId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "drawDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "principal": {
+          "type": "number",
+          "minimum": 0
+        },
+        "annualInterestRate": {
+          "type": "number",
+          "minimum": 0
+        },
+        "termMonths": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "repaymentMethod": {
+          "type": "string",
+          "enum": [
+            "annuity",
+            "equalPrincipal",
+            "bullet",
+            "custom"
+          ]
+        },
+        "fees": {
+          "type": "number",
+          "minimum": 0
+        },
+        "prepayments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "date",
+              "principal"
+            ],
+            "properties": {
+              "date": {
+                "type": "string",
+                "format": "date"
+              },
+              "principal": {
+                "type": "number",
+                "minimum": 0
+              },
+              "fee": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "source": {
+          "$ref": "#/$defs/field"
+        }
+      },
+      "additionalProperties": false
+    },
+    "exit": {
+      "type": "object",
+      "required": [
+        "method",
+        "exitDate",
+        "sellingCosts",
+        "exitObligations",
+        "expectedDepositRefund",
+        "applyResidentialRelief"
+      ],
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": [
+            "priceGrowth",
+            "NOICapitalizationReference",
+            "leaseSettlement"
+          ]
+        },
+        "exitDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "priceGrowthRate": {
+          "type": "number"
+        },
+        "capRate": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        },
+        "sellingCosts": {
+          "type": "number",
+          "minimum": 0
+        },
+        "exitObligations": {
+          "type": "number",
+          "minimum": 0
+        },
+        "expectedDepositRefund": {
+          "type": "number",
+          "minimum": 0
+        },
+        "applyResidentialRelief": {
+          "type": "boolean"
+        },
+        "source": {
+          "$ref": "#/$defs/field"
+        }
+      },
+      "additionalProperties": false
+    },
+    "unit": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "modelId",
+        "tenure",
+        "operatorEntityId",
+        "startDate",
+        "operationStartDate",
+        "fields",
+        "calendar",
+        "expenses",
+        "assets",
+        "loans",
+        "exit"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
+        },
+        "prefecture": {
+          "type": "string"
+        },
+        "municipality": {
+          "type": "string"
+        },
+        "buildingName": {
+          "type": "string"
+        },
+        "modelId": {
+          "type": "string",
+          "enum": [
+            "M1",
+            "M2",
+            "M3",
+            "M4"
+          ]
+        },
+        "tenure": {
+          "type": "string",
+          "enum": [
+            "own",
+            "lease"
+          ]
+        },
+        "operatorEntityId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ownerEntityId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tenantEntityId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "startDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "operationStartDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "fields": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "U": {
+              "$ref": "#/$defs/fieldsU"
+            },
+            "A": {
+              "$ref": "#/$defs/fieldsA"
+            },
+            "K": {
+              "$ref": "#/$defs/fieldsK"
+            },
+            "F": {
+              "$ref": "#/$defs/fieldsF"
+            },
+            "H": {
+              "$ref": "#/$defs/fieldsH"
+            },
+            "R": {
+              "$ref": "#/$defs/fieldsR"
+            },
+            "S": {
+              "$ref": "#/$defs/fieldsS"
+            },
+            "X": {
+              "$ref": "#/$defs/fieldsX"
+            }
+          },
+          "additionalProperties": false
+        },
+        "calendar": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/month"
+          }
+        },
+        "expenses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/expense"
+          }
+        },
+        "assets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/asset"
+          }
+        },
+        "loans": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/loan"
+          }
+        },
+        "exit": {
+          "$ref": "#/$defs/exit"
+        }
+      },
+      "additionalProperties": false
+    },
+    "override": {
+      "type": "object",
+      "required": [
+        "scope",
+        "targetId",
+        "fieldId",
+        "field"
+      ],
+      "properties": {
+        "scope": {
+          "type": "string",
+          "enum": [
+            "portfolio",
+            "entity",
+            "unit",
+            "month",
+            "asset",
+            "loan"
+          ]
+        },
+        "targetId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "year": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "month": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 12
+        },
+        "fieldId": {
+          "type": "string",
+          "pattern": "^(P|U|A|K|F|H|R|S|E|X|SC)[0-9]{2}$"
+        },
+        "field": {
+          "$ref": "#/$defs/field"
+        }
+      },
+      "additionalProperties": false
+    },
+    "scenario": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "role",
+        "overrides"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "base",
+            "upside",
+            "downside",
+            "custom"
+          ]
+        },
+        "overrides": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/override"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

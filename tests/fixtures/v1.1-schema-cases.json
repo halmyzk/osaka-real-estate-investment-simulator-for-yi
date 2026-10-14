@@ -1,0 +1,197 @@
+{
+  "schemaTestVersion": "2026-10-13",
+  "positive": {
+    "schemaVersion": "1.1.0",
+    "assumptionsVersion": "2026-10-13",
+    "calculationVersion": "foundation-not-implemented",
+    "portfolio": {
+      "id": "portfolio-1",
+      "name": "Test",
+      "baseDate": "2026-01-01",
+      "holdingYears": 10,
+      "currency": "JPY",
+      "fields": {}
+    },
+    "entities": [
+      {
+        "id": "entity-1",
+        "name": "Individual",
+        "taxpayerType": "individual",
+        "fields": {}
+      }
+    ],
+    "units": [
+      {
+        "id": "unit-1",
+        "name": "M3 Osaka",
+        "modelId": "M3",
+        "tenure": "own",
+        "operatorEntityId": "entity-1",
+        "ownerEntityId": "entity-1",
+        "tenantEntityId": null,
+        "startDate": "2026-01-01",
+        "operationStartDate": "2026-01-01",
+        "fields": {
+          "H": {
+            "H01": {
+              "value": 20000,
+              "unit": "JPY_per_room_night",
+              "sourceType": "userAssumption"
+            },
+            "H02": {
+              "value": 50,
+              "unit": "percent",
+              "sourceType": "userAssumption"
+            }
+          }
+        },
+        "calendar": [
+          {
+            "year": 2026,
+            "month": 1,
+            "lodgingDays": 15,
+            "rentalDays": 0,
+            "selfUseDays": 13,
+            "changeoverDays": 1,
+            "idleDays": 2,
+            "lodgingUnavailableWithinAllocationDays": 0
+          }
+        ],
+        "expenses": [],
+        "assets": [],
+        "loans": [],
+        "exit": {
+          "method": "priceGrowth",
+          "exitDate": "2035-12-31",
+          "sellingCosts": 0,
+          "exitObligations": 0,
+          "expectedDepositRefund": 0,
+          "applyResidentialRelief": false
+        }
+      }
+    ],
+    "scenarios": [
+      {
+        "id": "base",
+        "name": "Base",
+        "role": "base",
+        "overrides": []
+      }
+    ]
+  },
+  "negative": [
+    {
+      "id": "missing_schema_version",
+      "path": [
+        "schemaVersion"
+      ],
+      "value": "0"
+    },
+    {
+      "id": "invalid_model",
+      "path": [
+        "units",
+        0,
+        "modelId"
+      ],
+      "value": "A"
+    },
+    {
+      "id": "negative_lodging_days",
+      "path": [
+        "units",
+        0,
+        "calendar",
+        0,
+        "lodgingDays"
+      ],
+      "value": -1
+    },
+    {
+      "id": "wrong_adr_unit",
+      "path": [
+        "units",
+        0,
+        "fields",
+        "H",
+        "H01",
+        "unit"
+      ],
+      "value": "JPY_per_month"
+    },
+    {
+      "id": "invalid_occupancy",
+      "path": [
+        "units",
+        0,
+        "fields",
+        "H",
+        "H02",
+        "value"
+      ],
+      "value": 101
+    },
+    {
+      "id": "orphan_entity_reference",
+      "path": [
+        "units",
+        0,
+        "operatorEntityId"
+      ],
+      "value": "missing-entity"
+    },
+    {
+      "id": "calendar_overlap_or_mismatch",
+      "path": [
+        "units",
+        0,
+        "calendar",
+        0,
+        "selfUseDays"
+      ],
+      "value": 31
+    },
+    {
+      "id": "unavailable_exceeds_lodging",
+      "path": [
+        "units",
+        0,
+        "calendar",
+        0,
+        "lodgingUnavailableWithinAllocationDays"
+      ],
+      "value": 20
+    },
+    {
+      "id": "model_disallowed_rental",
+      "path": [
+        "units",
+        0,
+        "calendar",
+        0,
+        "rentalDays"
+      ],
+      "value": 1
+    },
+    {
+      "id": "duplicate_entity_id",
+      "path": [
+        "entities"
+      ],
+      "value": [
+        {
+          "id": "entity-1",
+          "name": "Individual",
+          "taxpayerType": "individual",
+          "fields": {}
+        },
+        {
+          "id": "entity-1",
+          "name": "Individual",
+          "taxpayerType": "individual",
+          "fields": {}
+        }
+      ]
+    }
+  ]
+}

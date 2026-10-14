@@ -1,0 +1,160 @@
+{
+  "version": "v11-income-tax-sidecar-1",
+  "scenarioId": "base",
+  "documentFingerprint": "v11-fnv1a32-5f29736a",
+  "taxBasis": "externallyReviewedScenarioAssumption",
+  "vatTreatment": "notConnected",
+  "illustrationOnly": true,
+  "withProject": [
+    {
+      "id": "person-1-incomeTax-2026",
+      "entityId": "person-1",
+      "taxYear": 2026,
+      "taxKind": "incomeTax",
+      "amount": 120000,
+      "status": "estimated",
+      "ruleVersion": "illustrative-2026-rule-not-tax-advice",
+      "sourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+      "paymentMonths": [
+        "2027-03"
+      ]
+    },
+    {
+      "id": "person-1-residenceTax-2026",
+      "entityId": "person-1",
+      "taxYear": 2026,
+      "taxKind": "residenceTax",
+      "amount": 110000,
+      "status": "estimated",
+      "ruleVersion": "illustrative-2026-rule-not-tax-advice",
+      "sourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+      "paymentMonths": [
+        "2027-06",
+        "2027-08",
+        "2027-10",
+        "2028-01"
+      ],
+      "paymentWeights": [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "id": "person-1-saleGainTax-2026",
+      "entityId": "person-1",
+      "taxYear": 2026,
+      "taxKind": "saleGainTax",
+      "amount": 30000,
+      "status": "estimated",
+      "ruleVersion": "illustrative-2026-rule-not-tax-advice",
+      "sourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+      "paymentMonths": [
+        "2027-03"
+      ]
+    },
+    {
+      "id": "corporation-1-corporateTax-2026",
+      "entityId": "corporation-1",
+      "taxYear": 2026,
+      "taxKind": "corporateTax",
+      "amount": 45000,
+      "status": "estimated",
+      "ruleVersion": "illustrative-2026-rule-not-tax-advice",
+      "sourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+      "paymentMonths": [
+        "2027-02"
+      ]
+    },
+    {
+      "id": "corporation-1-otherTax-2026",
+      "entityId": "corporation-1",
+      "taxYear": 2026,
+      "taxKind": "otherTax",
+      "amount": 10000,
+      "status": "estimated",
+      "ruleVersion": "illustrative-2026-rule-not-tax-advice",
+      "sourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+      "paymentMonths": [
+        "2027-02"
+      ]
+    }
+  ],
+  "withoutProject": [
+    {
+      "id": "person-1-incomeTax-2026",
+      "entityId": "person-1",
+      "taxYear": 2026,
+      "taxKind": "incomeTax",
+      "amount": 100000,
+      "status": "estimated",
+      "ruleVersion": "illustrative-2026-rule-not-tax-advice",
+      "sourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+      "paymentMonths": [
+        "2027-03"
+      ]
+    },
+    {
+      "id": "person-1-residenceTax-2026",
+      "entityId": "person-1",
+      "taxYear": 2026,
+      "taxKind": "residenceTax",
+      "amount": 100000,
+      "status": "estimated",
+      "ruleVersion": "illustrative-2026-rule-not-tax-advice",
+      "sourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+      "paymentMonths": [
+        "2027-06",
+        "2027-08",
+        "2027-10",
+        "2028-01"
+      ],
+      "paymentWeights": [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "id": "person-1-saleGainTax-2026",
+      "entityId": "person-1",
+      "taxYear": 2026,
+      "taxKind": "saleGainTax",
+      "amount": 0,
+      "status": "estimated",
+      "ruleVersion": "illustrative-2026-rule-not-tax-advice",
+      "sourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+      "paymentMonths": [
+        "2027-03"
+      ]
+    },
+    {
+      "id": "corporation-1-corporateTax-2026",
+      "entityId": "corporation-1",
+      "taxYear": 2026,
+      "taxKind": "corporateTax",
+      "amount": 30000,
+      "status": "estimated",
+      "ruleVersion": "illustrative-2026-rule-not-tax-advice",
+      "sourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+      "paymentMonths": [
+        "2027-02"
+      ]
+    },
+    {
+      "id": "corporation-1-otherTax-2026",
+      "entityId": "corporation-1",
+      "taxYear": 2026,
+      "taxKind": "otherTax",
+      "amount": 8000,
+      "status": "estimated",
+      "ruleVersion": "illustrative-2026-rule-not-tax-advice",
+      "sourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+      "paymentMonths": [
+        "2027-02"
+      ]
+    }
+  ]
+}

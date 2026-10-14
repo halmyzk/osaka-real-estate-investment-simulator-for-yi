@@ -1,0 +1,465 @@
+{
+  "version": "v11-derived-ordinary-tax-plan-1",
+  "documentFingerprint": "v11-fnv1a32-ff2812fb",
+  "scenarioId": "base",
+  "taxScope": "ordinaryAndOwnedSale",
+  "vatTreatment": "notConnected",
+  "withholdingTreatment": "notModeled",
+  "illustrationOnly": true,
+  "unitYearReviews": [
+    {
+      "unitId": "tokyo-m4",
+      "taxYear": 2026,
+      "reviewStatus": "reviewedScenarioAssumption",
+      "reviewEvidenceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+      "expenseAccrualMatchesOperations": true,
+      "lodgingCategory": null,
+      "rentalCategory": "corporate",
+      "sharedExpenseLodgingShare": 0,
+      "interestAccrualMatchesCash": true,
+      "interestDeductibleShare": 1,
+      "interestLodgingShare": 0,
+      "deductibleShares": {
+        "lodgingOperating": 1,
+        "rentalOperating": 1,
+        "propertyOperating": 1,
+        "masterRent": 1
+      }
+    },
+    {
+      "unitId": "osaka-m3",
+      "taxYear": 2026,
+      "reviewStatus": "reviewedScenarioAssumption",
+      "reviewEvidenceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+      "expenseAccrualMatchesOperations": true,
+      "lodgingCategory": "miscellaneous",
+      "rentalCategory": null,
+      "sharedExpenseLodgingShare": 0,
+      "interestAccrualMatchesCash": true,
+      "interestDeductibleShare": 1,
+      "interestLodgingShare": 0,
+      "deductibleShares": {
+        "lodgingOperating": 1,
+        "rentalOperating": 1,
+        "propertyOperating": 0.08876712328767122,
+        "masterRent": 1
+      }
+    }
+  ],
+  "entityYearRules": [
+    {
+      "entityId": "person-1",
+      "taxYear": 2026,
+      "reviewStatus": "reviewedScenarioAssumption",
+      "baselineEvidenceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+      "baselineTaxableIncome": 2000000,
+      "taxRule": {
+        "personal": {
+          "taxYear": 2026,
+          "ruleVersion": "FICTIONAL-TAX-2026-NOT-FILING",
+          "sourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+          "computationMode": "standard",
+          "assumptionOrConfirmed": "assumption",
+          "brackets": [
+            [
+              1950000,
+              0.05,
+              0
+            ],
+            [
+              3300000,
+              0.1,
+              97500
+            ],
+            [
+              6950000,
+              0.2,
+              427500
+            ],
+            [
+              9000000,
+              0.23,
+              636000
+            ],
+            [
+              18000000,
+              0.33,
+              1536000
+            ],
+            [
+              40000000,
+              0.4,
+              2796000
+            ],
+            [
+              1000000000000,
+              0.45,
+              4796000
+            ]
+          ],
+          "baseRounding": 1000,
+          "residenceRate": 0.1,
+          "residenceBaseAdjustment": 0,
+          "realEstateLossOffsetAllowed": false,
+          "businessLossOffsetAllowed": false
+        }
+      }
+    },
+    {
+      "entityId": "corporation-1",
+      "taxYear": 2026,
+      "reviewStatus": "reviewedScenarioAssumption",
+      "baselineEvidenceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+      "baselineCorporateProfit": 1000000,
+      "taxRule": {
+        "corporate": {
+          "taxYear": 2026,
+          "ruleVersion": "FICTIONAL-TAX-2026-NOT-FILING",
+          "sourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+          "computationMode": "standard",
+          "assumptionOrConfirmed": "assumption",
+          "eligibleSmallCompany": true,
+          "defenseCorporateApplies": false,
+          "lossOffsetEligible": true,
+          "allowNewLossCarryforward": true,
+          "lossOffsetFraction": 1,
+          "smallBandRate": 0.15,
+          "standardRate": 0.232,
+          "smallBandAmount": 8000000,
+          "defenseAllowance": 5000000,
+          "localEntityCount": 1
+        },
+        "local": {
+          "taxYear": 2026,
+          "ruleVersion": "FICTIONAL-TAX-2026-NOT-FILING",
+          "sourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
+          "computationMode": "standard",
+          "assumptionOrConfirmed": "assumption",
+          "paymentMonths": [
+            "2027-02"
+          ],
+          "components": [
+            {
+              "kind": "corporateBusinessIncomeLevy",
+              "basis": "taxableIncome",
+              "rate": 0.05
+            },
+            {
+              "kind": "corporateResidencePerCapita",
+              "basis": "fixedAmount",
+              "fixedAmount": 50000
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "ownedPropertyReviews": [
+    {
+      "unitId": "osaka-m3",
+      "reviewStatus": "reviewedScenarioAssumption",
+      "reviewedTaxBasis": true,
+      "costAllocationSourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2100.htm",
+      "assetRates": {
+        "building": {
+          "rate": 0.05,
+          "minimumResidualValue": 1,
+          "usefulLifeReviewed": true,
+          "eligibilityReviewed": true,
+          "sourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2100.htm",
+          "version": "FIXTURE-20-YEAR-STRAIGHTLINE-RATE"
+        }
+      },
+      "saleReview": {
+        "reviewStatus": "reviewedScenarioAssumption",
+        "eligibleRelief": false,
+        "exitCostsDeductibleReviewed": true,
+        "saleProceedsMatchCash": true,
+        "grossPriceReviewed": 1200000,
+        "sellingCostsReviewed": 10000,
+        "salePriceSourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/joto/3202.htm",
+        "individual": {
+          "taxRateEligibilityReviewed": true,
+          "rateSourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/joto/3211.htm",
+          "ruleVersion": "FIXTURE-2026-SHORT-GAIN-RATES",
+          "reconstructionRate": 0.021,
+          "defenseIncomeRate": 0,
+          "nationalPaymentMonth": "2027-03",
+          "residencePaymentMonths": [
+            "2027-06",
+            "2027-08",
+            "2027-10",
+            "2028-01"
+          ]
+        }
+      },
+      "yearUseReviews": [
+        {
+          "taxYear": 2026,
+          "reviewStatus": "reviewedScenarioAssumption",
+          "sourceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "useEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "businessFloorArea": 60,
+          "totalFloorArea": 100,
+          "businessSupplyDays": 365,
+          "separateGuestNightsReviewed": true,
+          "separateBuildingSupplyDaysReviewed": true,
+          "occupancyDerivedFromScenario": true,
+          "forecastGuestNights": 54,
+          "reviewedLodgingAllocatedDays": 180,
+          "note": "Illustrative projected room-nights, not observed booking nights; 180 allocated days cannot substitute 54 nights"
+        }
+      ],
+      "disposalBasisReview": {
+        "splitCalculationReviewed": true,
+        "dispositionExclusionReviewed": true,
+        "use90PercentException": false,
+        "ruleVersion": "FICTIONAL-REVIEWED-M3-MONTHLY-DISPOSAL-2026",
+        "monthlyRecords": [
+          {
+            "month": "2026-01",
+            "businessShare": 0.6,
+            "privateShare": 0.4,
+            "businessGrossEquivalent": 1500,
+            "nonbusinessGrossEquivalent": 1000,
+            "businessActualDeducted": 1500,
+            "reviewedDisposalTreatment": true,
+            "evidenceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/joto/3261.htm"
+          },
+          {
+            "month": "2026-02",
+            "businessShare": 0.6,
+            "privateShare": 0.4,
+            "businessGrossEquivalent": 1500,
+            "nonbusinessGrossEquivalent": 1000,
+            "businessActualDeducted": 1500,
+            "reviewedDisposalTreatment": true,
+            "evidenceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/joto/3261.htm"
+          },
+          {
+            "month": "2026-03",
+            "businessShare": 0.6,
+            "privateShare": 0.4,
+            "businessGrossEquivalent": 1500,
+            "nonbusinessGrossEquivalent": 1000,
+            "businessActualDeducted": 1500,
+            "reviewedDisposalTreatment": true,
+            "evidenceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/joto/3261.htm"
+          },
+          {
+            "month": "2026-04",
+            "businessShare": 0.6,
+            "privateShare": 0.4,
+            "businessGrossEquivalent": 1500,
+            "nonbusinessGrossEquivalent": 1000,
+            "businessActualDeducted": 1500,
+            "reviewedDisposalTreatment": true,
+            "evidenceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/joto/3261.htm"
+          },
+          {
+            "month": "2026-05",
+            "businessShare": 0.6,
+            "privateShare": 0.4,
+            "businessGrossEquivalent": 1500,
+            "nonbusinessGrossEquivalent": 1000,
+            "businessActualDeducted": 1500,
+            "reviewedDisposalTreatment": true,
+            "evidenceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/joto/3261.htm"
+          },
+          {
+            "month": "2026-06",
+            "businessShare": 0.6,
+            "privateShare": 0.4,
+            "businessGrossEquivalent": 1500,
+            "nonbusinessGrossEquivalent": 1000,
+            "businessActualDeducted": 1500,
+            "reviewedDisposalTreatment": true,
+            "evidenceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/joto/3261.htm"
+          },
+          {
+            "month": "2026-07",
+            "businessShare": 0.6,
+            "privateShare": 0.4,
+            "businessGrossEquivalent": 1500,
+            "nonbusinessGrossEquivalent": 1000,
+            "businessActualDeducted": 1500,
+            "reviewedDisposalTreatment": true,
+            "evidenceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/joto/3261.htm"
+          },
+          {
+            "month": "2026-08",
+            "businessShare": 0.6,
+            "privateShare": 0.4,
+            "businessGrossEquivalent": 1500,
+            "nonbusinessGrossEquivalent": 1000,
+            "businessActualDeducted": 1500,
+            "reviewedDisposalTreatment": true,
+            "evidenceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/joto/3261.htm"
+          },
+          {
+            "month": "2026-09",
+            "businessShare": 0.6,
+            "privateShare": 0.4,
+            "businessGrossEquivalent": 1500,
+            "nonbusinessGrossEquivalent": 1000,
+            "businessActualDeducted": 1500,
+            "reviewedDisposalTreatment": true,
+            "evidenceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/joto/3261.htm"
+          },
+          {
+            "month": "2026-10",
+            "businessShare": 0.6,
+            "privateShare": 0.4,
+            "businessGrossEquivalent": 1500,
+            "nonbusinessGrossEquivalent": 1000,
+            "businessActualDeducted": 1500,
+            "reviewedDisposalTreatment": true,
+            "evidenceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/joto/3261.htm"
+          },
+          {
+            "month": "2026-11",
+            "businessShare": 0.6,
+            "privateShare": 0.4,
+            "businessGrossEquivalent": 1500,
+            "nonbusinessGrossEquivalent": 1000,
+            "businessActualDeducted": 1500,
+            "reviewedDisposalTreatment": true,
+            "evidenceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/joto/3261.htm"
+          },
+          {
+            "month": "2026-12",
+            "businessShare": 0.6,
+            "privateShare": 0.4,
+            "businessGrossEquivalent": 1500,
+            "nonbusinessGrossEquivalent": 1000,
+            "businessActualDeducted": 1500,
+            "reviewedDisposalTreatment": true,
+            "evidenceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/joto/3261.htm"
+          }
+        ]
+      },
+      "sharedUtilityExpenseReviews": [
+        {
+          "expenseId": "shared-utilities-2026-01",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-02",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-03",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-04",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-05",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-06",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-07",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-08",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-09",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-10",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-11",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-12",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        }
+      ]
+    }
+  ]
+}

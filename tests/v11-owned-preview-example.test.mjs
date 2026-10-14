@@ -1,0 +1,53 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {fingerprintV11Document} from "../src/v11-income-tax-sidecar.mjs";
+import {inspectV11Draft} from "../src/v11-draft-storage.mjs";
+import {previewV11Scenario} from "../src/v11-preview-engine.mjs";
+const read=name=>JSON.parse(readFileSync(new URL("../preview/"+name,import.meta.url),"utf8"));
+const document=read("v11-owned-property-sample.json");
+const taxPlan=read("v11-owned-property-tax-plan.json");
+const approx=(x,y)=>assert.ok(Math.abs(x-y)<.000001,`${x} != ${y}`);
+test("Registered owned M4 and corporation lease M4 demo uses canonical v1.1 asset schema and reviewed exact plan fingerprint",()=>{
+ const check=inspectV11Draft(document);
+ assert.equal(check.status,"structurallyReviewed");
+ assert.equal(check.entityCount,2);
+ assert.equal(check.unitCount,2);
+ assert.equal(taxPlan.documentFingerprint,fingerprintV11Document(document));
+ assert.equal(document.units[0].assets.length,2);
+ assert.equal(taxPlan.ownedPropertyReviews[0].assetRates.building.rate,.05);
+});
+test("Owned demo end-to-end: 1000k buy, 30k noncash depreciation, 220k sale gain, 87186 individual capital tax in dated post-exit CF",()=>{
+ const r=previewV11Scenario(document,{scenarioId:"base",derivedTaxPlan:taxPlan});
+ assert.equal(r.status,"estimated-pre-tax");
+ assert.equal(r.incomeTaxStatus,"estimated",r.incomeTaxBlocker??"");
+ assert.equal(r.CF0,-1100000);
+ assert.equal(r.preTax.cashFlows[1],2838000);
+ assert.equal(r.ownedAssetTaxRegisters.length,1);
+ const a=r.ownedAssetTaxRegisters[0];
+ assert.equal(a.assetLines.find(x=>x.category==="land").annual[0].grossBookReduction,0);
+ assert.equal(a.assetLines.find(x=>x.category==="building").annual[0].grossBookReduction,30000);
+ assert.equal(a.taxBookValueAtExit,970000);
+ assert.equal(a.saleGain.gain,220000);
+ assert.equal(a.saleGain.holdingClass,"short");
+ approx(a.individualSaleAssessment.amount,87186);
+ approx(r.incomeTaxCashEvents.reduce((s,x)=>s+x.incrementalTaxCF,0),-392991);
+ approx(r.incomeTaxCashEvents.filter(x=>x.taxKind==="saleGainTax")
+  .reduce((s,x)=>s+x.incrementalTaxCF,0),-87186);
+ assert.deepEqual(r.annualIncomeTaxSensitivity.map(x=>x.year),[2026,2027,2028]);
+ approx(r.annualIncomeTaxSensitivity[1].incrementalTaxCashFlow,-361791);
+ approx(r.annualIncomeTaxSensitivity[2].incrementalTaxCashFlow,-31200);
+ assert.equal(r.afterTax,null);
+ assert.equal(r.taxStatus,"incomplete");
+ assert.ok(r.afterIncomeTaxSensitivity.NPV<r.preTax.NPV);
+});
+test("Tax plan for Base cannot be reused for changed financial assumptions or other scenarios",()=>{
+ const up=previewV11Scenario(document,{scenarioId:"upside",derivedTaxPlan:taxPlan});
+ assert.equal(up.incomeTaxStatus,"incomplete");
+ assert.equal(up.afterIncomeTaxSensitivity,null);
+ const modified=structuredClone(document);
+ modified.units[0].fields.R.R01.value+=1;
+ const r=previewV11Scenario(modified,{derivedTaxPlan:taxPlan});
+ assert.equal(r.incomeTaxStatus,"incomplete");
+ assert.equal(r.afterTax,null);
+});

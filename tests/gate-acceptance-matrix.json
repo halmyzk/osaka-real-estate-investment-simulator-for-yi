@@ -1,0 +1,379 @@
+{
+  "traceVersion": "2026-10-14-m3-mixed-use-integration-1",
+  "target": "docs/v1.1-design-change-spec.md §§13.9,14.11",
+  "definition": {
+    "exampleVerified": "Specific illustrative expected outcome tested; not full legal or boundary coverage",
+    "partial": "Related code has tests but entire acceptance criterion not proven",
+    "notImplemented": "No suitable verified implementation",
+    "criterionVerified": "Specific original acceptance assertion independently verified against identified primary law and numeric fixture; narrower than full Gate B clearance or actual taxpayer qualification"
+  },
+  "gateB": [
+    {
+      "id": "B-T01",
+      "status": "partial",
+      "evidence": [
+        "tests/tax.test.mjs",
+        "tests/annual-income-tax.test.mjs",
+        "tests/v11-m3-mixed-tax.test.mjs",
+        "tests/v11-owned-property-tax.test.mjs"
+      ],
+      "gap": "M3個人の宿泊を雑所得に分類し、建物償却・共通光熱費の審査済み事業用割合を通常所得税へ連結。雑所得損失の他所得不通算は既存専用テストで検証。複雑な損失区分・役員等は未完。"
+    },
+    {
+      "id": "B-T02",
+      "status": "partial",
+      "evidence": [
+        "tests/portfolio.test.mjs",
+        "tests/annual-income-tax.test.mjs"
+      ],
+      "gap": "Separation by category shown; legal category classification still assumption"
+    },
+    {
+      "id": "B-T03",
+      "status": "partial",
+      "evidence": [
+        "tests/tax.test.mjs",
+        "tests/tax-rounding.test.mjs",
+        "tests/officer-payroll-withholding.test.mjs"
+      ],
+      "gap": "国税所得税速算表の試算と別に、給与源泉徴収は年度別の源泉税額表を明示入力する方式。源泉徴収額の法定テーブル自動照合・端数の網羅未完了。"
+    },
+    {
+      "id": "B-T04",
+      "status": "partial",
+      "evidence": [
+        "tests/tax.test.mjs",
+        "tests/officer-payroll-withholding.test.mjs",
+        "tests/nta-monthly-withholding.test.mjs"
+      ],
+      "gap": "2026/2027所得税の付加税目は別年度ルールを保持。加えて国税庁2026/2027年分給与源泉徴収月額表の一部実数値を独立照合（2026年105,000円、2027年111,000円の甲0人の0円境界）。税目別本税・付加税の完全法定端数と全年の源泉表は未受入。"
+    },
+    {
+      "id": "B-T05",
+      "status": "partial",
+      "evidence": [
+        "tests/portfolio.test.mjs",
+        "tests/end-to-end-finance.test.mjs",
+        "tests/annual-income-tax.test.mjs",
+        "tests/combined-tax-reconciliation.test.mjs"
+      ],
+      "gap": "個人・法人の給与・源泉税・消費税・売却税を別主体で処理し、連結CFで内部給与を相殺。個人事業/法人の全所得区分・年度の独立申告税額は未完了。"
+    },
+    {
+      "id": "B-T06",
+      "status": "exampleVerified",
+      "evidence": [
+        "tests/tax.test.mjs",
+        "tests/v11-m3-mixed-tax.test.mjs",
+        "tests/v11-owned-property-tax.test.mjs"
+      ],
+      "gap": "国税庁FAQ算例 240,000×60/180×90/365=19,726.027…円を独立確認。追加でM3宿泊見込54泊と営業割当180日の差を保持し、共有光熱費×面積×見込泊数の自動CF→税額経路を追加。宿泊実績の外部同期・請求内訳は未対応。"
+    },
+    {
+      "id": "B-T07",
+      "status": "partial",
+      "evidence": [
+        "tests/tax.test.mjs",
+        "tests/v11-m3-mixed-tax.test.mjs",
+        "tests/v11-owned-property-tax.test.mjs"
+      ],
+      "gap": "M3宿泊割当180日でも実宿泊見込54泊を使用し、共通光熱費（宿泊泊数）と建物償却（事業供用期間）の係数を混同しない一気通貫テスト。実績と見込差異、私用が月途中で変化する場合は未対応。"
+    },
+    {
+      "id": "B-T08",
+      "status": "partial",
+      "evidence": [
+        "tests/tax-rules.test.mjs",
+        "tests/annual-income-tax.test.mjs",
+        "tests/statutory-depreciation.test.mjs",
+        "tests/depreciation-income-tax.test.mjs",
+        "tests/v11-owned-property-tax.test.mjs",
+        "tests/v11-owned-preview-example.test.mjs",
+        "tests/v11-m3-mixed-tax.test.mjs"
+      ],
+      "gap": "既存購入M4の土地・建物別取得費・全額事業用償却に加え、個人M3の事業用建物償却18,000円と私用を含む売却時の別原価調整を繋ぎ、正式Schemaの元帳で検算。法定減価相当額の自動算定・中古/設備/造作・全事業用割合は未完。"
+    },
+    {
+      "id": "B-T09",
+      "status": "partial",
+      "evidence": [
+        "tests/tax.test.mjs",
+        "tests/depreciation-income-tax.test.mjs",
+        "tests/v11-owned-property-tax.test.mjs",
+        "tests/v11-owned-preview-example.test.mjs"
+      ],
+      "gap": "M4購入価格の現金CF0を一度だけ計上し、土地・建物の取得価額配分と建物償却を非現金で別処理。高額改装の資本化・任意取得日・短期供用等の全適格性は未完成。"
+    },
+    {
+      "id": "B-T10",
+      "status": "partial",
+      "evidence": [
+        "tests/tax-rules.test.mjs",
+        "tests/annual-income-tax.test.mjs",
+        "tests/statutory-depreciation.test.mjs",
+        "tests/depreciation-income-tax.test.mjs",
+        "tests/v11-owned-property-tax.test.mjs",
+        "tests/v11-owned-preview-example.test.mjs",
+        "tests/v11-m3-mixed-tax.test.mjs"
+      ],
+      "gap": "M3の事業用面積60%→50%変更時に、共有光熱費、建物償却18,000→15,000円、独立した月次売却時簿価、税額・納付CFが連動。元データCF0と税引前CFは変わらない。費目別全期間・観測実績の適格性確認は未完。"
+    },
+    {
+      "id": "B-T11",
+      "status": "partial",
+      "evidence": [
+        "tests/tax.test.mjs"
+      ],
+      "gap": "CapEx vs ordinary expense in separate model; statutory repair/capitalization rules incomplete"
+    },
+    {
+      "id": "B-T12",
+      "status": "partial",
+      "evidence": [
+        "tests/tax.test.mjs",
+        "tests/officer-housing-tax.test.mjs",
+        "tests/officer-housing-exceptions.test.mjs"
+      ],
+      "gap": "公式賃貸料相当額の算式は独立検算済み。住宅手当・役員本人の直接賃借・豪華社宅判定の例外分岐を追加。実物件の区分判定と給与申告・源泉徴収は未完成。"
+    },
+    {
+      "id": "B-T13",
+      "status": "criterionVerified",
+      "evidence": [
+        "tests/tax.test.mjs",
+        "tests/officer-housing-tax.test.mjs",
+        "tests/officer-payroll-withholding.test.mjs",
+        "tests/payroll-tax-assessment-bridge.test.mjs",
+        "tests/nta-monthly-withholding.test.mjs"
+      ],
+      "gap": "無償役員社宅の課税価値をゼロと誤認しない条件は狭義criterionVerified。関連する給与源泉税は2026/2027年の一部の甲欄公式額を照合可能。扶養控除等申告書・扶養人数確認がないと公式照合済みCFを拒否。実物件の法的認定は未完了。",
+      "criterionVerification": {
+        "primarySourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/gensen/2600.htm",
+        "corroboratingSourceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/hojin/5202.htm",
+        "independentExpectedMonthlyYen": {
+          "smallFree": 15360,
+          "ordinaryOwnedFree": "500000/12",
+          "ordinaryLeasedFree": 60000,
+          "luxuryFree": 350000
+        },
+        "evidenceTests": [
+          "tests/officer-housing-tax.test.mjs"
+        ],
+        "verifiedQuestion": "Provided the housing class and bases are explicitly reviewed, free officer use is NOT treated as zero taxable salary.",
+        "scopeLimit": "Scenario arithmetic verification only; tax-law eligibility of particular property, local taxes and payroll withholding remain unresolved."
+      }
+    },
+    {
+      "id": "B-T14",
+      "status": "partial",
+      "evidence": [
+        "tests/reconciliation.test.mjs",
+        "tests/officer-housing-tax.test.mjs",
+        "tests/officer-housing-exceptions.test.mjs",
+        "tests/multi-entity-multiyear-tax.test.mjs",
+        "tests/officer-payroll-withholding.test.mjs",
+        "tests/payroll-tax-assessment-bridge.test.mjs",
+        "tests/combined-tax-reconciliation.test.mjs",
+        "tests/nta-monthly-withholding.test.mjs"
+      ],
+      "gap": "法人・役員間の現金使用料/給与、給与源泉税・社会保険料をそれぞれ記録。2026/2027年甲欄の限定給与帯はNTA公式表に対する独立照合と年度境界テスト追加。ただし賞与・乙欄・社会保険料の法定額と給与調整の通年包括判定は未完了。"
+    },
+    {
+      "id": "B-T15",
+      "status": "partial",
+      "evidence": [
+        "tests/tax-detail.test.mjs",
+        "tests/cash-adapter.test.mjs",
+        "tests/vat-restrictions.test.mjs",
+        "tests/vat-building-adjustment.test.mjs"
+      ],
+      "gap": "宿泊課税／賃貸非課税に加え住宅賃貸建物の仕入控除後年度調整を取得時制限と分離。課税売上割合・複数物件・VAT法定申告様式は未完成。"
+    },
+    {
+      "id": "B-T16",
+      "status": "partial",
+      "evidence": [
+        "tests/tax-detail.test.mjs",
+        "tests/vat-restrictions.test.mjs",
+        "tests/vat-building-adjustment.test.mjs",
+        "tests/vat-taxpayer-settlement.test.mjs"
+      ],
+      "gap": "VAT免税の1,000万円境界、インボイス・特定期間・新設法人資本金・国外事業者・高額資産例外の明示確認を追加。不明条件は未算定。免税/課税/簡易の全法定例外と登録日分割は未実装。"
+    },
+    {
+      "id": "B-T17",
+      "status": "partial",
+      "evidence": [
+        "tests/tax.test.mjs",
+        "tests/tax-detail.test.mjs",
+        "tests/vat-restrictions.test.mjs",
+        "tests/vat-building-adjustment.test.mjs",
+        "tests/vat-taxpayer-settlement.test.mjs",
+        "tests/combined-tax-reconciliation.test.mjs"
+      ],
+      "gap": "消費税の課税事業者判定と、申告計算額・実際の納付書を一対一で突合。簡易課税の高額資産取得制限の存在を検証。みなし仕入率の法定資格・全取引の税額控除は未受入。"
+    },
+    {
+      "id": "B-T18",
+      "status": "exampleVerified",
+      "evidence": [
+        "tests/tax.test.mjs",
+        "tests/v11-owned-property-tax.test.mjs",
+        "tests/v11-owned-preview-example.test.mjs"
+      ],
+      "gap": "売却年1月1日の長短区分の独立テストに加え、2026年購入2026年売却の短期譲渡税をレビュー済み購入M4パイプラインで検算。複雑な取得日承継・複数取得費の例外は未完。"
+    },
+    {
+      "id": "B-T19",
+      "status": "exampleVerified",
+      "evidence": [
+        "tests/tax-rules.test.mjs",
+        "tests/personal-sale-basis.test.mjs",
+        "tests/multi-entity-multiyear-tax.test.mjs",
+        "tests/mixed-use-sale-basis.test.mjs",
+        "tests/combined-tax-reconciliation.test.mjs",
+        "tests/v11-owned-property-tax.test.mjs",
+        "tests/v11-owned-preview-example.test.mjs",
+        "tests/v11-m3-mixed-tax.test.mjs"
+      ],
+      "gap": "M3本人住宅兼用の取得費（建物60万円）を、業務用月次減価相当1,500円と非業務用1,000円×12で独立審査・減額し、売却時建物取得費57万円・譲渡益22万円・譲渡税へ接続。月次証拠不備・90%非業務例外は拒否。法定非業務減価相当額の自動算定と特例判定は未完。"
+    },
+    {
+      "id": "B-T20",
+      "status": "exampleVerified",
+      "evidence": [
+        "tests/tax-schedule.test.mjs",
+        "tests/portfolio.test.mjs",
+        "tests/annual-income-tax.test.mjs",
+        "tests/personal-sale-basis.test.mjs",
+        "tests/multi-entity-multiyear-tax.test.mjs",
+        "tests/combined-tax-reconciliation.test.mjs",
+        "tests/v11-owned-property-tax.test.mjs",
+        "tests/v11-owned-preview-example.test.mjs",
+        "tests/v11-m3-mixed-tax.test.mjs"
+      ],
+      "gap": "個人M3の2026年売却と、翌年国税・翌々年1月の住民税までのCFを架空2主体で検算。従来M4・源泉・VATケースも別途維持。住所地納付期限・税額調整未完。"
+    },
+    {
+      "id": "B-T21",
+      "status": "criterionVerified",
+      "evidence": [
+        "tests/tax.test.mjs",
+        "tests/annual-income-tax.test.mjs",
+        "tests/payroll-tax-assessment-bridge.test.mjs",
+        "tests/gate-b-t21-acceptance.test.mjs"
+      ],
+      "gap": "狭義の計算恒等式についてB-T21を独立検証済み（複数納税主体/年度、税額差0円と1円対照）。各税務区分の確定税額・法定適格性・現金還付の検証とは別でありGate B全体の受入は未了。",
+      "criterionVerification": {
+        "criterion": "IncrementalCashIncomeTax=0 => BeforeTaxEquityCF=AfterTaxEquityCF in every calendar year, and corresponding NPV/IRR equal",
+        "basis": "approvedGateBAccountingInvariant",
+        "specification": "docs/v1.1-design-change-spec.md §14.11 B-T21 and §14.10",
+        "independentExpected": {
+          "zeroIncrementalTaxCF": 0,
+          "matchingYearlyCF": true,
+          "matchingNPV": true,
+          "negativeControlAdditionalTaxYen": 1,
+          "negativeControlChangeAfterTaxCFYen": -1
+        },
+        "evidenceTests": [
+          "tests/gate-b-t21-acceptance.test.mjs"
+        ],
+        "scopeLimit": "Proves the numerical identity only for tested calendar/entity cases. It does not certify legal tax calculation or payment eligibility."
+      }
+    },
+    {
+      "id": "B-T22",
+      "status": "partial",
+      "evidence": [
+        "tests/tax.test.mjs",
+        "tests/finance.test.mjs",
+        "tests/annual-income-tax.test.mjs",
+        "tests/statutory-depreciation.test.mjs",
+        "tests/depreciation-income-tax.test.mjs",
+        "tests/v11-owned-property-tax.test.mjs",
+        "tests/v11-owned-preview-example.test.mjs",
+        "tests/v11-m3-mixed-tax.test.mjs"
+      ],
+      "gap": "M3購入代金100万円と光熱費24万円は現金CFに一度計上。建物償却3万円うち雑所得必要経費18,000円、独立した月次業務／非業務用譲渡原価減額を非現金税務明細に限定。M4の償却率テストも維持。改修投資等は未完。"
+    },
+    {
+      "id": "B-T23",
+      "status": "partial",
+      "evidence": [
+        "tests/tax-detail.test.mjs",
+        "tests/annual-income-tax.test.mjs"
+      ],
+      "gap": "Loss vintages, expiry, limit tested; statutory continuity and eligible-loss attributes incomplete"
+    },
+    {
+      "id": "B-T24",
+      "status": "partial",
+      "evidence": [
+        "tests/acceptance.test.mjs",
+        "tests/tax-rules.test.mjs",
+        "tests/annual-income-tax.test.mjs",
+        "tests/vat-restrictions.test.mjs",
+        "tests/personal-sale-basis.test.mjs",
+        "tests/vat-building-adjustment.test.mjs",
+        "tests/officer-housing-exceptions.test.mjs",
+        "tests/multi-entity-multiyear-tax.test.mjs",
+        "tests/mixed-use-sale-basis.test.mjs",
+        "tests/officer-payroll-withholding.test.mjs",
+        "tests/payroll-tax-assessment-bridge.test.mjs",
+        "tests/vat-taxpayer-settlement.test.mjs",
+        "tests/combined-tax-reconciliation.test.mjs",
+        "tests/nta-monthly-withholding.test.mjs",
+        "tests/v11-owned-property-tax.test.mjs",
+        "tests/v11-owned-preview-example.test.mjs",
+        "tests/v11-m3-mixed-tax.test.mjs"
+      ],
+      "gap": "M3の年度別用法、見込泊数、法定償却率、非業務用減価相当額月次簿価を欠く場合税引後数値はnull。利用前提変更で税務プラン失効。M1/M2等の判定はなお未完。"
+    }
+  ],
+  "gateA": [
+    {
+      "id": "A-13.9-01",
+      "status": "exampleVerified",
+      "evidence": [
+        "tests/operations.test.mjs"
+      ],
+      "gap": "Zero ADR, zero rent and all occupancy extremes need explicit complete matrix"
+    },
+    {
+      "id": "A-13.9-02",
+      "status": "exampleVerified",
+      "evidence": [
+        "tests/operations.test.mjs"
+      ],
+      "gap": "180/181 allocation and negative days covered"
+    },
+    {
+      "id": "A-13.9-03",
+      "status": "partial",
+      "evidence": [
+        "tests/finance.test.mjs",
+        "tests/cash-adapter.test.mjs"
+      ],
+      "gap": "Monthly and income/VAT cash boundary cases require broader coverage"
+    },
+    {
+      "id": "A-13.9-04",
+      "status": "partial",
+      "evidence": [
+        "tests/portfolio.test.mjs"
+      ],
+      "gap": "Nonconventional multi-IRR flagged; tangent roots not exhaustively detected"
+    },
+    {
+      "id": "A-13.9-05",
+      "status": "partial",
+      "evidence": [
+        "tests/reconciliation.test.mjs",
+        "tests/cash-adapter.test.mjs"
+      ],
+      "gap": "Grouped line references and VAT trace improved; multi-entity full ledger reconciliation still needed"
+    }
+  ],
+  "acceptanceNotice": "Owned M4 purchase/disposal vertical slice integrated: reviewed land/building acquisition basis, straight-line building tax book, owner-level ordinary tax plus individual separate short sale gain / corporate income gain, dated cash through post-exit resident tax. These are narrow scenario examples only. Status counts remain criterionVerified 2, exampleVerified 4, partial 18. Complete B gate, mixed use, all asset classes, VAT, withholding and statutory eligibility NOT accepted.",
+  "m3IntegrationNotice": "Restricted individual M3 mixed lodging/private: distinct 180 allocations vs 54 modeled nights, itemized utility ratio, area x separate building service period, independently reviewed business/non-business monthly sale equivalents, individual miscellaneous income and separate capital gain cash through 2028. This is a narrow scenario example and not complete Gate B acceptance."
+}

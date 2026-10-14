@@ -1,0 +1,195 @@
+{
+  "schemaVersion": "1.1.0",
+  "assumptionsVersion": "2026-10-14-v11-derived-ordinary-example",
+  "calculationVersion": "v11-preview-engine-2",
+  "portfolio": {
+    "id": "portfolio-demo",
+    "name": "税務自動計算の開発サンプル（架空／2主体・M4）",
+    "baseDate": "2026-01-01",
+    "holdingYears": 1,
+    "currency": "JPY",
+    "fields": {
+      "P04": {
+        "value": 8,
+        "unit": "percent",
+        "sourceType": "userAssumption"
+      }
+    }
+  },
+  "entities": [
+    {
+      "id": "person-1",
+      "name": "個人（架空）",
+      "taxpayerType": "individual",
+      "fields": {}
+    },
+    {
+      "id": "corporation-1",
+      "name": "法人（架空）",
+      "taxpayerType": "corporation",
+      "fields": {}
+    }
+  ],
+  "units": [
+    {
+      "id": "tokyo-m4",
+      "name": "東京 M4（架空）",
+      "modelId": "M4",
+      "tenure": "lease",
+      "operatorEntityId": "corporation-1",
+      "ownerEntityId": null,
+      "tenantEntityId": "corporation-1",
+      "startDate": "2026-01-01",
+      "operationStartDate": "2026-01-01",
+      "fields": {
+        "A": {
+          "A06": {
+            "value": 50000,
+            "unit": "JPY_per_month",
+            "sourceType": "userAssumption"
+          },
+          "A07": {
+            "value": 100000,
+            "unit": "JPY",
+            "sourceType": "userAssumption"
+          },
+          "A08": {
+            "value": 0,
+            "unit": "JPY",
+            "sourceType": "userAssumption"
+          }
+        },
+        "R": {
+          "R01": {
+            "value": 100000,
+            "unit": "JPY_per_month",
+            "sourceType": "userAssumption"
+          },
+          "R02": {
+            "value": 90,
+            "unit": "percent",
+            "sourceType": "userAssumption"
+          },
+          "R05": {
+            "value": 1000,
+            "unit": "JPY_per_month",
+            "sourceType": "userAssumption"
+          }
+        }
+      },
+      "calendar": [],
+      "expenses": [],
+      "assets": [],
+      "loans": [],
+      "exit": {
+        "method": "leaseSettlement",
+        "exitDate": "2026-12-31",
+        "sellingCosts": 0,
+        "exitObligations": 0,
+        "expectedDepositRefund": 100000,
+        "applyResidentialRelief": false
+      }
+    },
+    {
+      "id": "person-lease",
+      "name": "大阪 M4 個人賃借（税務試算専用・架空）",
+      "modelId": "M4",
+      "tenure": "lease",
+      "operatorEntityId": "person-1",
+      "ownerEntityId": null,
+      "tenantEntityId": "person-1",
+      "startDate": "2026-01-01",
+      "operationStartDate": "2026-01-01",
+      "fields": {
+        "A": {
+          "A06": {
+            "value": 50000,
+            "unit": "JPY_per_month",
+            "sourceType": "userAssumption"
+          },
+          "A07": {
+            "value": 100000,
+            "unit": "JPY",
+            "sourceType": "userAssumption"
+          },
+          "A08": {
+            "value": 0,
+            "unit": "JPY",
+            "sourceType": "userAssumption"
+          }
+        },
+        "R": {
+          "R01": {
+            "value": 150000,
+            "unit": "JPY_per_month",
+            "sourceType": "userAssumption"
+          },
+          "R02": {
+            "value": 90,
+            "unit": "percent",
+            "sourceType": "userAssumption"
+          },
+          "R05": {
+            "value": 1000,
+            "unit": "JPY_per_month",
+            "sourceType": "userAssumption"
+          }
+        }
+      },
+      "calendar": [],
+      "expenses": [],
+      "assets": [],
+      "loans": [],
+      "exit": {
+        "method": "leaseSettlement",
+        "exitDate": "2026-12-31",
+        "sellingCosts": 0,
+        "exitObligations": 0,
+        "expectedDepositRefund": 100000,
+        "applyResidentialRelief": false
+      }
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "base",
+      "name": "Base",
+      "role": "base",
+      "overrides": []
+    },
+    {
+      "id": "upside",
+      "name": "Upside（個人稼働率95％）",
+      "role": "upside",
+      "overrides": [
+        {
+          "scope": "unit",
+          "targetId": "person-lease",
+          "fieldId": "R02",
+          "field": {
+            "value": 95,
+            "unit": "percent",
+            "sourceType": "userAssumption"
+          }
+        }
+      ]
+    },
+    {
+      "id": "downside",
+      "name": "Downside（個人稼働率70％）",
+      "role": "downside",
+      "overrides": [
+        {
+          "scope": "unit",
+          "targetId": "person-lease",
+          "fieldId": "R02",
+          "field": {
+            "value": 70,
+            "unit": "percent",
+            "sourceType": "userAssumption"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,497 @@
+{
+  "P01": {
+    "type": "string",
+    "unit": "text",
+    "group": "P"
+  },
+  "P02": {
+    "type": "string",
+    "unit": "date",
+    "group": "P"
+  },
+  "P03": {
+    "type": "integer",
+    "unit": "years",
+    "group": "P"
+  },
+  "P04": {
+    "type": "number",
+    "unit": "percent",
+    "group": "P"
+  },
+  "P05": {
+    "type": "number",
+    "unit": "percent",
+    "group": "P"
+  },
+  "P06": {
+    "type": "number",
+    "unit": "percent",
+    "group": "P"
+  },
+  "P07": {
+    "type": "number",
+    "unit": "percent",
+    "group": "P"
+  },
+  "P08": {
+    "type": "number",
+    "unit": "months",
+    "group": "P"
+  },
+  "P09": {
+    "type": "number",
+    "unit": "percent",
+    "group": "P"
+  },
+  "P10": {
+    "type": "number",
+    "unit": "percent",
+    "group": "P"
+  },
+  "P11": {
+    "type": "string",
+    "unit": "text",
+    "group": "P"
+  },
+  "P12": {
+    "type": "string",
+    "unit": "JPY",
+    "group": "P"
+  },
+  "U01": {
+    "type": "string",
+    "unit": "text",
+    "group": "U"
+  },
+  "U02": {
+    "type": "string",
+    "unit": "text",
+    "group": "U"
+  },
+  "U03": {
+    "type": "string",
+    "unit": "text",
+    "group": "U"
+  },
+  "U04": {
+    "type": "string",
+    "unit": "text",
+    "group": "U"
+  },
+  "U05": {
+    "type": "string",
+    "unit": "text",
+    "group": "U"
+  },
+  "U06": {
+    "type": "string",
+    "unit": "text",
+    "group": "U"
+  },
+  "U07": {
+    "type": "number",
+    "unit": "sqm",
+    "group": "U"
+  },
+  "U08": {
+    "type": "string",
+    "unit": "text",
+    "group": "U"
+  },
+  "U09": {
+    "type": "string",
+    "unit": "date",
+    "group": "U"
+  },
+  "U10": {
+    "type": "string",
+    "unit": "date",
+    "group": "U"
+  },
+  "U11": {
+    "type": "string",
+    "unit": "date",
+    "group": "U"
+  },
+  "U12": {
+    "type": "string",
+    "unit": "text",
+    "group": "U"
+  },
+  "U13": {
+    "type": "string",
+    "unit": "text",
+    "group": "U"
+  },
+  "A01": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "A"
+  },
+  "A02": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "A"
+  },
+  "A03": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "A"
+  },
+  "A04": {
+    "type": "number",
+    "unit": "JPY_per_year",
+    "group": "A"
+  },
+  "A05": {
+    "type": "number",
+    "unit": "JPY_per_month",
+    "group": "A"
+  },
+  "A06": {
+    "type": "number",
+    "unit": "JPY_per_month",
+    "group": "A"
+  },
+  "A07": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "A"
+  },
+  "A08": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "A"
+  },
+  "A09": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "A"
+  },
+  "A10": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "A"
+  },
+  "K01": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "K"
+  },
+  "K02": {
+    "type": "string",
+    "unit": "text",
+    "group": "K"
+  },
+  "K03": {
+    "type": "string",
+    "unit": "date",
+    "group": "K"
+  },
+  "K04": {
+    "type": "string",
+    "unit": "text",
+    "group": "K"
+  },
+  "K05": {
+    "type": "number",
+    "unit": "percent",
+    "group": "K"
+  },
+  "K06": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "K"
+  },
+  "F01": {
+    "type": "boolean",
+    "unit": "boolean",
+    "group": "F"
+  },
+  "F02": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "F"
+  },
+  "F03": {
+    "type": "number",
+    "unit": "percent",
+    "group": "F"
+  },
+  "F04": {
+    "type": "integer",
+    "unit": "months",
+    "group": "F"
+  },
+  "F05": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "F"
+  },
+  "F06": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "F"
+  },
+  "H01": {
+    "type": "number",
+    "unit": "JPY_per_room_night",
+    "group": "H"
+  },
+  "H02": {
+    "type": "number",
+    "unit": "percent",
+    "group": "H"
+  },
+  "H03": {
+    "type": "integer",
+    "unit": "days",
+    "group": "H"
+  },
+  "H04": {
+    "type": "integer",
+    "unit": "days",
+    "group": "H"
+  },
+  "H05": {
+    "type": "number",
+    "unit": "multiplier",
+    "group": "H"
+  },
+  "H06": {
+    "type": "number",
+    "unit": "multiplier",
+    "group": "H"
+  },
+  "H07": {
+    "type": "number",
+    "unit": "nights_per_booking",
+    "group": "H"
+  },
+  "H08": {
+    "type": "number",
+    "unit": "percent",
+    "group": "H"
+  },
+  "H09": {
+    "type": "number",
+    "unit": "JPY_per_booking",
+    "group": "H"
+  },
+  "H10": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "H"
+  },
+  "H11": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "H"
+  },
+  "H12": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "H"
+  },
+  "R01": {
+    "type": "number",
+    "unit": "JPY_per_month",
+    "group": "R"
+  },
+  "R02": {
+    "type": "number",
+    "unit": "percent",
+    "group": "R"
+  },
+  "R03": {
+    "type": "integer",
+    "unit": "days",
+    "group": "R"
+  },
+  "R04": {
+    "type": "integer",
+    "unit": "days",
+    "group": "R"
+  },
+  "R05": {
+    "type": "number",
+    "unit": "JPY_per_month",
+    "group": "R"
+  },
+  "R06": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "R"
+  },
+  "R07": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "R"
+  },
+  "R08": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "R"
+  },
+  "R09": {
+    "type": "integer",
+    "unit": "days",
+    "group": "R"
+  },
+  "R10": {
+    "type": "number",
+    "unit": "percent",
+    "group": "R"
+  },
+  "R11": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "R"
+  },
+  "S01": {
+    "type": "integer",
+    "unit": "days",
+    "group": "S"
+  },
+  "S02": {
+    "type": "string",
+    "unit": "text",
+    "group": "S"
+  },
+  "S03": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "S"
+  },
+  "S04": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "S"
+  },
+  "S05": {
+    "type": "number",
+    "unit": "percent",
+    "group": "S"
+  },
+  "S06": {
+    "type": "number",
+    "unit": "percent",
+    "group": "S"
+  },
+  "S07": {
+    "type": "number",
+    "unit": "percent",
+    "group": "S"
+  },
+  "S08": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "S"
+  },
+  "S09": {
+    "type": "number",
+    "unit": "JPY_per_month",
+    "group": "S"
+  },
+  "S10": {
+    "type": "string",
+    "unit": "text",
+    "group": "S"
+  },
+  "E01": {
+    "type": "string",
+    "unit": "text",
+    "group": "E"
+  },
+  "E02": {
+    "type": "string",
+    "unit": "text",
+    "group": "E"
+  },
+  "E03": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "E"
+  },
+  "E04": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "E"
+  },
+  "E05": {
+    "type": "string",
+    "unit": "text",
+    "group": "E"
+  },
+  "E06": {
+    "type": "number",
+    "unit": "percent",
+    "group": "E"
+  },
+  "E07": {
+    "type": "string",
+    "unit": "text",
+    "group": "E"
+  },
+  "E08": {
+    "type": "string",
+    "unit": "text",
+    "group": "E"
+  },
+  "E09": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "E"
+  },
+  "E10": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "E"
+  },
+  "E11": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "E"
+  },
+  "E12": {
+    "type": "string",
+    "unit": "text",
+    "group": "E"
+  },
+  "X01": {
+    "type": "number",
+    "unit": "percent",
+    "group": "X"
+  },
+  "X02": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "X"
+  },
+  "X03": {
+    "type": "number",
+    "unit": "percent",
+    "group": "X"
+  },
+  "X04": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "X"
+  },
+  "X05": {
+    "type": "number",
+    "unit": "JPY",
+    "group": "X"
+  },
+  "SC01": {
+    "type": "string",
+    "unit": "text",
+    "group": "SC"
+  },
+  "SC02": {
+    "type": "string",
+    "unit": "text",
+    "group": "SC"
+  }
+}
