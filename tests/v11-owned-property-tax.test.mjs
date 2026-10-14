@@ -95,7 +95,7 @@ test("Owned personal M4: acquisition cash once, tax land nondepreciable, buildin
  assert.equal(building.saleClosingBookValue,570000);
  assert.equal(report.derivedTaxItems.filter(x=>x.sourceLine==="buildingTaxDepreciation").length,1);
  assert.equal(report.derivedTaxItems.filter(x=>x.sourceLine==="buildingTaxDepreciation")[0].amount,30000);
- assert.equal(report.CF0,-1120000); // 1m owned purchase + 100k corporate deposit + 20k lease setup? adjusted lease setup=0, so -1.1m.
+ assert.equal(report.CF0,-1100000); // 1m purchase + 100k corporate deposit; lease fee is 0.
 });
 test("Owned individual short gain tax appears as March national + following year resident installments, not rental income",()=>{
  const {d,p}=fixture();
@@ -137,8 +137,7 @@ test("Missing register/asset, private use, basis mismatch and unreviewed statuto
   q=>{q.d.units[0].assets[1].businessUseRatioByYear[0].ratio=80;q.p.documentFingerprint=fingerprintV11Document(q.d)},
   q=>{q.p.ownedPropertyReviews[0].assetRates.building.eligibilityReviewed=false},
   q=>{q.d.units[0].assets[1].taxBasis=590000;q.p.documentFingerprint=fingerprintV11Document(q.d)},
-  q=>{q.p.ownedPropertyReviews[0].saleReview.grossPriceReviewed=1500000},
-  q=>{q.d.units[0].exit.applyResidentialRelief=true;q.p.documentFingerprint=fingerprintV11Document(q.d)}
+  q=>{q.p.ownedPropertyReviews[0].saleReview.grossPriceReviewed=1500000}
  ];
  for(const edit of cases){
    const scenario={d:clone(d),p:clone(p)};edit(scenario);
@@ -158,4 +157,11 @@ test("Cannot double charge land/building as CapEx, or bypass review by claiming 
  assert.throws(()=>previewV11Scenario(inflated),/reconcile exactly to A01/);
  const mixed=clone(d);mixed.units[0].assets.push({...mixed.units[0].assets[0],id:"extra"});
  assert.throws(()=>previewV11Scenario(mixed),/one land and one building/);
+});
+
+test("Unreviewed residential relief is rejected before portfolio tax model can hide it",()=>{
+ const {d,p}=fixture();
+ d.units[0].exit.applyResidentialRelief=true;
+ p.documentFingerprint=fingerprintV11Document(d);
+ assert.throws(()=>previewV11Scenario(d,{derivedTaxPlan:p}),/sale tax relief requires reviewed/);
 });
