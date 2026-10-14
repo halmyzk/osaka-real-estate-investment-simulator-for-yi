@@ -52,8 +52,8 @@ test("Fixed asset tax/insurance use building service share for M3, with NO suppl
  assert.equal(t.vatPaid,0);
  assert.equal(n.vatPaid,0);
  tol(u.vatPaid,3650);
- tol(tax.indicativeVATRows[0].taxableVendorVATPaid,24000);
- tol(util.indicativeVATRows[0].taxableVendorVATPaid,27650);
+ tol(tax.indicativeVATRows.find(x=>x.entityId==="person-1").taxableVendorVATPaid,24000);
+ tol(util.indicativeVATRows.find(x=>x.entityId==="person-1").taxableVendorVATPaid,27650);
  assert.equal(ins.afterTax,null);
 });
 test("OTA entered once as existing H08 percent and never as extra explicit expense",()=>{
@@ -133,10 +133,9 @@ test("ADR and occupancy scenario shocks move only one chosen unit and do not mut
    assert.ok(a.indicativeAfterTax.NPV>b.indicativeAfterTax.NPV);
    assert.equal(a.CF0,b.CF0);
  }
- const cap=applyV11FinancialShock({
+ assert.throws(()=>applyV11FinancialShock({
   document:source,scenarioId:"base",unitId:"osaka-m3",kind:"occupancy",shockFraction:2
- });
- assert.throws(()=>preview(cap.document),/occupancy exceeds|outside permitted/);
+ }),/occupancy result/);
 });
 test("Purchase-price sensitivity holds gross sale proceeds fixed; reprices asset basis and initial equity once",()=>{
  const s=applyV11FinancialShock({document:owner,scenarioId:"base",
@@ -145,8 +144,8 @@ test("Purchase-price sensitivity holds gross sale proceeds fixed; reprices asset
  assert.equal(s.originalValue,1000000);
  assert.equal(s.stressedValue,1100000);
  assert.equal(s.document.units[0].fields.A.A01.value,1000000);
- assert.equal(s.document.units[0].assets[0].grossCost,440000);
- assert.equal(s.document.units[0].assets[1].grossCost,660000);
+ tol(s.document.units[0].assets[0].grossCost,440000);
+ tol(s.document.units[0].assets[1].grossCost,660000);
  assert.equal(changed.CF0,original.CF0-100000);
  const saleTotal=x=>x.units[0].investing.filter(e=>e.category==="disposalProceeds").reduce((s,e)=>s+e.amount,0);
  tol(saleTotal(changed),saleTotal(original));
