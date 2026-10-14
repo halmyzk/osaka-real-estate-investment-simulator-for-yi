@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
+import vm from "node:vm";
 import {previewV11Scenario} from "../src/v11-preview-engine.mjs";
 import {
  defaultV11IndicativeAssumptions,estimateV11IndicativeTaxCash,
@@ -177,4 +178,83 @@ test("UI exposes editable effective tax/VAT assumptions and keeps ambiguous IRR 
  assert.match(html,/fmt\(r\.indicativeAfterTax\.NPV\)/);
  assert.match(html,/annualIndicativeCashFlows/);
  assert.match(html,/概算税引後NPV/);
+});
+
+test("Three scenarios are jointly useful financial what-if estimates without separate tax sidecar",()=>{
+ const assumptions=init(doc);
+ const base=calc(doc,assumptions,"base");
+ const upside=calc(doc,assumptions,"upside");
+ const downside=calc(doc,assumptions,"downside");
+ for(const x of [base,upside,downside]){
+   assert.equal(x.indicativeTaxStatus,"estimated");
+   assert.equal(x.afterTax,null);
+   assert.ok(Number.isFinite(x.indicativeAfterTax.NPV));
+ }
+ assert.ok(upside.indicativeAfterTax.NPV>base.indicativeAfterTax.NPV);
+ assert.ok(base.indicativeAfterTax.NPV>downside.indicativeAfterTax.NPV);
+ assert.equal(base.CF0,upside.CF0);
+ assert.equal(base.CF0,downside.CF0);
+});
+
+test("Original M3 prototype with NO registered asset/depreciation or external tax receipts can now give labeled indicative net investor cash",()=>{
+ const original=data("v11-sample.json");
+ assert.equal(original.units[0].assets.length,0);
+ const reported=calc(original,init(original));
+ assert.equal(reported.indicativeTaxStatus,"estimated");
+ assert.equal(reported.afterTax,null);
+ assert.ok(Number.isFinite(reported.indicativeAfterTax.NPV));
+ const sale=reported.indicativeSaleRows.find(x=>x.unitId==="osaka-m3");
+ assert.ok(sale);
+ nearly(sale.assumedBuildingBasis,
+  1000000*defaultV11IndicativeAssumptions(original).assumedBuildingShareOfPurchase);
+ assert.ok(sale.estimatedAdjustedTaxBasis<sale.acquisitionPurchase);
+});
+
+test("Estimated building cost never depreciates below residual even when 25-year modelled holding outlasts 5% per year",()=>{
+ const d=structuredClone(doc);
+ d.portfolio.holdingYears=25;
+ const years=Array.from({length:25},(_,i)=>2026+i);
+ for(const u of d.units){
+   u.exit.exitDate="2050-12-31";
+   if(u.assets?.length)for(const asset of u.assets){
+     asset.disposalDate="2050-12-31";
+     asset.businessUseRatioByYear=years.map(year=>({year,ratio:60}));
+   }
+   if(u.modelId==="M3"){
+     for(const year of years.slice(1)){
+       for(const m of doc.units[0].calendar){
+         const days=new Date(Date.UTC(year,m.month,0)).getUTCDate();
+         u.calendar.push({...m,year,selfUseDays:days-m.lodgingDays});
+       }
+       for(const expense of doc.units[0].expenses){
+         const mm=Number(expense.periodStart.slice(5,7));
+         const ymonth=year+"-"+String(mm).padStart(2,"0");
+         const finalDay=String(new Date(Date.UTC(year,mm,0)).getUTCDate()).padStart(2,"0");
+         u.expenses.push({...expense,id:ymonth+"-utility",periodStart:ymonth+"-01",
+            periodEnd:ymonth+"-"+finalDay,cashDate:ymonth+"-"+finalDay});
+       }
+     }
+   }
+ }
+ const r=calc(d,init(d));
+ assert.equal(r.indicativeTaxStatus,"estimated");
+ const rows=r.indicativeUnitProof.filter(x=>x.unitId==="osaka-m3");
+ assert.equal(rows.length,25);
+ const total=sum(rows.map(x=>x.assumedNoncashDepreciationGross));
+ nearly(total,599999);
+ assert.equal(rows.at(-1).assumedNoncashDepreciationGross,0);
+ assert.equal(r.indicativeSaleRows.find(x=>x.unitId==="osaka-m3").estimatedAdjustedTaxBasis,400001);
+});
+test("Developer HTML module parses as JavaScript and includes reusable scenario assumptions import/export plus comparison",()=>{
+ const html=readFileSync(new URL("../preview/v11-dev.html",import.meta.url),"utf8");
+ const js=html.match(/<script type="module">([\s\S]*?)<\/script>/)?.[1];
+ assert.ok(js,"module script must exist");
+ const withoutImports=js.replace(/^import\s+[^;]+;\s*$/gm,"");
+ assert.doesNotThrow(()=>new vm.Script(withoutImports,{filename:"v11-dev-parse-check.js"}));
+ for(const name of ["enable-indicative","clear-indicative","indicative-settings",
+   "export-indicative","choose-indicative-import","indicative-comparison","indicative-breakdown"])
+   assert.match(html,new RegExp('id="'+name+'"'));
+ assert.match(html,/renderIndicativeComparison/);
+ assert.match(html,/renderIndicativeBreakdown/);
+ assert.match(html,/premium-re-v11-indicative-assumptions\.json/);
 });
