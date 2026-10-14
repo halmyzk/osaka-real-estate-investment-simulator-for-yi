@@ -296,7 +296,7 @@ function resolveUnit(document,scenarioContext,unit,portfolio,assumptions){
   if(realEstate.length){
     if(unit.tenure!=="own"||realEstate.length!==2||
       new Set(realEstate.map(a=>a.category)).size!==2)
-      throw new RangeError("Real-estate property tax register requires one land and one building for an owned unit");
+      throw new RangeError("Owned land/building tax register requires one land and one building for an owned unit");
     const basis=realEstate.reduce((t,a)=>t+money(a.grossCost,"grossCost"),0);
     if(purchase===null||Math.abs(basis-purchase)>1e-6)
       throw new RangeError("Land plus building gross costs must reconcile exactly to A01 purchase");
