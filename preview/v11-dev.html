@@ -36,7 +36,7 @@ footer{font-size:.8rem;color:#516a76;padding:20px 0}
 <body>
 <header class="top"><div class="wrap"><div><div class="kicker">DEVELOPMENT BRANCH ONLY · NOT PUBLISHED v1.1</div><h1>不動産投資シミュレーター v1.1 試作画面</h1></div><span id="save-indicator">未保存の開発用サンプル</span></div></header>
 <div class="wrap">
-<p class="warning"><strong>開発検証用：</strong>税引後CF、消費税、詳細な資産償却と一部の日付・契約条件は未接続です。現時点の数値は税引前の限定試算です。公開v1や旧保存データは操作しません。</p>
+<p class="warning"><strong>開発検証用：</strong>税引前CFに加えて仮定に基づく<strong>概算税引後CF／NPV／IRR</strong>を試算できます。法的な税務申告精度、追加投資の税務償却、任意の日付条件と本番画面は未完成です。公開v1や旧保存データは操作しません。</p>
 <nav aria-label="画面切替" id="tabnav">
  <button type="button" data-tab="business" aria-selected="true">01 事業設計</button>
  <button type="button" data-tab="evidence" aria-selected="false">02 前提・根拠</button>
@@ -53,11 +53,43 @@ footer{font-size:.8rem;color:#516a76;padding:20px 0}
 <main id="analysis" hidden>
  <section class="card"><h2>03 収支分析</h2>
   <div id="kpis" class="grid"></div>
-  <p class="muted small">IRRは税引前。税引前NPVは税引後自己資本割引率P04を使った参考感応度です。任意の税額サイドカーを読込むと所得税等控除後の参考値を別表示しますが、消費税・償却・申告適格性との接続が未完了のため正式な税引後NPV／IRRは算定保留です。</p>
+  <p class="muted small">概算モードでは税引後自己資本CF・NPV・IRRを明示的な税率／消費税／償却仮定で試算します。納税でCF符号が複数回変わる場合、IRRは一意性未確認として非表示です。税引前NPVはP04を適用した参考値です。</p>
  </section>
  <section class="card"><h3>標準入力（選択住戸）</h3><label for="unit-choice">住戸</label><select id="unit-choice"></select>
  <fieldset id="edit-fields" class="field-grid" style="margin-top:18px"></fieldset>
  <p class="muted small">変更は現在の下書きに反映します。「保存」を押すまでブラウザには書き込みません。シナリオ差分がある場合は差分が優先されます。</p></section>
+ <section class="card"><h3>主要費目のクイック入力（選択住戸）</h3>
+ <p class="muted small">OTAは宿泊売上に対する率として一度だけ計上。光熱費・保険料・管理費・固定資産税は期間内の月次費用へ、改修・FF&amp;Eは設備投資CFへ直接追加します。既存の月次請求明細と重複しないか確認してください。追加した額は税抜費用とみなし、VAT課税範囲は概算の設定で調整します。</p>
+ <div class="field-grid">
+  <label for="quick-cost-kind">費目
+    <select id="quick-cost-kind">
+      <option value="utilities">共通光熱費（月額）</option>
+      <option value="insurance">保険料（月額換算）</option>
+      <option value="propertyTax">固定資産税（月額換算・購入物件）</option>
+      <option value="management">宿泊管理・運営委託（月額）</option>
+      <option value="rentalManagement">賃貸管理（月額）</option>
+    </select>
+  </label>
+  <label for="quick-cost-amount">月額費用（円）<input id="quick-cost-amount" type="number" min="0" step="100" value="20000"></label>
+  <label for="quick-cost-from">開始月 <input id="quick-cost-from" type="month"></label>
+  <label for="quick-cost-to">終了月 <input id="quick-cost-to" type="month"></label>
+ </div>
+ <div class="actions"><button type="button" class="secondary" id="apply-quick-cost">月次費用を反映／更新</button></div>
+ <div class="field-grid" style="margin-top:12px">
+  <label for="quick-ota">OTA手数料（宿泊売上の%）<input id="quick-ota" type="number" min="0" max="100" step=".1" value="15"></label>
+  <div><button type="button" class="secondary" id="apply-quick-ota">OTA手数料率を更新</button></div>
+  <label for="quick-capex-month">改修・FF&amp;E投資月 <input id="quick-capex-month" type="month"></label>
+  <label for="quick-capex-amount">改修・FF&amp;E投資額（円）<input id="quick-capex-amount" type="number" min="1" step="1000" value="100000"></label>
+  <div><button type="button" class="secondary" id="apply-quick-capex">設備投資CFに追加</button></div>
+ </div>
+ <p id="quick-cost-status" class="muted small" aria-live="polite"></p>
+ <div id="quick-cost-list"></div>
+ </section>
+ <section class="card"><h3>主要投資条件の単独感応度（選択住戸）</h3>
+ <p class="muted small">選択したシナリオを基準に、ADR・稼働率・購入価格・売却価格だけをそれぞれ±指定率だけ変えて、<strong>税引後NPV差額</strong>を比較します。購入価格のみ変える場合は売却総額を一定に保ち、土地／建物の帳簿価額を同比率で動かします（投資判断用の概算）。</p>
+ <label for="quick-shock-pct">感応度幅（%） <input id="quick-shock-pct" type="number" min="1" max="50" step="1" value="10"></label>
+ <div id="quick-sensitivity-table">概算税引後分析を開始すると表示します。</div>
+ </section>
  <section class="card"><h3>暦年別の投資キャッシュフロー</h3><div id="annual-table"></div></section>
  <section class="card"><h3>Base／Upside／Downside比較（概算・同じ税務仮定）</h3>
  <p class="muted small">営業前提の違いによって税額・消費税CF・NPVがどう変化するかを比較します。IRRは符号反転が複数ある場合、数値を強制表示しません。</p>
@@ -121,12 +153,14 @@ import {inspectV11Draft,parseV11Draft,saveV11Draft,restoreV11Draft,serializeV11D
 import {compileV11IncomeTaxSidecar} from "../src/v11-income-tax-sidecar.mjs";
 import {deriveV11OrdinaryTax} from "../src/v11-derived-ordinary-tax.mjs";
 import {defaultV11IndicativeAssumptions} from "../src/v11-indicative-tax.mjs";
+import {setV11QuickExpense,setV11QuickOTA,addV11QuickRenovation,v11QuickExpenseKinds} from "../src/v11-quick-input.mjs";
+import {applyV11FinancialShock,v11FinancialShockKinds} from "../src/v11-financial-sensitivity.mjs";
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=v=>v===null||v===undefined?"算定保留":new Intl.NumberFormat("ja-JP",{maximumFractionDigits:0}).format(v)+"円";
 const pct=v=>v===null||v===undefined?"算定保留":(v*100).toFixed(2)+"%";
 let data=null,last=null,selectedUnit=null,dirty=false,activeTab="business",
- sample=null,taxSidecar=null,indicativeAssumptions=null;
+ sample=null,taxSidecar=null,indicativeAssumptions=null,financialShockPercent=10;
 const fields=[
  ["H01","ADR（円／室泊）","JPY_per_room_night"],["H02","宿泊稼働率（％）","percent"],
  ["R01","基準月額賃料（円）","JPY_per_month"],["R02","賃貸入居率（％）","percent"],
@@ -242,6 +276,78 @@ function renderAnnual(){
           tax?fmt(tax.postIncomeTaxEquityCF):"算定保留"];
       }));
  }
+}
+function quickInputMonths(){
+ const unit=selected();
+ const start=unit.operationStartDate.slice(0,7),finish=unit.exit.exitDate.slice(0,7);
+ for(const id of ["quick-cost-from","quick-cost-to","quick-capex-month"]){
+   const field=$(id);
+   field.min=id==="quick-capex-month"?unit.startDate.slice(0,7):start;
+   field.max=finish;
+   if(!field.value||field.value<field.min||field.value>finish)
+     field.value=id==="quick-cost-to"?finish:field.min;
+ }
+}
+function renderQuickCosts(){
+ quickInputMonths();
+ const unit=selected();
+ const rows=(unit.expenses??[]).filter(x=>x.description?.startsWith("[quick:"))
+   .map(x=>[x.description.replace(/^\\[quick:[^\\]]+\\] /,""),
+     x.periodStart.slice(0,7),fmt(x.amount),x.category]);
+ const assets=(unit.assets??[]).filter(x=>x.id.startsWith("quick-renovation-"))
+   .map(x=>["改修・FF&E投資（CapEx）",x.invoiceDate.slice(0,7),
+     fmt(x.grossCost),x.category]);
+ const ota=unit.fields?.H?.H08?.value;
+ $("quick-cost-list").innerHTML=
+   "<p class='small'>モデルに反映したクイック費目："+(rows.length+assets.length)+
+   "件／OTA売上連動率："+(ota===undefined?"未設定":ota+"%")+"</p>"+
+   (rows.length+assets.length?
+    simpleTable(["費目","計上月","現金支払額","CF区分"],[...rows,...assets]):"");
+}
+function acceptQuick(result,message){
+ inspectV11Draft(result.document);
+ data=result.document;
+ taxSidecar=null;
+ setDirty();
+ $("quick-cost-status").textContent=message+"。下書きは未保存です。";
+ render();
+}
+function renderFinancialSensitivity(){
+ const out=$("quick-sensitivity-table");
+ if(!indicativeAssumptions||last?.status!=="estimated-pre-tax"||!last.indicativeAfterTax){
+   out.textContent="概算税引後分析を開始すると、各投資条件の感応度が比較できます。";return;
+ }
+ const u=selected(),base=last.indicativeAfterTax;
+ const shocks=[
+  ["adr","ADR"],["occupancy","宿泊稼働率"],
+  ["purchase","取得価格"],["sale","出口売却価格"]
+ ];
+ const rows=[];
+ const current=activeScenario();
+ for(const [kind,label] of shocks){
+   for(const direction of [-1,1]){
+     try{
+       const result=applyV11FinancialShock({
+         document:data,scenarioId:current,unitId:u.id,kind,
+         shockFraction:direction*financialShockPercent/100
+       });
+       const r=previewV11Scenario(result.document,{
+         scenarioId:current,indicativeAssumptions
+       });
+       const value=r.indicativeAfterTax;
+       if(!value)throw new Error("仮定の評価を完了できません");
+       rows.push([label,(direction>0?"+":"−")+financialShockPercent+"%",
+          fmt(result.originalValue),fmt(result.stressedValue),
+          fmt(value.NPV),fmt(value.NPV-base.NPV),
+          pct(value.IRR)]);
+     }catch(e){
+       rows.push([label,(direction>0?"+":"−")+financialShockPercent+"%",
+          "—","—","算定不能","—",String(e?.message??e)]);
+     }
+   }
+ }
+ out.innerHTML=simpleTable(
+  ["変更対象","変化幅","基準値","変更値","概算税引後NPV","NPV差額","概算IRR"],rows);
 }
 function renderIndicativeComparison(){
  const target=$("indicative-comparison");
@@ -463,7 +569,7 @@ function render(){
  $("unit-choice").innerHTML=data.units.map(u=>'<option value="'+esc(u.id)+'">'+esc(u.name)+'</option>').join("");
  $("unit-choice").value=selectedUnit;
  calculate();
- renderBusiness();renderEvidence();renderKpis();renderAnnual();renderIndicativeComparison();renderIndicativeBreakdown();renderTaxCrosswalk();renderOwnedAssetTax();renderEditor();renderMonths();renderLimitations();renderIndicativeSettings();
+ renderBusiness();renderEvidence();renderKpis();renderAnnual();renderIndicativeComparison();renderIndicativeBreakdown();renderTaxCrosswalk();renderOwnedAssetTax();renderEditor();renderMonths();renderLimitations();renderIndicativeSettings();renderQuickCosts();renderFinancialSensitivity();
 }
 function showTab(tab){
  activeTab=tab;
@@ -518,6 +624,42 @@ $("edit-fields").addEventListener("change",e=>{
  u.fields[id[0]][id]={value:parsed,unit:meta[2],
     sourceType:"userAssumption",isOverride:true};
  setDirty();render();
+});
+$("apply-quick-cost").addEventListener("click",()=>{
+ try{
+  const result=setV11QuickExpense({
+    document:data,unitId:selectedUnit,
+    kind:$("quick-cost-kind").value,monthlyAmount:Number($("quick-cost-amount").value),
+    fromMonth:$("quick-cost-from").value,toMonth:$("quick-cost-to").value
+  });
+  acceptQuick(result,"月次費用を反映："+result.kind+"／"+fmt(result.total));
+ }catch(e){$("quick-cost-status").textContent="入力エラー："+e.message;}
+});
+$("apply-quick-ota").addEventListener("click",()=>{
+ try{
+   const r=setV11QuickOTA({
+     document:data,unitId:selectedUnit,percentage:Number($("quick-ota").value)
+   });
+   acceptQuick(r,"OTA手数料率を更新："+r.percentage+"%");
+ }catch(e){$("quick-cost-status").textContent="入力エラー："+e.message;}
+});
+$("apply-quick-capex").addEventListener("click",()=>{
+ try{
+   const r=addV11QuickRenovation({
+     document:data,unitId:selectedUnit,month:$("quick-capex-month").value,
+     cost:Number($("quick-capex-amount").value)
+   });
+   acceptQuick(r,"改修投資を一度だけCapExに計上："+fmt(r.cost)+
+     "。なお、改修の税務償却は概算所得税に含めていません");
+ }catch(e){$("quick-cost-status").textContent="入力エラー："+e.message;}
+});
+$("quick-shock-pct").addEventListener("change",()=>{
+ const v=Number($("quick-shock-pct").value);
+ if(!Number.isFinite(v)||v<1||v>50){
+   $("quick-shock-pct").value=String(financialShockPercent);return;
+ }
+ financialShockPercent=v;
+ renderFinancialSensitivity();
 });
 $("save").addEventListener("click",()=>{
  if(!data)return;
