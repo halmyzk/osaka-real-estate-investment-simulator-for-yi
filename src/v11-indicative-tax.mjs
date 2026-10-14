@@ -179,7 +179,10 @@ export function estimateV11IndicativeTaxCash({document,unitResults,assumptions})
   if(!monthsByYear.size)throw new RangeError("Empty operating unit");
   // First pass: category-tagged net cash revenues/expenses and VAT-inclusive
   // adjustments. Cash operating outlays already contain the NET amounts once.
-  for(const [year,rows] of monthsByYear){
+  // Cap modelled accumulated building book reductions at a residual 1 yen;
+  // no asset can be depreciated below zero over long hold periods.
+  let buildingGrossReductionToDate=0;
+  for(const [year,rows] of [...monthsByYear].sort((x,y)=>x[0]-y[0])){
    const subtotal=find(entity,year);
    const forecastNights=sum(rows.map(o=>finite(o.result.lodging.soldRoomNights,"forecast sold nights")));
    const shares=businessShare(unit,year,forecastNights,a);
@@ -261,7 +264,9 @@ export function estimateV11IndicativeTaxCash({document,unitResults,assumptions})
        buildingBasis=purchase*a.assumedBuildingShareOfPurchase;
     }else throw new RangeError("Partial land/building cost register cannot be estimated without an explicit proportion");
     const serviceMonths=rows.filter(x=>x.month>=unit.operationStartDate.slice(0,7)).length;
-    depreciationGross=buildingBasis*a.buildingAnnualDepreciationRate*serviceMonths/12;
+    depreciationGross=Math.min(Math.max(0,buildingBasis-1-buildingGrossReductionToDate),
+       buildingBasis*a.buildingAnnualDepreciationRate*serviceMonths/12);
+    buildingGrossReductionToDate+=depreciationGross;
     depreciationDeductible=depreciationGross*shares.depreciationShare;
     subtotal.buildingGrossDepreciation+=depreciationGross;
     subtotal.allowableDepreciation+=depreciationDeductible;
