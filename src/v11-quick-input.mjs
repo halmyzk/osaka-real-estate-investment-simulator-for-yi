@@ -101,3 +101,127 @@ export function addV11QuickRenovation({document,unitId,month,cost,label="改修�
  return {document:copy,assetId:asset.id,cost,month,
   warning:"CapEx cash is included once; tax depreciation/remaining resale basis of renovation is NOT modeled in indicative taxes"};
 }
+
+/**
+ * Modify/delete one explicitly quick-created cash line. Manual lines and
+ * land/building tax basis must never be mutated by the quick editor.
+ * Returning a clone permits a UI confirmation before any draft change.
+ */
+export function editV11QuickLine({document,unitId,lineId,newAmount}){
+ amount(newAmount,"newAmount");
+ const copy=structuredClone(document),unit=locate(copy,unitId);
+ const expense=(unit.expenses??[]).find(e=>e.id===lineId);
+ if(expense){
+  if(!expense.id.startsWith("quick-")||!expense.description?.startsWith("[quick:"))
+    throw new RangeError("Only uniquely marked quick expenses can be edited");
+  expense.amount=newAmount;
+  return {document:copy,lineId,lineKind:"expense",newAmount};
+ }
+ const asset=(unit.assets??[]).find(a=>a.id===lineId);
+ if(!asset||!asset.id.startsWith("quick-renovation-"))
+  throw new RangeError("Unknown or protected manual/real-estate line");
+ if(newAmount<=0)throw new RangeError("Renovation amount must be positive; delete the line to remove it");
+ if(!["buildingEquipment","leaseholdImprovement"].includes(asset.category))
+  throw new RangeError("Cannot edit non-renovation asset category");
+ asset.grossCost=newAmount;
+ asset.taxBasis=newAmount;
+ asset.taxBookValue=newAmount;
+ if(asset.source?.sourceType==="userAssumption")asset.source.value=newAmount;
+ recomputeQuickCapExTotal(unit);
+ return {document:copy,lineId,lineKind:"capex",newAmount,
+  warning:"Gross renovation cash updated; indicative depreciation and its VAT credit are not automatically deducted"};
+}
+export function removeV11QuickLine({document,unitId,lineId}){
+ const copy=structuredClone(document),unit=locate(copy,unitId);
+ const expense=(unit.expenses??[]).find(e=>e.id===lineId);
+ if(expense){
+  if(!expense.id.startsWith("quick-")||!expense.description?.startsWith("[quick:"))
+    throw new RangeError("Only explicitly marked quick expense may be deleted");
+  unit.expenses=unit.expenses.filter(x=>x.id!==lineId);
+  return {document:copy,lineId,lineKind:"expense",deletedAmount:expense.amount};
+ }
+ const asset=(unit.assets??[]).find(a=>a.id===lineId);
+ if(!asset||!asset.id.startsWith("quick-renovation-")||
+    !["buildingEquipment","leaseholdImprovement"].includes(asset.category))
+  throw new RangeError("Cannot delete unknown or protected non-quick asset");
+ unit.assets=unit.assets.filter(x=>x.id!==lineId);
+ recomputeQuickCapExTotal(unit);
+ return {document:copy,lineId,lineKind:"capex",deletedAmount:asset.grossCost};
+}
+function recomputeQuickCapExTotal(unit){
+ const total=(unit.assets??[]).filter(a=>a.category!=="land"&&a.category!=="building")
+   .reduce((sum,a)=>sum+amount(a.grossCost,"non-property asset cost"),0);
+ unit.fields.K??={};
+ unit.fields.K.K01={value:total,unit:"JPY",sourceType:"userAssumption"};
+}
+const monthFor=e=>e.periodStart?.slice(0,7);
+const identical=(a,b)=>Math.abs(a-b)<=Math.max(1e-6,Math.abs(a)*1e-10);
+/**
+ * Reviewable warnings (not silent deletion). Values with similar names may
+ * be genuinely separate invoices, so do not guess which cash is correct.
+ * Duplicate expense IDs are a hard error even in manually authored data.
+ */
+export function inspectV11QuickInputConflicts({document,unitId}){
+ const unit=locate(document,unitId),expenses=unit.expenses??[];
+ const flags=[],ids=new Set();
+ const add=(code,message,lineIds=[],fieldId=null)=>flags.push({
+  code,severity:"review",unitId,message,lineIds,fieldId
+ });
+ for(const e of expenses){
+  if(ids.has(e.id))throw new RangeError("Duplicate expense ID: "+e.id);
+  ids.add(e.id);
+ }
+ for(const e of expenses){
+  if(!e.description?.startsWith("[quick:"))continue;
+  const mo=monthFor(e);
+  const same=expenses.filter(x=>x.id!==e.id&&
+     monthFor(x)===mo&&x.category===e.category&&
+     identical(x.amount,e.amount));
+  for(const other of same){
+   // Only one marker row per pair. A manual ID is also reported.
+   if(e.id.localeCompare(other.id)<0||!other.description?.startsWith("[quick:"))
+     add("sameAmountCategoryMonth","同じ月・分類・同額の経費が重複している可能性。請求書の別取引か確認",
+       [e.id,other.id]);
+  }
+  if(e.category==="propertyOperating"){
+   const fixed=unit.fields?.A?.A05?.value;
+   if(typeof fixed==="number"&&fixed>0)
+      add("propertyRecurringOverlap","A05の月次保有費とクイック費用が同じ支出を含む可能性",
+        [e.id],"A05");
+  }
+  if(e.category==="lodgingOperating"){
+   const fixedNames=["H10","H12"];
+   for(const fieldId of fixedNames){
+    const fixed=unit.fields?.H?.[fieldId]?.value;
+    if(typeof fixed==="number"&&fixed>0&&
+       identical(fixed,e.amount))
+      add("lodgingFixedOverlap","H10/H12の固定費と月次入力の同額重複を確認",
+         [e.id],fieldId);
+   }
+  }
+  if(e.category==="rentalOperating"){
+   for(const fieldId of ["R05","R08"]){
+    const value=unit.fields?.R?.[fieldId]?.value;
+    if(typeof value==="number"&&value>0&&identical(value,e.amount))
+      add("rentalFixedOverlap","R05/R08の賃貸運営費との同額重複を確認",
+         [e.id],fieldId);
+   }
+  }
+ }
+ const ota=unit.fields?.H?.H08?.value;
+ if(typeof ota==="number"&&ota>0){
+  for(const e of expenses){
+   if(e.category==="lodgingOperating"&&
+      /OTA|booking|airbnb|予約サイト|プラットフォーム|販売手数料|commission/i.test(e.description??""))
+      add("otaCommissionOverlap","H08のOTA料率と、手入力済みのOTA相当手数料が重複している可能性",
+        [e.id],"H08");
+  }
+ }
+ const initial=unit.fields?.K?.K01?.value;
+ const otherAssets=(unit.assets??[]).filter(a=>a.category!=="land"&&a.category!=="building");
+ const sum=otherAssets.reduce((a,b)=>a+amount(b.grossCost,"asset cost"),0);
+ if(typeof initial==="number"&&initial>0&&!identical(initial,sum))
+  add("capitalTotalMismatch","K01と明細資産の合計が不一致。設備投資の重複または未登録の可能性",[],"K01");
+ return {status:flags.length?"review":"clear",flags,
+   scannedExpenses:expenses.length,scannedAssets:unit.assets?.length??0};
+}
