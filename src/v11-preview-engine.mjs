@@ -289,17 +289,38 @@ function resolveUnit(document,scenarioContext,unit,portfolio,assumptions){
  if(!Array.isArray(unit.assets)||!Array.isArray(unit.loans))
     throw new TypeError("assets and loans required");
  if(unit.assets.length){
-  const total=unit.assets.reduce((t,a)=>t+money(a.grossCost,"grossCost"),0);
+  // The land/building purchase is ALREADY booked by A01. An asset register
+  // supplies tax-basis classification only, never a second initial CapEx.
+  const realEstate=unit.assets.filter(a=>a.category==="land"||a.category==="building");
+  const otherAssets=unit.assets.filter(a=>a.category!=="land"&&a.category!=="building");
+  if(realEstate.length){
+    if(unit.tenure!=="own"||realEstate.length!==2||
+      new Set(realEstate.map(a=>a.category)).size!==2)
+      throw new RangeError("Real-estate property tax register requires one land and one building for an owned unit");
+    const basis=realEstate.reduce((t,a)=>t+money(a.grossCost,"grossCost"),0);
+    if(purchase===null||Math.abs(basis-purchase)>1e-6)
+      throw new RangeError("Land plus building gross costs must reconcile exactly to A01 purchase");
+  }
+  const total=otherAssets.reduce((t,a)=>t+money(a.grossCost,"grossCost"),0);
   if(calcCapital!==null&&Math.abs(total-calcCapital)>1e-6)
-    throw new RangeError("K01 must reconcile to detailed assets");
+    throw new RangeError("K01 must reconcile to detailed non-property capital assets");
   const ids=new Set();
   for(const a of unit.assets){
    if(ids.has(a.id))throw new RangeError("duplicate asset ID");
    ids.add(a.id);
-   if(a.ownerEntityId!==unit.operatorEntityId||!allowedAssetCategory.has(a.category))
-     throw new RangeError("purchased land/building must not be expensed as separate CapEx");
+   if(a.ownerEntityId!==unit.operatorEntityId)
+     throw new RangeError("asset owner must match tax/cash entity");
    const date=ISO(a.invoiceDate,"asset invoice date");
    if(date<start||date>exit)throw new RangeError("asset invoice outside holding");
+   if(a.category==="land"||a.category==="building"){
+     if(date!==start)throw new RangeError("Real-estate tax register invoice must align with A01 acquisition");
+     if(a.disposalDate!==undefined&&a.disposalDate!==null&&a.disposalDate!==exit)
+       throw new RangeError("Real-estate asset disposal date must match exit sale");
+     // No second investment cash; the property was acquired in A01.
+     continue;
+   }
+   if(!allowedAssetCategory.has(a.category))
+     throw new RangeError("Asset category unsupported by preview");
    investing.push(...investingEvents({capitalSpending:[
     {id:unit.id+"-"+a.id,month:monthOf(date),purpose:"initial",amount:a.grossCost}]}));
   }
