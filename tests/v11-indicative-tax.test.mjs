@@ -129,7 +129,9 @@ test("Cannot combine indicative mode with statutory reviewed sidecar or compute 
   x=>{x.inputAmountsBasis="amountsAreAlreadyGross"},
   x=>{x.noAutomaticTaxRefunds=false},
   x=>{x.assumedBuildingShareOfPurchase=NaN},
-  x=>{x.vatSettlementMonth=13}
+  x=>{x.vatSettlementMonth=13},
+  x=>{x.taxableVendorExpenseShares.property=-.1},
+  x=>{delete x.taxableVendorExpenseShares.lodging}
  ]){
    const b=structuredClone(a);patch(b);
    assert.throws(()=>calc(doc,b));
@@ -257,4 +259,23 @@ test("Developer HTML module parses as JavaScript and includes reusable scenario 
  assert.match(html,/renderIndicativeComparison/);
  assert.match(html,/renderIndicativeBreakdown/);
  assert.match(html,/premium-re-v11-indicative-assumptions\.json/);
+});
+
+test("Investor can exclude property taxes from fictitious vendor VAT rather than charging VAT on every owner operating expense",()=>{
+ const a=init(doc);
+ a.vatRegisteredByEntity["person-1"]=true;
+ const defaultCase=calc(doc,a);
+ const b=structuredClone(a);
+ b.taxableVendorExpenseShares.property=0;
+ const exclusive=calc(doc,b);
+ const v=exclusive.indicativeVATRows.find(x=>x.entityId==="person-1");
+ assert.equal(v.outputVAT,108000);
+ assert.equal(v.taxableVendorVATPaid,0);
+ assert.equal(v.creditApplied,0);
+ assert.equal(v.estimatedCashSettlement,108000);
+ assert.ok(v.estimatedCashSettlement>defaultCase.indicativeVATRows.find(x=>x.entityId==="person-1").estimatedCashSettlement);
+ const inc=exclusive.indicativeTaxRows.find(x=>x.entityId==="person-1");
+ nearly(inc.categoryProfit.miscellaneous,1080000-240000*.6*54/365-18000);
+ assert.ok(Number.isFinite(exclusive.indicativeAfterTax.NPV));
+ assert.equal(exclusive.afterTax,null);
 });
