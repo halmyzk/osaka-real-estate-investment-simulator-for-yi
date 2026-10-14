@@ -103,3 +103,15 @@
   https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2108_qa.htm
 - 国税庁「所得税基本通達38-3等」：
   https://www.nta.go.jp/law/tsutatsu/kihon/shotoku/05/18.htm
+
+
+## 追加保護：光熱費明細から業務按分までの証拠連鎖
+
+`ownedReview.sharedUtilityExpenseReviews` は、M3の`unit.expenses[]`に記録された**全件の請求明細ID**と1対1で照合する。各行に`expenseId`、`reviewedGrossCashAmount`、`amountAgreesWithCash:true`、`expenseKind:"sharedUtilities"`、`deductionBasis:"areaGuestNights"`、レビュー状態・資料URLを要求する。欠落、重複、追加の不明請求、現金額との差異は`incomplete`にする。これにより、単に「共通費」にまとめて固定資産税や保険料まで夜数比率で落とす処理を拒否する。
+
+なお開発サンプルの一般的な国税庁資料URLは請求書原本ではない。実際のユーザー入力では請求書・計量データ等の根拠と適法な経費区分を別途確認する必要がある。
+
+## 複数年度（うるう年）の追加回帰
+
+2026年取得／2028年12月売却の架空3年度試験も追加し、年次の見込宿泊54泊→90泊→90泊、2028年の366日母数、建物非現金減価償却、毎年度の個人と法人の別税額、2030年1月までの翌々年残存住民税を確認する。2028年売却時の復興特別所得税と防衛特別所得税は年次前提として1.1%／1%を別指定し、2026年の2.1%／0%を無反省に使い回さない。
+
