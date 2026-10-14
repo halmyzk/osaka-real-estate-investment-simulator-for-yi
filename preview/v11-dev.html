@@ -84,11 +84,19 @@ footer{font-size:.8rem;color:#516a76;padding:20px 0}
  </div>
  <p id="quick-cost-status" class="muted small" aria-live="polite"></p>
  <div id="quick-cost-list"></div>
+  <h4>既存入力との重複警告（確認後に保存）</h4>
+  <div id="quick-conflict-list" role="status" aria-live="polite"></div>
  </section>
  <section class="card"><h3>主要投資条件の単独感応度（選択住戸）</h3>
  <p class="muted small">選択したシナリオを基準に、ADR・稼働率・購入価格・売却価格だけをそれぞれ±指定率だけ変えて、<strong>税引後NPV差額</strong>を比較します。購入価格のみ変える場合は売却総額を一定に保ち、土地／建物の帳簿価額を同比率で動かします（投資判断用の概算）。</p>
  <label for="quick-shock-pct">感応度幅（%） <input id="quick-shock-pct" type="number" min="1" max="50" step="1" value="10"></label>
  <div id="quick-sensitivity-table">概算税引後分析を開始すると表示します。</div>
+ </section>
+ <section class="card"><h3>投資家資金収支ウォーターフォール（初期CF₀→取得→営業→融資→売却→税金）</h3>
+ <p class="muted small">取得と改修投資、営業費用、借入元本・利息、売却収入を区別して表示します。税額を反映した行は概算モードでのみ表示します。残余の納税があれば売却後の暦年にも記載します。累積残高は年末ベースであり、月中の資金繰り最低残高ではありません。</p>
+ <div id="investor-waterfall-kpi" class="grid"></div>
+ <div id="investor-waterfall-table"></div>
+ <details><summary>投資・借入・出口の内訳と検算</summary><div id="investor-waterfall-detail"></div></details>
  </section>
  <section class="card"><h3>暦年別の投資キャッシュフロー</h3><div id="annual-table"></div></section>
  <section class="card"><h3>Base／Upside／Downside比較（概算・同じ税務仮定）</h3>
@@ -153,7 +161,10 @@ import {inspectV11Draft,parseV11Draft,saveV11Draft,restoreV11Draft,serializeV11D
 import {compileV11IncomeTaxSidecar} from "../src/v11-income-tax-sidecar.mjs";
 import {deriveV11OrdinaryTax} from "../src/v11-derived-ordinary-tax.mjs";
 import {defaultV11IndicativeAssumptions} from "../src/v11-indicative-tax.mjs";
-import {setV11QuickExpense,setV11QuickOTA,addV11QuickRenovation,v11QuickExpenseKinds} from "../src/v11-quick-input.mjs";
+import {setV11QuickExpense,setV11QuickOTA,addV11QuickRenovation,
+ editV11QuickLine,removeV11QuickLine,inspectV11QuickInputConflicts,
+ v11QuickExpenseKinds} from "../src/v11-quick-input.mjs";
+import {buildV11InvestorWaterfall} from "../src/v11-investor-waterfall.mjs";
 import {applyV11FinancialShock,v11FinancialShockKinds} from "../src/v11-financial-sensitivity.mjs";
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -291,18 +302,44 @@ function quickInputMonths(){
 function renderQuickCosts(){
  quickInputMonths();
  const unit=selected();
- const rows=(unit.expenses??[]).filter(x=>x.description?.startsWith("[quick:"))
-   .map(x=>[x.description.slice(x.description.indexOf("]")+2),
-     x.periodStart.slice(0,7),fmt(x.amount),x.category]);
- const assets=(unit.assets??[]).filter(x=>x.id.startsWith("quick-renovation-"))
-   .map(x=>["改修・FF&E投資（CapEx）",x.invoiceDate.slice(0,7),
-     fmt(x.grossCost),x.category]);
+ const expenses=(unit.expenses??[]).filter(x=>x.description?.startsWith("[quick:"));
+ const assets=(unit.assets??[]).filter(x=>x.id.startsWith("quick-renovation-"));
  const ota=unit.fields?.H?.H08?.value;
+ const lines=[
+   ...expenses.map(e=>({id:e.id,
+     name:e.description.slice(e.description.indexOf("]")+2),
+     month:e.periodStart.slice(0,7),amount:e.amount,type:e.category})),
+   ...assets.map(a=>({id:a.id,name:"改修・FF&E（設備投資）",
+     month:a.invoiceDate.slice(0,7),amount:a.grossCost,type:"CapEx"}))
+ ];
+ const editRow=line=>'<tr><td>'+esc(line.name)+'</td><td>'+esc(line.month)+
+   '</td><td><label class="sr-only" for="edit-quick-'+esc(line.id)+'">'+
+   esc(line.name)+' '+esc(line.month)+'の金額</label>'+
+   '<input id="edit-quick-'+esc(line.id)+'" type="number" min="0" step="100"'+
+   ' data-quick-line-amount="'+esc(line.id)+'" value="'+esc(line.amount)+'"></td>'+
+   '<td>'+esc(line.type)+'</td><td><button type="button" class="secondary"'+
+   ' data-quick-update="'+esc(line.id)+'">金額更新</button></td>'+
+   '<td><button type="button" class="secondary" data-quick-remove="'+
+   esc(line.id)+'">削除</button></td></tr>';
  $("quick-cost-list").innerHTML=
-   "<p class='small'>モデルに反映したクイック費目："+(rows.length+assets.length)+
-   "件／OTA売上連動率："+(ota===undefined?"未設定":ota+"%")+"</p>"+
-   (rows.length+assets.length?
-    simpleTable(["費目","計上月","現金支払額","CF区分"],[...rows,...assets]):"");
+   "<p class='small'>明示登録したクイック費目："+lines.length+
+   "件／OTA売上連動率："+(ota===undefined?"未設定":ota+"%")+
+   "。既存の手入力明細は削除・変更しません。</p>"+
+   (lines.length?'<div class="table-scroll"><table><thead><tr>'+
+    ["費目","月","金額（円）","CF区分","金額更新","削除"].map(v=>"<th>"+v+"</th>").join("")+
+    "</tr></thead><tbody>"+lines.map(editRow).join("")+"</tbody></table></div>":"");
+ try{
+   const check=inspectV11QuickInputConflicts({document:data,unitId:unit.id});
+   $("quick-conflict-list").innerHTML=check.flags.length?
+     '<p class="warning">'+check.flags.length+
+       '件の重複可能性が見つかりました。これは削除指示ではなく確認警告です。</p>'+
+       '<ul>'+check.flags.map(x=>'<li>'+esc(x.message)+
+          ' ('+esc(x.lineIds.join(", "))+')'+
+          (x.fieldId?" ／ "+esc(x.fieldId):"")+'</li>').join("")+"</ul>":
+     '<p class="good">自動判定できた範囲に重複警告はありません。ただし請求書の同一性までは保証しません。</p>';
+ }catch(error){
+   $("quick-conflict-list").textContent="費用照合を実行できません："+error.message;
+ }
 }
 function acceptQuick(result,message){
  inspectV11Draft(result.document);
@@ -348,6 +385,67 @@ function renderFinancialSensitivity(){
  }
  out.innerHTML=simpleTable(
   ["変更対象","変化幅","基準値","変更値","概算税引後NPV","NPV差額","概算IRR"],rows);
+}
+function renderInvestorWaterfall(){
+ if(last?.status!=="estimated-pre-tax"){
+   $("investor-waterfall-table").textContent="入力検証後に資金収支を表示します。";
+   $("investor-waterfall-detail").textContent="";
+   $("investor-waterfall-kpi").textContent="";
+   return;
+ }
+ try{
+   const w=buildV11InvestorWaterfall({document:data,preview:last});
+   const k=w.metrics;
+   const estimated=w.status==="estimated";
+   const tiles=[
+      ["初期自己資金CF₀",fmt(k.initialEquityCF)],
+      ["物件取得額（グロス）",fmt(k.acquisitionTotal)],
+      ["融資実行額",fmt(k.loanDrawdownTotal)],
+      ["期間中の元本返済",fmt(k.principalRepaidTotal)],
+      ["借入利息支払",fmt(k.cashInterestPaidTotal)],
+      ["売却総額",fmt(k.grossDisposalTotal)],
+      ["所得・譲渡税支払（概算）",estimated?fmt(k.cashTaxPaidTotal):"概算モードで表示"],
+      ["年末累積の最大資金不足",fmt(k.annualYearEndMaxFundingNeed)],
+      ["全期間回収差額（割引前）",estimated?fmt(k.indicativeNetProfit):"税引前："+fmt(w.total.preTaxEquityCF)]
+   ];
+   $("investor-waterfall-kpi").innerHTML=tiles.map(([label,value])=>
+       '<div class="kpi"><span class="muted small">'+esc(label)+
+       '</span><strong>'+esc(value)+'</strong></div>').join("");
+   const series=[w.initial,...w.annual];
+   $("investor-waterfall-table").innerHTML=simpleTable(
+     ["期間","宿泊＋賃貸収入","営業費用・運転資本","設備・取得支出",
+      "売却純収入","借入実行","元本返済＋利息等",
+      "消費税CF（概算）","所得・譲渡税CF（概算）",
+      estimated?"概算税引後Equity CF":"税引前Equity CF",
+      estimated?"年末累積（概算）":"年末累積（税引前）"],
+     series.map(x=>[
+        x.label,fmt(x.lodgingRevenue+x.rentalRevenue),
+        fmt(x.operatingCashExpense+x.workingCapital),
+        fmt(x.acquisition+x.closingCosts+x.renovationCapEx+x.maintenanceCapital),
+        fmt(x.grossDisposal+x.sellingAndExitCosts),fmt(x.loanDrawdown),
+        fmt(x.scheduledPrincipal+x.earlyAndExitPrincipal+x.interest+x.financingFees+x.otherFinancing),
+        estimated?fmt(x.VATCash):"—",
+        estimated?fmt(x.incomeTaxCash):"—",
+        fmt(estimated?x.indicativeEquityCF:x.preTaxEquityCF),
+        fmt(x.year===null?k.initialEquityCF:
+          estimated?x.cumulativeIndicativeEquityCF:x.cumulativePreTaxEquityCF)
+     ]));
+   $("investor-waterfall-detail").innerHTML="<h4>投資・債務・出口の分類</h4>"+
+     simpleTable(
+      ["期間","物件取得","購入諸費用","改修・FF&E","売却総額","売却費／原状回復",
+       "敷金返還・預入","その他投資","元本定期返済","繰上・売却時完済",
+       "利息","融資手数料","検算：税引前CF"],
+      series.map(x=>[x.label,fmt(x.acquisition),fmt(x.closingCosts),
+       fmt(x.renovationCapEx+x.maintenanceCapital),fmt(x.grossDisposal),
+       fmt(x.sellingAndExitCosts),fmt(x.depositChange),fmt(x.otherInvesting),
+       fmt(x.scheduledPrincipal),fmt(x.earlyAndExitPrincipal),
+       fmt(x.interest),fmt(x.financingFees),fmt(x.preTaxEquityCF)]))+
+     "<p class='small muted'>CF₀・各暦年・全期間の収支は同じ現金イベントから計算し、既存の投資CFと自動照合しています。追加投資の税務償却や税制は簡易前提です。</p>";
+ }catch(error){
+   $("investor-waterfall-table").textContent="ウォーターフォールの検算失敗："+error.message;
+   $("investor-waterfall-detail").textContent="";
+   $("investor-waterfall-kpi").textContent="";
+ }
 }
 function renderIndicativeComparison(){
  const target=$("indicative-comparison");
@@ -569,7 +667,7 @@ function render(){
  $("unit-choice").innerHTML=data.units.map(u=>'<option value="'+esc(u.id)+'">'+esc(u.name)+'</option>').join("");
  $("unit-choice").value=selectedUnit;
  calculate();
- renderBusiness();renderEvidence();renderKpis();renderAnnual();renderIndicativeComparison();renderIndicativeBreakdown();renderTaxCrosswalk();renderOwnedAssetTax();renderEditor();renderMonths();renderLimitations();renderIndicativeSettings();renderQuickCosts();renderFinancialSensitivity();
+ renderBusiness();renderEvidence();renderKpis();renderAnnual();renderIndicativeComparison();renderIndicativeBreakdown();renderTaxCrosswalk();renderOwnedAssetTax();renderEditor();renderMonths();renderLimitations();renderIndicativeSettings();renderQuickCosts();renderFinancialSensitivity();renderInvestorWaterfall();
 }
 function showTab(tab){
  activeTab=tab;
@@ -624,6 +722,32 @@ $("edit-fields").addEventListener("change",e=>{
  u.fields[id[0]][id]={value:parsed,unit:meta[2],
     sourceType:"userAssumption",isOverride:true};
  setDirty();render();
+});
+$("quick-cost-list").addEventListener("click",event=>{
+ const update=event.target.closest("[data-quick-update]");
+ const remove=event.target.closest("[data-quick-remove]");
+ const control=update??remove;
+ if(!control)return;
+ const lineId=update?.dataset.quickUpdate??remove.dataset.quickRemove;
+ try{
+   if(update){
+     const editor=[...$("quick-cost-list").querySelectorAll("[data-quick-line-amount]")]
+       .find(x=>x.dataset.quickLineAmount===lineId);
+     if(!editor||editor.value.trim()===""||!Number.isFinite(Number(editor.value))||
+        Number(editor.value)<0)throw new Error("金額は0以上の数値で入力してください");
+     const result=editV11QuickLine({
+       document:data,unitId:selectedUnit,lineId,newAmount:Number(editor.value)
+     });
+     acceptQuick(result,"既存クイック明細の金額を更新："+lineId+"／"+fmt(result.newAmount));
+   }else{
+     if(!confirm("このクイック明細1件を下書きから削除します。既存の他の請求明細は削除しません。よろしいですか？"))
+       return;
+     const result=removeV11QuickLine({document:data,unitId:selectedUnit,lineId});
+     acceptQuick(result,"クイック明細を削除："+lineId+"／"+fmt(result.deletedAmount));
+   }
+ }catch(error){
+   $("quick-cost-status").textContent="明細の操作エラー："+error.message;
+ }
 });
 $("apply-quick-cost").addEventListener("click",()=>{
  try{
