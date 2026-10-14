@@ -16,6 +16,7 @@
 import {fingerprintV11Document} from "./v11-income-tax-sidecar.mjs";
 import {assessPersonalYear,assessCorporateYear,combineAnnualIncomeTaxResults} from "./annual-income-tax.mjs";
 import {connectAnnualTaxAssessments} from "./income-tax-bridge.mjs";
+import {deriveOwnedM4TaxRegister} from "./v11-owned-property-tax.mjs";
 
 const num=(v,k,{min=-Infinity,max=Infinity}={})=>{
  if(typeof v!=="number"||!Number.isFinite(v)||v<min||v>max)
@@ -44,23 +45,44 @@ function buildTaxItems(document,unitResults,plan){
  const byUnit=new Map(document.units.map(u=>[u.id,u]));
  const entities=new Map(document.entities.map(e=>[e.id,e]));
  const expectedReview=new Map();
+ const ownedRegisters=[],ownedTaxReviews=plan.ownedPropertyReviews??[];
+ if(!Array.isArray(ownedTaxReviews))throw new RangeError("Owned property reviews must be an array");
+ const ownedById=new Map();
+ for(const r of ownedTaxReviews){
+  if(!r?.unitId||ownedById.has(r.unitId))
+    throw new RangeError("Duplicate/unknown owned-property review ID");
+  ownedById.set(r.unitId,r);
+ }
  for(const u of unitResults){
    const stored=byUnit.get(u.unitId);
    if(!stored||!entities.has(u.entityId)||stored.operatorEntityId!==u.entityId)
      throw new RangeError("operating tax source entity or unit references invalid");
-   if(stored.tenure!=="lease")
-     throw new RangeError("Owned property requires separate land/building basis, depreciation and disposal tax computation");
-   if(stored.assets?.length)throw new RangeError("Asset register and depreciation not yet linked to automatic income-tax route");
+   if(stored.tenure==="own"){
+     if(plan.taxScope!=="ordinaryAndOwnedSale"||!ownedById.has(stored.id))
+       throw new RangeError("Owned property requires separately reviewed land/building basis, depreciation and disposal tax computation");
+     const reg=deriveOwnedM4TaxRegister({
+        unit:stored,unitResult:u,ownerType:entities.get(u.entityId).taxpayerType,
+        ownedReview:ownedById.get(stored.id)});
+     ownedRegisters.push(reg);
+   }else if(stored.tenure==="lease"){
+     if(stored.assets?.length)
+       throw new RangeError("Leased asset depreciation not yet linked to automatic income-tax route");
+   }else throw new RangeError("Unknown unit tenure");
+   if(stored.tenure==="lease"&&ownedById.has(stored.id))
+     throw new RangeError("Leased unit cannot claim owned property review");
    if((stored.expenses??[]).some(x=>x.taxTreatment!=="deductible"||
       x.businessUseRatio!==undefined&&x.businessUseRatio!==100))
       throw new RangeError("Partial or non-deductible explicit expense needs item-level allocation");
-   if(u.investing.some(x=>["initialCapEx","maintenanceCapEx","acquisitionPrice"].includes(x.category)&&x.amount!==0))
+   if(u.investing.some(x=>["initialCapEx","expansionCapEx","maintenanceCapEx"].includes(x.category)&&x.amount!==0)||
+      stored.tenure==="lease"&&u.investing.some(x=>x.category==="acquisitionPrice"&&x.amount!==0))
      throw new RangeError("Capital/lease setup payment requires reviewed amortization/depreciation schedule");
    if(u.financing.some(x=>["financingFee"].includes(x.category)&&x.amount!==0))
      throw new RangeError("Financing fee requires separately reviewed tax treatment");
    const years=new Set(u.operating.map(x=>Number(x.month.slice(0,4))));
    for(const y of years)expectedReview.set(key(u.unitId,y),{unit:u,stored,entity:entities.get(u.entityId),year:y});
  }
+ if(ownedById.size!==ownedRegisters.length)
+   throw new RangeError("Owned property review has no matching computed owned unit");
  const reviews=plan.unitYearReviews;
  if(!Array.isArray(reviews))throw new TypeError("Reviewed unit-year classification array required");
  const provided=new Map();
@@ -150,7 +172,11 @@ function buildTaxItems(document,unitResults,plan){
         sum(taxItems.filter(x=>x.sourceUnitId===unit.unitId&&x.taxYear===year&&x.kind==="revenue").map(x=>x.amount))-
         (lodgingRevenue+rentalRevenue))<1e-6});
  }
- return {taxItems,proof};
+ const personalSales=ownedRegisters.map(x=>x.individualSaleAssessment).filter(Boolean);
+ for(const register of ownedRegisters){
+   taxItems.push(...register.ordinaryDepreciationItems,...register.corporateGainItems);
+ }
+ return {taxItems,proof,ownedRegisters,personalSales};
 }
 export function deriveV11OrdinaryTax({document,scenarioId,unitResults,taxPlan}){
  if(taxPlan===null||taxPlan===undefined)return reason("Reviewed income tax calculation plan not provided");
@@ -160,7 +186,7 @@ export function deriveV11OrdinaryTax({document,scenarioId,unitResults,taxPlan}){
     taxPlan.documentFingerprint!==fingerprintV11Document(document)||
     taxPlan.scenarioId!==scenarioId)
    return reason("Tax calculation plan does not match document fingerprint or scenario");
- if(taxPlan.taxScope!=="ordinaryIncomeOnly"||
+ if(!["ordinaryIncomeOnly","ordinaryAndOwnedSale"].includes(taxPlan.taxScope)||
     taxPlan.vatTreatment!=="notConnected"||
     taxPlan.withholdingTreatment!=="notModeled")
    return reason("Only explicitly VAT- and withholding-excluded ordinary-income scenarios supported");
@@ -231,20 +257,25 @@ export function deriveV11OrdinaryTax({document,scenarioId,unitResults,taxPlan}){
      entities:entities.map(e=>({entityId:e.id,entityType:e.taxpayerType})),
      years,results
    });
+   const saleWith=source.personalSales;
+   const saleWithout=source.personalSales.map(x=>({...x,amount:0}));
+   const allWith=[...assessment.assessmentsWithProject,...saleWith];
+   const allWithout=[...assessment.assessmentsWithoutProject,...saleWithout];
    const taxCash=connectAnnualTaxAssessments({
       entities:entities.map(e=>({entityId:e.id,entityType:e.taxpayerType})),
-      assessmentsWithProject:assessment.assessmentsWithProject,
-      assessmentsWithoutProject:assessment.assessmentsWithoutProject
+      assessmentsWithProject:allWith,
+      assessmentsWithoutProject:allWithout
    });
    return {status:"estimated",calculationBasis:"derivedFromUnitOperations",
      taxYears:years,taxItems:source.taxItems,
      unitYearProof:source.proof,yearlyAssessmentResults:results,
-     withProject:assessment.assessmentsWithProject,
-     withoutProject:assessment.assessmentsWithoutProject,
+     ownedAssetTaxRegisters:source.ownedRegisters,
+     withProject:allWith,
+     withoutProject:allWithout,
      incomeTaxEvents:taxCash.entries,incrementalTaxCF:taxCash.incrementalTaxCF,
      warnings:[
        "Income tax estimates are computed from actual scenario operating results, with separately reviewed income categories and expense shares",
-       "No land/building asset, capitalization, VAT, withholding, prior tax prepayment, individual sale gain or corporate opening-loss law has been certified",
+       "Owned M4 land/building tax only when a full reviewed asset/sale plan exists; mixed personal use, other asset additions, taxable VAT and tax refunds remain unsupported",
        "Baseline income, local rates, tax-year rule eligibility and deductible interest are reviewed modeling assumptions",
        "Tax cash dates are forecast scheduling rules; refunds are not automatically remitted"
      ]};
