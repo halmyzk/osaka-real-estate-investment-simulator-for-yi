@@ -1,5 +1,5 @@
 {
-  "traceVersion": "2026-10-14-owned-m4-integration-1",
+  "traceVersion": "2026-10-14-m3-mixed-use-integration-1",
   "target": "docs/v1.1-design-change-spec.md §§13.9,14.11",
   "definition": {
     "exampleVerified": "Specific illustrative expected outcome tested; not full legal or boundary coverage",
@@ -13,9 +13,11 @@
       "status": "partial",
       "evidence": [
         "tests/tax.test.mjs",
-        "tests/annual-income-tax.test.mjs"
+        "tests/annual-income-tax.test.mjs",
+        "tests/v11-m3-mixed-tax.test.mjs",
+        "tests/v11-owned-property-tax.test.mjs"
       ],
-      "gap": "Miscellaneous losses not offset against salary in simple category model; complex tax offsets not complete"
+      "gap": "M3個人の宿泊を雑所得に分類し、建物償却・共通光熱費の審査済み事業用割合を通常所得税へ連結。雑所得損失の他所得不通算は既存専用テストで検証。複雑な損失区分・役員等は未完。"
     },
     {
       "id": "B-T02",
@@ -61,17 +63,21 @@
       "id": "B-T06",
       "status": "exampleVerified",
       "evidence": [
-        "tests/tax.test.mjs"
+        "tests/tax.test.mjs",
+        "tests/v11-m3-mixed-tax.test.mjs",
+        "tests/v11-owned-property-tax.test.mjs"
       ],
-      "gap": "Independent utility split 240k × 60/180 × 90/365 covered"
+      "gap": "国税庁FAQ算例 240,000×60/180×90/365=19,726.027…円を独立確認。追加でM3宿泊見込54泊と営業割当180日の差を保持し、共有光熱費×面積×見込泊数の自動CF→税額経路を追加。宿泊実績の外部同期・請求内訳は未対応。"
     },
     {
       "id": "B-T07",
       "status": "partial",
       "evidence": [
-        "tests/tax.test.mjs"
+        "tests/tax.test.mjs",
+        "tests/v11-m3-mixed-tax.test.mjs",
+        "tests/v11-owned-property-tax.test.mjs"
       ],
-      "gap": "Guest-night allocation separate; full practical annual data lineage remains missing"
+      "gap": "M3宿泊割当180日でも実宿泊見込54泊を使用し、共通光熱費（宿泊泊数）と建物償却（事業供用期間）の係数を混同しない一気通貫テスト。実績と見込差異、私用が月途中で変化する場合は未対応。"
     },
     {
       "id": "B-T08",
@@ -82,9 +88,10 @@
         "tests/statutory-depreciation.test.mjs",
         "tests/depreciation-income-tax.test.mjs",
         "tests/v11-owned-property-tax.test.mjs",
-        "tests/v11-owned-preview-example.test.mjs"
+        "tests/v11-owned-preview-example.test.mjs",
+        "tests/v11-m3-mixed-tax.test.mjs"
       ],
-      "gap": "建物・土地の個別資産登録、土地非償却、建物の年次定額償却、売却時の税務簿価更新を購入M4物件の正式Schemaデータで統合検算。個人自宅併用・建物附属設備・造作/家具・中古・減価率適格性と全物件分類は未受入。"
+      "gap": "既存購入M4の土地・建物別取得費・全額事業用償却に加え、個人M3の事業用建物償却18,000円と私用を含む売却時の別原価調整を繋ぎ、正式Schemaの元帳で検算。法定減価相当額の自動算定・中古/設備/造作・全事業用割合は未完。"
     },
     {
       "id": "B-T09",
@@ -106,9 +113,10 @@
         "tests/statutory-depreciation.test.mjs",
         "tests/depreciation-income-tax.test.mjs",
         "tests/v11-owned-property-tax.test.mjs",
-        "tests/v11-owned-preview-example.test.mjs"
+        "tests/v11-owned-preview-example.test.mjs",
+        "tests/v11-m3-mixed-tax.test.mjs"
       ],
-      "gap": "税務簿価減額と当期必要経費の分離、年次償却率の感応度による税額・売却益の変化を追加検証。実際の事業割合50%→30%と家事按分を購入M3併用物件に接続する部分は未完了。"
+      "gap": "M3の事業用面積60%→50%変更時に、共有光熱費、建物償却18,000→15,000円、独立した月次売却時簿価、税額・納付CFが連動。元データCF0と税引前CFは変わらない。費目別全期間・観測実績の適格性確認は未完。"
     },
     {
       "id": "B-T11",
@@ -225,9 +233,10 @@
         "tests/mixed-use-sale-basis.test.mjs",
         "tests/combined-tax-reconciliation.test.mjs",
         "tests/v11-owned-property-tax.test.mjs",
-        "tests/v11-owned-preview-example.test.mjs"
+        "tests/v11-owned-preview-example.test.mjs",
+        "tests/v11-m3-mixed-tax.test.mjs"
       ],
-      "gap": "従来の非業務期間・同時使用取得費レビューに加え、新規取得かつ100%事業用M4に限り土地/建物譲渡時簿価を年次更新。M3個人自宅併用・再転用は依然自動税務計算対象外。"
+      "gap": "M3本人住宅兼用の取得費（建物60万円）を、業務用月次減価相当1,500円と非業務用1,000円×12で独立審査・減額し、売却時建物取得費57万円・譲渡益22万円・譲渡税へ接続。月次証拠不備・90%非業務例外は拒否。法定非業務減価相当額の自動算定と特例判定は未完。"
     },
     {
       "id": "B-T20",
@@ -240,9 +249,10 @@
         "tests/multi-entity-multiyear-tax.test.mjs",
         "tests/combined-tax-reconciliation.test.mjs",
         "tests/v11-owned-property-tax.test.mjs",
-        "tests/v11-owned-preview-example.test.mjs"
+        "tests/v11-owned-preview-example.test.mjs",
+        "tests/v11-m3-mixed-tax.test.mjs"
       ],
-      "gap": "購入M4の2026年売却益22万円、個人譲渡税概算87,186円の本税/住民税内訳、翌年所得税とさらに翌年1月の住民税をポートフォリオCFへ接続。法定端数・自治体納期限・中間納付の全網羅は未受入。"
+      "gap": "個人M3の2026年売却と、翌年国税・翌々年1月の住民税までのCFを架空2主体で検算。従来M4・源泉・VATケースも別途維持。住所地納付期限・税額調整未完。"
     },
     {
       "id": "B-T21",
@@ -281,9 +291,10 @@
         "tests/statutory-depreciation.test.mjs",
         "tests/depreciation-income-tax.test.mjs",
         "tests/v11-owned-property-tax.test.mjs",
-        "tests/v11-owned-preview-example.test.mjs"
+        "tests/v11-owned-preview-example.test.mjs",
+        "tests/v11-m3-mixed-tax.test.mjs"
       ],
-      "gap": "購入M4の土地・建物100万円をCF0で1回のみ計上し、建物定額償却3万円は非現金税務費用、売却調整後簿価97万円を検算。償却率のみ変えた場合税引前CFは不変で税額のみ変わる反例テストも合格。造作・改修投資を含む全分類は未完。"
+      "gap": "M3購入代金100万円と光熱費24万円は現金CFに一度計上。建物償却3万円うち雑所得必要経費18,000円、独立した月次業務／非業務用譲渡原価減額を非現金税務明細に限定。M4の償却率テストも維持。改修投資等は未完。"
     },
     {
       "id": "B-T23",
@@ -313,9 +324,10 @@
         "tests/combined-tax-reconciliation.test.mjs",
         "tests/nta-monthly-withholding.test.mjs",
         "tests/v11-owned-property-tax.test.mjs",
-        "tests/v11-owned-preview-example.test.mjs"
+        "tests/v11-owned-preview-example.test.mjs",
+        "tests/v11-m3-mixed-tax.test.mjs"
       ],
-      "gap": "未承認の私用混在、売却特例、売却損、取得費未配分、建物耐用年数/償却率未審査、追加資本支出/売却義務未分類は税引後自動計算を停止。2026/2027給与源泉表等既存の未知条件処理も維持。全法令例外の完全網羅は未完。"
+      "gap": "M3の年度別用法、見込泊数、法定償却率、非業務用減価相当額月次簿価を欠く場合税引後数値はnull。利用前提変更で税務プラン失効。M1/M2等の判定はなお未完。"
     }
   ],
   "gateA": [
@@ -362,5 +374,6 @@
       "gap": "Grouped line references and VAT trace improved; multi-entity full ledger reconciliation still needed"
     }
   ],
-  "acceptanceNotice": "Owned M4 purchase/disposal vertical slice integrated: reviewed land/building acquisition basis, straight-line building tax book, owner-level ordinary tax plus individual separate short sale gain / corporate income gain, dated cash through post-exit resident tax. These are narrow scenario examples only. Status counts remain criterionVerified 2, exampleVerified 4, partial 18. Complete B gate, mixed use, all asset classes, VAT, withholding and statutory eligibility NOT accepted."
+  "acceptanceNotice": "Owned M4 purchase/disposal vertical slice integrated: reviewed land/building acquisition basis, straight-line building tax book, owner-level ordinary tax plus individual separate short sale gain / corporate income gain, dated cash through post-exit resident tax. These are narrow scenario examples only. Status counts remain criterionVerified 2, exampleVerified 4, partial 18. Complete B gate, mixed use, all asset classes, VAT, withholding and statutory eligibility NOT accepted.",
+  "m3IntegrationNotice": "Restricted individual M3 mixed lodging/private: distinct 180 allocations vs 54 modeled nights, itemized utility ratio, area x separate building service period, independently reviewed business/non-business monthly sale equivalents, individual miscellaneous income and separate capital gain cash through 2028. This is a narrow scenario example and not complete Gate B acceptance."
 }
