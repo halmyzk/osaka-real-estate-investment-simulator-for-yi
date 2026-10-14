@@ -210,7 +210,7 @@ test("Owned M3 self-use and unreviewed sale loss cannot flow through full-busine
  m3.units[0].fields.H={H01:{value:20000,unit:"JPY_per_room_night",sourceType:"userAssumption"},
   H02:{value:50,unit:"percent",sourceType:"userAssumption"}};
  const m3Plan=clone(p);m3Plan.documentFingerprint=fingerprintV11Document(m3);
- assert.match(previewV11Scenario(m3,{derivedTaxPlan:m3Plan}).incomeTaxBlocker,/owned M4/);
+ assert.match(previewV11Scenario(m3,{derivedTaxPlan:m3Plan}).incomeTaxBlocker,/Separate annual use and ordinary-tax reviews/);
  const loss=clone(d);
  loss.units[0].exit.priceGrowthRate=-10;
  const lossPlan=clone(p);
