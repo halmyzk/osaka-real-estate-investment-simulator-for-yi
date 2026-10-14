@@ -170,3 +170,77 @@ test("Developer preview exposes two-step explicit M3 sample and tax-plan control
  assert.match(html,/nonbusinessBookReduction/);
  assert.match(html,/正式な税引後NPV／IRR/);
 });
+
+test("M3 multi-year 2028 leap calendar: different 365/366 expense denominator, year-end disposal basis and 2030 post-sale tax cash",()=>{
+ const d=clone(source),p=clone(tax);
+ d.portfolio.holdingYears=3;
+ for(const unit of d.units){
+   unit.exit.exitDate="2028-12-31";
+   if(unit.modelId==="M3"){
+     for(const a of unit.assets){
+       a.disposalDate="2028-12-31";
+       a.businessUseRatioByYear=[2026,2027,2028].map(year=>({year,ratio:60}));
+     }
+     for(const year of [2027,2028]){
+       for(const c of source.units[0].calendar){
+         const days=new Date(Date.UTC(year,c.month,0)).getUTCDate();
+         unit.calendar.push({...c,year,selfUseDays:days-c.lodgingDays});
+       }
+       for(const expense of source.units[0].expenses){
+         const month=Number(expense.periodStart.slice(5,7));
+         const mo=year+"-"+String(month).padStart(2,"0");
+         const monthEnd=String(new Date(Date.UTC(year,month,0)).getUTCDate()).padStart(2,"0");
+         unit.expenses.push({...expense,id:"shared-utilities-"+mo,
+           periodStart:mo+"-01",periodEnd:mo+"-"+monthEnd,cashDate:mo+"-"+monthEnd});
+       }
+     }
+   }
+ }
+ const review=p.ownedPropertyReviews[0];
+ for(const year of [2027,2028]){
+    const yr=year===2028?366:365;
+    review.yearUseReviews.push({
+      ...clone(review.yearUseReviews[0]),taxYear:year,
+      businessSupplyDays:yr,forecastGuestNights:90
+    });
+    for(let i=0;i<12;i++){
+      review.disposalBasisReview.monthlyRecords.push({
+        ...clone(review.disposalBasisReview.monthlyRecords[i]),
+        month:year+"-"+String(i+1).padStart(2,"0")
+      });
+    }
+    for(const base of tax.unitYearReviews){
+      p.unitYearReviews.push({
+        ...clone(base),taxYear:year,
+        deductibleShares:{...base.deductibleShares,
+          propertyOperating:base.unitId==="osaka-m3"?.6*90/yr:1}
+      });
+    }
+    for(const entity of tax.entityYearRules){
+      const row=clone(entity);row.taxYear=year;
+      for(const rule of Object.values(row.taxRule)){
+        rule.taxYear=year;
+        if(rule.paymentMonths)rule.paymentMonths=[(year+1)+"-02"];
+      }
+      p.entityYearRules.push(row);
+    }
+ }
+ review.saleReview.grossPriceReviewed=1000000*(1.2**3);
+ p.documentFingerprint=fingerprintV11Document(d);
+ const result=evaluate(d,p);
+ assert.equal(result.incomeTaxStatus,"estimated",result.incomeTaxBlocker);
+ assert.equal(result.ownedAssetTaxRegisters.length,1);
+ const m3=result.ownedAssetTaxRegisters[0];
+ assert.deepEqual(m3.annualUse.map(x=>x.calendarDays),[365,365,366]);
+ assert.deepEqual(m3.annualUse.map(x=>x.forecastSoldNights),[54,90,90]);
+ near(m3.annualUse[1].sharedUtilityExpenseShare,.6*90/365);
+ near(m3.annualUse[2].sharedUtilityExpenseShare,.6*90/366);
+ assert.equal(m3.assetLines[1].annual.length,3);
+ assert.equal(m3.assetLines[1].annual.reduce((z,x)=>z+x.deductibleDepreciation,0),54000);
+ assert.equal(m3.disposalEvidence.businessBookReduction,54000);
+ assert.equal(m3.disposalEvidence.nonbusinessBookReduction,36000);
+ assert.equal(m3.disposalEvidence.adjustedBuildingBasis,510000);
+ near(m3.saleGain.gain,808000);
+ assert.ok(result.incomeTaxCashEvents.some(x=>x.taxKind==="saleGainTax"&&x.month==="2030-01"));
+ assert.equal(result.afterTax,null);
+});
