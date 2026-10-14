@@ -1,0 +1,502 @@
+{
+  "schemaVersion": "1.1.0",
+  "assumptionsVersion": "2026-10-14-M3-mixed-use-pilot",
+  "calculationVersion": "v11-m3-mixed-sensitivity-1",
+  "portfolio": {
+    "id": "portfolio-demo",
+    "name": "M3宿泊・自己居住兼用／家事按分と売却税・架空試算",
+    "baseDate": "2026-01-01",
+    "holdingYears": 1,
+    "currency": "JPY",
+    "fields": {
+      "P04": {
+        "value": 8,
+        "unit": "percent",
+        "sourceType": "userAssumption"
+      }
+    }
+  },
+  "entities": [
+    {
+      "id": "person-1",
+      "name": "個人（架空）",
+      "taxpayerType": "individual",
+      "fields": {}
+    },
+    {
+      "id": "corporation-1",
+      "name": "法人（架空）",
+      "taxpayerType": "corporation",
+      "fields": {}
+    }
+  ],
+  "units": [
+    {
+      "id": "osaka-m3",
+      "name": "大阪 M3・宿泊と自己居住の兼用（開発検算用・架空）",
+      "modelId": "M3",
+      "tenure": "own",
+      "operatorEntityId": "person-1",
+      "ownerEntityId": "person-1",
+      "tenantEntityId": null,
+      "startDate": "2026-01-01",
+      "operationStartDate": "2026-01-01",
+      "fields": {
+        "A": {
+          "A01": {
+            "value": 1000000,
+            "unit": "JPY",
+            "sourceType": "userAssumption"
+          }
+        },
+        "H": {
+          "H01": {
+            "value": 20000,
+            "unit": "JPY_per_room_night",
+            "sourceType": "userAssumption"
+          },
+          "H02": {
+            "value": 50,
+            "unit": "percent",
+            "sourceType": "userAssumption"
+          }
+        }
+      },
+      "calendar": [
+        {
+          "year": 2026,
+          "month": 1,
+          "lodgingDays": 15,
+          "rentalDays": 0,
+          "selfUseDays": 16,
+          "changeoverDays": 0,
+          "idleDays": 0,
+          "lodgingUnavailableWithinAllocationDays": 0
+        },
+        {
+          "year": 2026,
+          "month": 2,
+          "lodgingDays": 15,
+          "rentalDays": 0,
+          "selfUseDays": 13,
+          "changeoverDays": 0,
+          "idleDays": 0,
+          "lodgingUnavailableWithinAllocationDays": 0
+        },
+        {
+          "year": 2026,
+          "month": 3,
+          "lodgingDays": 15,
+          "rentalDays": 0,
+          "selfUseDays": 16,
+          "changeoverDays": 0,
+          "idleDays": 0,
+          "lodgingUnavailableWithinAllocationDays": 0
+        },
+        {
+          "year": 2026,
+          "month": 4,
+          "lodgingDays": 15,
+          "rentalDays": 0,
+          "selfUseDays": 15,
+          "changeoverDays": 0,
+          "idleDays": 0,
+          "lodgingUnavailableWithinAllocationDays": 0
+        },
+        {
+          "year": 2026,
+          "month": 5,
+          "lodgingDays": 15,
+          "rentalDays": 0,
+          "selfUseDays": 16,
+          "changeoverDays": 0,
+          "idleDays": 0,
+          "lodgingUnavailableWithinAllocationDays": 0
+        },
+        {
+          "year": 2026,
+          "month": 6,
+          "lodgingDays": 15,
+          "rentalDays": 0,
+          "selfUseDays": 15,
+          "changeoverDays": 0,
+          "idleDays": 0,
+          "lodgingUnavailableWithinAllocationDays": 0
+        },
+        {
+          "year": 2026,
+          "month": 7,
+          "lodgingDays": 15,
+          "rentalDays": 0,
+          "selfUseDays": 16,
+          "changeoverDays": 0,
+          "idleDays": 0,
+          "lodgingUnavailableWithinAllocationDays": 0
+        },
+        {
+          "year": 2026,
+          "month": 8,
+          "lodgingDays": 15,
+          "rentalDays": 0,
+          "selfUseDays": 16,
+          "changeoverDays": 0,
+          "idleDays": 0,
+          "lodgingUnavailableWithinAllocationDays": 0
+        },
+        {
+          "year": 2026,
+          "month": 9,
+          "lodgingDays": 15,
+          "rentalDays": 0,
+          "selfUseDays": 15,
+          "changeoverDays": 0,
+          "idleDays": 0,
+          "lodgingUnavailableWithinAllocationDays": 0
+        },
+        {
+          "year": 2026,
+          "month": 10,
+          "lodgingDays": 15,
+          "rentalDays": 0,
+          "selfUseDays": 16,
+          "changeoverDays": 0,
+          "idleDays": 0,
+          "lodgingUnavailableWithinAllocationDays": 0
+        },
+        {
+          "year": 2026,
+          "month": 11,
+          "lodgingDays": 15,
+          "rentalDays": 0,
+          "selfUseDays": 15,
+          "changeoverDays": 0,
+          "idleDays": 0,
+          "lodgingUnavailableWithinAllocationDays": 0
+        },
+        {
+          "year": 2026,
+          "month": 12,
+          "lodgingDays": 15,
+          "rentalDays": 0,
+          "selfUseDays": 16,
+          "changeoverDays": 0,
+          "idleDays": 0,
+          "lodgingUnavailableWithinAllocationDays": 0
+        }
+      ],
+      "expenses": [
+        {
+          "id": "shared-utilities-2026-01",
+          "entityId": "person-1",
+          "category": "propertyOperating",
+          "description": "Model shared utility full cash bill; business portion determined by reviewed annual guest nights",
+          "amount": 20000,
+          "currency": "JPY",
+          "periodStart": "2026-01-01",
+          "periodEnd": "2026-01-31",
+          "cashDate": "2026-01-31",
+          "allocationMethod": "areaTimesGuestNights",
+          "taxTreatment": "deductible"
+        },
+        {
+          "id": "shared-utilities-2026-02",
+          "entityId": "person-1",
+          "category": "propertyOperating",
+          "description": "Model shared utility full cash bill; business portion determined by reviewed annual guest nights",
+          "amount": 20000,
+          "currency": "JPY",
+          "periodStart": "2026-02-01",
+          "periodEnd": "2026-02-28",
+          "cashDate": "2026-02-28",
+          "allocationMethod": "areaTimesGuestNights",
+          "taxTreatment": "deductible"
+        },
+        {
+          "id": "shared-utilities-2026-03",
+          "entityId": "person-1",
+          "category": "propertyOperating",
+          "description": "Model shared utility full cash bill; business portion determined by reviewed annual guest nights",
+          "amount": 20000,
+          "currency": "JPY",
+          "periodStart": "2026-03-01",
+          "periodEnd": "2026-03-31",
+          "cashDate": "2026-03-31",
+          "allocationMethod": "areaTimesGuestNights",
+          "taxTreatment": "deductible"
+        },
+        {
+          "id": "shared-utilities-2026-04",
+          "entityId": "person-1",
+          "category": "propertyOperating",
+          "description": "Model shared utility full cash bill; business portion determined by reviewed annual guest nights",
+          "amount": 20000,
+          "currency": "JPY",
+          "periodStart": "2026-04-01",
+          "periodEnd": "2026-04-30",
+          "cashDate": "2026-04-30",
+          "allocationMethod": "areaTimesGuestNights",
+          "taxTreatment": "deductible"
+        },
+        {
+          "id": "shared-utilities-2026-05",
+          "entityId": "person-1",
+          "category": "propertyOperating",
+          "description": "Model shared utility full cash bill; business portion determined by reviewed annual guest nights",
+          "amount": 20000,
+          "currency": "JPY",
+          "periodStart": "2026-05-01",
+          "periodEnd": "2026-05-31",
+          "cashDate": "2026-05-31",
+          "allocationMethod": "areaTimesGuestNights",
+          "taxTreatment": "deductible"
+        },
+        {
+          "id": "shared-utilities-2026-06",
+          "entityId": "person-1",
+          "category": "propertyOperating",
+          "description": "Model shared utility full cash bill; business portion determined by reviewed annual guest nights",
+          "amount": 20000,
+          "currency": "JPY",
+          "periodStart": "2026-06-01",
+          "periodEnd": "2026-06-30",
+          "cashDate": "2026-06-30",
+          "allocationMethod": "areaTimesGuestNights",
+          "taxTreatment": "deductible"
+        },
+        {
+          "id": "shared-utilities-2026-07",
+          "entityId": "person-1",
+          "category": "propertyOperating",
+          "description": "Model shared utility full cash bill; business portion determined by reviewed annual guest nights",
+          "amount": 20000,
+          "currency": "JPY",
+          "periodStart": "2026-07-01",
+          "periodEnd": "2026-07-31",
+          "cashDate": "2026-07-31",
+          "allocationMethod": "areaTimesGuestNights",
+          "taxTreatment": "deductible"
+        },
+        {
+          "id": "shared-utilities-2026-08",
+          "entityId": "person-1",
+          "category": "propertyOperating",
+          "description": "Model shared utility full cash bill; business portion determined by reviewed annual guest nights",
+          "amount": 20000,
+          "currency": "JPY",
+          "periodStart": "2026-08-01",
+          "periodEnd": "2026-08-31",
+          "cashDate": "2026-08-31",
+          "allocationMethod": "areaTimesGuestNights",
+          "taxTreatment": "deductible"
+        },
+        {
+          "id": "shared-utilities-2026-09",
+          "entityId": "person-1",
+          "category": "propertyOperating",
+          "description": "Model shared utility full cash bill; business portion determined by reviewed annual guest nights",
+          "amount": 20000,
+          "currency": "JPY",
+          "periodStart": "2026-09-01",
+          "periodEnd": "2026-09-30",
+          "cashDate": "2026-09-30",
+          "allocationMethod": "areaTimesGuestNights",
+          "taxTreatment": "deductible"
+        },
+        {
+          "id": "shared-utilities-2026-10",
+          "entityId": "person-1",
+          "category": "propertyOperating",
+          "description": "Model shared utility full cash bill; business portion determined by reviewed annual guest nights",
+          "amount": 20000,
+          "currency": "JPY",
+          "periodStart": "2026-10-01",
+          "periodEnd": "2026-10-31",
+          "cashDate": "2026-10-31",
+          "allocationMethod": "areaTimesGuestNights",
+          "taxTreatment": "deductible"
+        },
+        {
+          "id": "shared-utilities-2026-11",
+          "entityId": "person-1",
+          "category": "propertyOperating",
+          "description": "Model shared utility full cash bill; business portion determined by reviewed annual guest nights",
+          "amount": 20000,
+          "currency": "JPY",
+          "periodStart": "2026-11-01",
+          "periodEnd": "2026-11-30",
+          "cashDate": "2026-11-30",
+          "allocationMethod": "areaTimesGuestNights",
+          "taxTreatment": "deductible"
+        },
+        {
+          "id": "shared-utilities-2026-12",
+          "entityId": "person-1",
+          "category": "propertyOperating",
+          "description": "Model shared utility full cash bill; business portion determined by reviewed annual guest nights",
+          "amount": 20000,
+          "currency": "JPY",
+          "periodStart": "2026-12-01",
+          "periodEnd": "2026-12-31",
+          "cashDate": "2026-12-31",
+          "allocationMethod": "areaTimesGuestNights",
+          "taxTreatment": "deductible"
+        }
+      ],
+      "assets": [
+        {
+          "id": "land",
+          "ownerEntityId": "person-1",
+          "category": "land",
+          "grossCost": 400000,
+          "taxBasis": 400000,
+          "invoiceDate": "2026-01-01",
+          "inServiceDate": "2026-01-01",
+          "usefulLifeYears": null,
+          "depreciationMethod": "nonDepreciable",
+          "privateUseAdjustment": "detailed",
+          "businessUseRatioByYear": [
+            {
+              "year": 2026,
+              "ratio": 60
+            }
+          ],
+          "priorAccumulatedDepreciation": 0,
+          "taxBookValue": 400000,
+          "disposalDate": "2026-12-31"
+        },
+        {
+          "id": "building",
+          "ownerEntityId": "person-1",
+          "category": "building",
+          "grossCost": 600000,
+          "taxBasis": 600000,
+          "invoiceDate": "2026-01-01",
+          "inServiceDate": "2026-01-01",
+          "usefulLifeYears": 20,
+          "depreciationMethod": "straightLine",
+          "privateUseAdjustment": "detailed",
+          "businessUseRatioByYear": [
+            {
+              "year": 2026,
+              "ratio": 60
+            }
+          ],
+          "priorAccumulatedDepreciation": 0,
+          "taxBookValue": 600000,
+          "disposalDate": "2026-12-31"
+        }
+      ],
+      "loans": [],
+      "exit": {
+        "method": "priceGrowth",
+        "exitDate": "2026-12-31",
+        "priceGrowthRate": 20,
+        "sellingCosts": 10000,
+        "exitObligations": 0,
+        "expectedDepositRefund": 0,
+        "applyResidentialRelief": false
+      }
+    },
+    {
+      "id": "tokyo-m4",
+      "name": "東京 M4（架空）",
+      "modelId": "M4",
+      "tenure": "lease",
+      "operatorEntityId": "corporation-1",
+      "ownerEntityId": null,
+      "tenantEntityId": "corporation-1",
+      "startDate": "2026-01-01",
+      "operationStartDate": "2026-01-01",
+      "fields": {
+        "A": {
+          "A06": {
+            "value": 50000,
+            "unit": "JPY_per_month",
+            "sourceType": "userAssumption"
+          },
+          "A07": {
+            "value": 100000,
+            "unit": "JPY",
+            "sourceType": "userAssumption"
+          },
+          "A08": {
+            "value": 0,
+            "unit": "JPY",
+            "sourceType": "userAssumption"
+          }
+        },
+        "R": {
+          "R01": {
+            "value": 100000,
+            "unit": "JPY_per_month",
+            "sourceType": "userAssumption"
+          },
+          "R02": {
+            "value": 90,
+            "unit": "percent",
+            "sourceType": "userAssumption"
+          },
+          "R05": {
+            "value": 1000,
+            "unit": "JPY_per_month",
+            "sourceType": "userAssumption"
+          }
+        }
+      },
+      "calendar": [],
+      "expenses": [],
+      "assets": [],
+      "loans": [],
+      "exit": {
+        "method": "leaseSettlement",
+        "exitDate": "2026-12-31",
+        "sellingCosts": 0,
+        "exitObligations": 0,
+        "expectedDepositRefund": 100000,
+        "applyResidentialRelief": false
+      }
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "base",
+      "name": "Base",
+      "role": "base",
+      "overrides": []
+    },
+    {
+      "id": "upside",
+      "name": "Upside 宿泊稼働率60%",
+      "role": "upside",
+      "overrides": [
+        {
+          "scope": "unit",
+          "targetId": "osaka-m3",
+          "fieldId": "H02",
+          "field": {
+            "value": 60,
+            "unit": "percent",
+            "sourceType": "userAssumption"
+          }
+        }
+      ]
+    },
+    {
+      "id": "downside",
+      "name": "Downside 宿泊稼働率35%",
+      "role": "downside",
+      "overrides": [
+        {
+          "scope": "unit",
+          "targetId": "osaka-m3",
+          "fieldId": "H02",
+          "field": {
+            "value": 35,
+            "unit": "percent",
+            "sourceType": "userAssumption"
+          }
+        }
+      ]
+    }
+  ]
+}
