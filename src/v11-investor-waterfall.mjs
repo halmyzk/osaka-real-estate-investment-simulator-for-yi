@@ -163,8 +163,14 @@ export function buildV11InvestorWaterfall({document,preview}){
    for(const k of keys)add(total,k,r[k]);
  finalize(total);
  const cashSeries=preview.preTax?.cashFlows??[];
- if(cashSeries.length!==annual.length+1||
-   !approx(total.preTaxEquityCF,sum(cashSeries)))
+ // Pre-tax portfolio evaluation intentionally stops at the contracted
+ // investment horizon. The indicative assessment adds later years when
+ // taxes are paid after the sale. In those later years pre-tax flow is zero,
+ // so extend the input reference with zeros instead of duplicating exit cash.
+ if(!cashSeries.length||cashSeries.length>annual.length+1||
+   !approx(total.preTaxEquityCF,sum(cashSeries))||
+   cashSeries.slice(1).some((value,i)=>!approx(value,annual[i].preTaxEquityCF))||
+   annual.slice(cashSeries.length-1).some(r=>!approx(r.preTaxEquityCF,0)))
    throw new RangeError("Total pre-tax portfolio waterfall does not reconcile");
  if(approximate){
   if(preview.indicativeAfterTax.cashFlows.length!==annual.length+1||
