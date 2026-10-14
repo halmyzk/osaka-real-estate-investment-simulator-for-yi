@@ -6,7 +6,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 root = Path(__file__).resolve().parents[1]
 schema = json.loads((root / "schema" / "v1.1.schema.json").read_text(encoding="utf-8"))
 validator = Draft202012Validator(schema, format_checker=FormatChecker())
-samples = ["v11-sample.json", "v11-ordinary-income-sample.json", "v11-owned-property-sample.json"]
+samples = ["v11-sample.json", "v11-ordinary-income-sample.json", "v11-owned-property-sample.json", "v11-m3-mixed-use-sample.json"]
 for name in samples:
     sample = json.loads((root / "preview" / name).read_text(encoding="utf-8"))
     issues = sorted(
