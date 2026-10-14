@@ -15,6 +15,7 @@ import {evaluatePortfolio} from "./portfolio.mjs";
 import {compileV11IncomeTaxSidecar} from "./v11-income-tax-sidecar.mjs";
 import {buildV11TaxSourceCrosswalk} from "./v11-tax-source-crosswalk.mjs";
 import {deriveV11OrdinaryTax} from "./v11-derived-ordinary-tax.mjs";
+import {estimateV11IndicativeTaxCash,appendV11IndicativeVATToLedgers} from "./v11-indicative-tax.mjs";
 const money=(n,k)=>{if(typeof n!=="number"||!Number.isFinite(n)||n<0)throw new RangeError(k+" must be nonnegative finite number");return n};
 const id=(s,k)=>{if(typeof s!=="string"||!s)throw new TypeError(k+" required");return s};
 const ISO=(s,k)=>{
@@ -350,9 +351,12 @@ function resolveUnit(document,scenarioContext,unit,portfolio,assumptions){
  return {unitId:unit.id,entityId:unit.operatorEntityId,status:"computed",
    missing,optionalZeroDefaults:[...defaults],operating,investing,financing,trace};
 }
-export function previewV11Scenario(document,{scenarioId,incomeTaxSidecar=null,derivedTaxPlan=null}={}){
- if(incomeTaxSidecar!==null&&derivedTaxPlan!==null)
-   throw new RangeError("Use either external tax sidecar or derived ordinary-tax plan, not both");
+export function previewV11Scenario(document,{
+ scenarioId,incomeTaxSidecar=null,derivedTaxPlan=null,
+ indicativeAssumptions=null
+}={}){
+ if([incomeTaxSidecar,derivedTaxPlan,indicativeAssumptions].filter(x=>x!==null).length>1)
+   throw new RangeError("Select exactly one tax evaluation route: external, reviewed-derived or indicative assumption sensitivity");
  if(document?.schemaVersion!=="1.1.0"||!Array.isArray(document.entities)||
  !Array.isArray(document.units)||!document.units.length)
   throw new TypeError("Complete v1.1 portfolio/entities/units document required");
@@ -431,6 +435,20 @@ export function previewV11Scenario(document,{scenarioId,incomeTaxSidecar=null,de
  // An externally prepared assessment sidecar can connect annual income-tax
  // assessments to actual payment-calendar years; it NEVER certifies VAT or
  // full after-tax investor valuation. Stale sidecars cannot be reused.
+ let indicative=null,indicativeReport=null;
+ if(indicativeAssumptions!==null){
+   indicative=estimateV11IndicativeTaxCash({
+     document,unitResults,assumptions:indicativeAssumptions
+   });
+   indicativeReport=evaluatePortfolio({
+     entityLedgers:appendV11IndicativeVATToLedgers({
+       entityLedgers:ledgers,vatCashAdjustments:indicative.vatCashAdjustments
+     }),
+     timeZero:t0,baseCalendarYear:year,holdingYears:p.holdingYears,
+     discountRate:rate,taxes:indicative.incomeTaxCashEvents,
+     taxCoverage:[...entityIds].map(entityId=>({entityId,status:"estimated"}))
+   });
+ }
  const tax=derivedTaxPlan===null?compileV11IncomeTaxSidecar({
     document,scenarioId:scenario.scenarioId,sidecar:incomeTaxSidecar
  }):deriveV11OrdinaryTax({
@@ -445,6 +463,24 @@ export function previewV11Scenario(document,{scenarioId,incomeTaxSidecar=null,de
  return {status:"estimated-pre-tax",scenarioId:scenario.scenarioId,units:unitResults,
   preTax:report.preTax,afterTax:null,CF0:report.CF0,
   afterIncomeTaxSensitivity:incomeTaxReport?.afterTax??null,
+  indicativeAfterTax:indicativeReport?.afterTax??null,
+  indicativeTaxStatus:indicative?.status??"notRequested",
+  indicativeAssumptions:indicative?.assumptions??null,
+  indicativeTaxRows:indicative?.taxRows??[],
+  indicativeVATRows:indicative?.vatRows??[],
+  indicativeSaleRows:indicative?.saleRows??[],
+  indicativeUnitProof:indicative?.unitProof??[],
+  indicativeWarnings:indicative?.warnings??[],
+  indicativeCashReconciliation:indicative?.reconciliation??null,
+  indicativeVATCashAdjustments:indicative?.vatCashAdjustments??[],
+  indicativeIncomeTaxCashEvents:indicative?.incomeTaxCashEvents??[],
+  annualIndicativeCashFlows:indicativeReport?.annual.map(row=>({
+    year:row.year,netOperatingBase:report.annual.find(x=>x.year===row.year)?.operating??0,
+    VATAdjustedOperatingCash:row.operating,
+    VATCashDifference:row.operating-(report.annual.find(x=>x.year===row.year)?.operating??0),
+    incrementalIncomeTaxPaid:row.taxCashFlow,
+    indicativeAfterTaxEquityCF:row.afterTaxEquityCF
+  }))??null,
   incomeTaxCashEvents:tax.status==="estimated"?incomeTaxEvents:[],
   incomeTaxCalculationBasis:derivedTaxPlan===null?"externalAssumedAssessments":"derivedFromUnitOperations",
   derivedTaxUnitYearProof:derivedTaxPlan!==null&&tax.status==="estimated"?tax.unitYearProof:[],
@@ -469,8 +505,8 @@ export function previewV11Scenario(document,{scenarioId,incomeTaxSidecar=null,de
     unitId:x.unitId,fieldId,reason:"Optional detail absent, interpreted as zero for this restricted forecast"}))),
   taxStatus:"incomplete",
   limitations:[
-    "VAT, complete taxable income/depreciation derivation, inter-entity transfers and FULL after-tax NPV/IRR are NOT evaluated",
-    "An optional external-tax sidecar OR reviewed ordinary-income auto-calculation plan produces a provisional post-income-tax sensitivity only; it is not full after-tax cash flow",
+    "Formal VAT/depreciation eligibility and FULL statutory after-tax NPV/IRR are NOT evaluated; optional indicative after-tax equity KPIs use editable assumptions",
+    "Choose external annual tax assessments, reviewed-derived ordinary taxes, OR scenario-based indicative investor tax+VAT; never mix these routes or double apply VAT",
     "The pre-tax NPV is a reference sensitivity using P04 after-tax equity discount rate, not a tax-adjusted investor NPV",
     "Full-month acquisitions/openings and month-end exit only; no arbitrary-date partial revenue",
     "Initial transaction amounts in base month belong to CF0 and are not duplicated in year 1",
