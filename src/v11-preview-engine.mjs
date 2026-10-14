@@ -449,6 +449,7 @@ export function previewV11Scenario(document,{scenarioId,incomeTaxSidecar=null,de
   incomeTaxCalculationBasis:derivedTaxPlan===null?"externalAssumedAssessments":"derivedFromUnitOperations",
   derivedTaxUnitYearProof:derivedTaxPlan!==null&&tax.status==="estimated"?tax.unitYearProof:[],
   derivedTaxItems:derivedTaxPlan!==null&&tax.status==="estimated"?tax.taxItems:[],
+  ownedAssetTaxRegisters:derivedTaxPlan!==null&&tax.status==="estimated"?tax.ownedAssetTaxRegisters??[]:[],
   incomeTaxStatus:tax.status,
   incomeTaxBlocker:tax.status==="incomplete"?tax.reason:null,
   incomeTaxAudit:tax.status==="estimated"?(tax.audit??[]):[],
