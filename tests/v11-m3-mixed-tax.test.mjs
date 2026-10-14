@@ -226,6 +226,13 @@ test("M3 multi-year 2028 leap calendar: different 365/366 expense denominator, y
     }
  }
  review.saleReview.grossPriceReviewed=1000000*(1.2**3);
+ // Cash settlement dates and surtax labels must follow the actual sale tax
+ // year. The 2026 fictional example's dates/rules cannot be reused in 2028.
+ review.saleReview.individual.nationalPaymentMonth="2029-03";
+ review.saleReview.individual.residencePaymentMonths=["2029-06","2029-08","2029-10","2030-01"];
+ review.saleReview.individual.reconstructionRate=.011;
+ review.saleReview.individual.defenseIncomeRate=.01;
+ review.saleReview.individual.ruleVersion="FICTIONAL-2028-RECONSTRUCTION-AND-DEFENSE";
  p.documentFingerprint=fingerprintV11Document(d);
  const result=evaluate(d,p);
  assert.equal(result.incomeTaxStatus,"estimated",result.incomeTaxBlocker);
