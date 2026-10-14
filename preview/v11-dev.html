@@ -88,6 +88,9 @@ footer{font-size:.8rem;color:#516a76;padding:20px 0}
  <div class="actions">
   <button type="button" class="primary" id="enable-indicative">概算税引後分析を開始</button>
   <button type="button" class="secondary" id="clear-indicative">概算分析を解除</button>
+  <button type="button" class="secondary" id="export-indicative">概算税率・家事按分の仮定をJSON出力</button>
+  <button type="button" class="secondary" id="choose-indicative-import">概算仮定JSONを読込む</button>
+  <input class="sr-only" id="indicative-import-file" type="file" accept=".json,application/json">
  </div>
  <div id="indicative-settings"></div>
  <p id="indicative-status" class="muted small" aria-live="polite">概算分析はまだ有効化されていません。</p>
@@ -613,6 +616,33 @@ $("clear-indicative").addEventListener("click",()=>{
  indicativeAssumptions=null;
  $("indicative-status").textContent="概算分析を解除しました。税引前試算に戻します。";
  render();
+});
+$("export-indicative").addEventListener("click",()=>{
+ if(!indicativeAssumptions){
+  $("indicative-status").textContent="まず概算分析を有効化してください。";return;
+ }
+ const raw=JSON.stringify(indicativeAssumptions,null,2)+"\n";
+ const blob=new Blob([raw],{type:"application/json"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download="premium-re-v11-indicative-assumptions.json";a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+ $("indicative-status").textContent="概算税率・面積・消費税の仮定を、独立JSONとして書き出しました。";
+});
+$("choose-indicative-import").addEventListener("click",()=>$("indicative-import-file").click());
+$("indicative-import-file").addEventListener("change",async event=>{
+ const file=event.target.files?.[0];
+ if(!file)return;
+ try{
+  const restored=JSON.parse(await file.text());
+  const check=previewV11Scenario(data,{scenarioId:activeScenario(),
+    indicativeAssumptions:restored});
+  if(check.indicativeTaxStatus!=="estimated")throw new Error("概算税務の仮定を検証できませんでした。");
+  indicativeAssumptions=structuredClone(restored);
+  taxSidecar=null;
+  $("indicative-status").textContent="概算前提をJSONから検証・復元しました。";
+  render();
+ }catch(e){$("indicative-status").textContent="概算仮定JSONの読込失敗："+e.message}
+ finally{event.target.value=""}
 });
 $("indicative-settings").addEventListener("change",e=>{
  if(!indicativeAssumptions)return;
