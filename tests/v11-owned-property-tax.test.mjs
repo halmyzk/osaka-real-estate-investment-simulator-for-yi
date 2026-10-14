@@ -165,3 +165,56 @@ test("Unreviewed residential relief is rejected before portfolio tax model can h
  p.documentFingerprint=fingerprintV11Document(d);
  assert.throws(()=>previewV11Scenario(d,{derivedTaxPlan:p}),/sale tax relief requires reviewed/);
 });
+
+
+test("B-T22 book depreciation is noncash: changing reviewed rate changes tax not pre-tax investment cash",()=>{
+ const {d,p}=fixture();
+ const a=previewV11Scenario(d,{derivedTaxPlan:p});
+ const other=clone(p);
+ other.ownedPropertyReviews[0].assetRates.building.rate=.04;
+ other.ownedPropertyReviews[0].assetRates.building.version="REVIEWED-20-YEAR-ALTERNATE-RATE-FIXTURE";
+ const b=previewV11Scenario(d,{derivedTaxPlan:other});
+ assert.deepEqual(a.preTax.cashFlows,b.preTax.cashFlows);
+ assert.equal(a.CF0,b.CF0);
+ assert.equal(a.ownedAssetTaxRegisters[0].saleGain.gain,220000);
+ assert.equal(b.ownedAssetTaxRegisters[0].saleGain.gain,214000);
+ assert.equal(b.ownedAssetTaxRegisters[0].taxBookValueAtExit,976000);
+ assert.equal(a.derivedTaxItems.find(x=>x.sourceLine==="buildingTaxDepreciation").amount,30000);
+ assert.equal(b.derivedTaxItems.find(x=>x.sourceLine==="buildingTaxDepreciation").amount,24000);
+ assert.notEqual(a.afterIncomeTaxSensitivity.NPV,b.afterIncomeTaxSensitivity.NPV);
+});
+test("Exit restoration liability, closing costs and non-new asset service date must be explicitly tax-reviewed",()=>{
+ const {d,p}=fixture();
+ const restore=clone(d);
+ restore.units[0].exit.exitObligations=50000;
+ const plan=clone(p);plan.documentFingerprint=fingerprintV11Document(restore);
+ assert.match(previewV11Scenario(restore,{derivedTaxPlan:plan}).incomeTaxBlocker,/exit obligation/);
+ const closing=clone(d);
+ closing.units[0].fields.A.A02={value:50000,unit:"JPY",sourceType:"userAssumption"};
+ const pClosing=clone(p);pClosing.documentFingerprint=fingerprintV11Document(closing);
+ assert.match(previewV11Scenario(closing,{derivedTaxPlan:pClosing}).incomeTaxBlocker,/closing cost/);
+ const notNew=clone(d);
+ notNew.units[0].assets[1].inServiceDate="2026-03-01";
+ const pNew=clone(p);pNew.documentFingerprint=fingerprintV11Document(notNew);
+ assert.match(previewV11Scenario(notNew,{derivedTaxPlan:pNew}).incomeTaxBlocker,/in-service/);
+});
+test("Owned M3 self-use and unreviewed sale loss cannot flow through full-business M4 pilot",()=>{
+ const {d,p}=fixture();
+ const m3=clone(d);
+ m3.units[0].modelId="M3";
+ m3.units[0].calendar=Array.from({length:12},(_,i)=>{
+  const month=i+1,days=new Date(Date.UTC(2026,month,0)).getUTCDate();
+  return {year:2026,month,lodgingDays:15,rentalDays:0,selfUseDays:days-15,
+   changeoverDays:0,idleDays:0};
+ });
+ m3.units[0].fields.H={H01:{value:20000,unit:"JPY_per_room_night",sourceType:"userAssumption"},
+  H02:{value:50,unit:"percent",sourceType:"userAssumption"}};
+ const m3Plan=clone(p);m3Plan.documentFingerprint=fingerprintV11Document(m3);
+ assert.match(previewV11Scenario(m3,{derivedTaxPlan:m3Plan}).incomeTaxBlocker,/owned M4/);
+ const loss=clone(d);
+ loss.units[0].exit.priceGrowthRate=-10;
+ const lossPlan=clone(p);
+ lossPlan.ownedPropertyReviews[0].saleReview.grossPriceReviewed=900000;
+ lossPlan.documentFingerprint=fingerprintV11Document(loss);
+ assert.match(previewV11Scenario(loss,{derivedTaxPlan:lossPlan}).incomeTaxBlocker,/Sale loss offset eligibility/);
+});
