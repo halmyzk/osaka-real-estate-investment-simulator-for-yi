@@ -99,6 +99,8 @@ test("M3 disposal basis cannot be inferred from operating depreciation: monthly 
   p=>p.ownedPropertyReviews[0].disposalBasisReview.monthlyRecords[0].businessShare=.5,
   p=>p.ownedPropertyReviews[0].yearUseReviews[0].forecastGuestNights=180,
   p=>p.ownedPropertyReviews[0].yearUseReviews[0].businessSupplyDays=180,
+  p=>p.ownedPropertyReviews[0].sharedUtilityExpenseReviews.pop(),
+  p=>p.ownedPropertyReviews[0].sharedUtilityExpenseReviews[0].reviewedGrossCashAmount=1,
   p=>p.ownedPropertyReviews[0].assetRates.building.eligibilityReviewed=false
  ]){
   const p=clone(tax);alter(p);
@@ -204,6 +206,10 @@ test("M3 multi-year 2028 leap calendar: different 365/366 expense denominator, y
       businessSupplyDays:yr,forecastGuestNights:90
     });
     for(let i=0;i<12;i++){
+      const mo=year+"-"+String(i+1).padStart(2,"0");
+      review.sharedUtilityExpenseReviews.push({
+        ...clone(review.sharedUtilityExpenseReviews[i]),expenseId:"shared-utilities-"+mo
+      });
       review.disposalBasisReview.monthlyRecords.push({
         ...clone(review.disposalBasisReview.monthlyRecords[i]),
         month:year+"-"+String(i+1).padStart(2,"0")
