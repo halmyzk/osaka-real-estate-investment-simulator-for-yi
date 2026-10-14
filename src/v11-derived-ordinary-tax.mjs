@@ -59,7 +59,7 @@ function buildTaxItems(document,unitResults,plan){
      throw new RangeError("operating tax source entity or unit references invalid");
    if(stored.tenure==="own"){
      if(plan.taxScope!=="ordinaryAndOwnedSale"||!ownedById.has(stored.id))
-       throw new RangeError("Owned property requires separately reviewed land/building basis, depreciation and disposal tax computation");
+       throw new RangeError("Owned property requires separate land/building basis, depreciation and disposal tax computation, with reviewed evidence");
      const reg=deriveOwnedM4TaxRegister({
         unit:stored,unitResult:u,ownerType:entities.get(u.entityId).taxpayerType,
         ownedReview:ownedById.get(stored.id)});
