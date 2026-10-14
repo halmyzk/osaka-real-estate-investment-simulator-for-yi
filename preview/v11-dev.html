@@ -78,7 +78,15 @@ footer{font-size:.8rem;color:#516a76;padding:20px 0}
   <button class="secondary" type="button" id="choose-import">v1.1 JSONを読み込む</button>
   <input class="sr-only" id="import-file" type="file" accept=".json,application/json">
  </div>
- <h3>税務試算ルート（開発専用）</h3>
+ <h3>投資判断用の概算税引後分析（追加）</h3>
+ <p><strong>概算モードでは、税務資料や申告用の証拠が揃っていなくても、税率・消費税・建物償却・家事按分を仮定として設定し、概算税引後NPV・IRRを試算できます。</strong> 実税額の認定ではありません。売上・経常費用を原則税抜、購入・売却・その他投資CFは入力どおり（消費税調整なし）とする簡易モデルです。入力済みv1.1下書きは変更せず、概算前提は別途保存しません。</p>
+ <div class="actions">
+  <button type="button" class="primary" id="enable-indicative">概算税引後分析を開始</button>
+  <button type="button" class="secondary" id="clear-indicative">概算分析を解除</button>
+ </div>
+ <div id="indicative-settings"></div>
+ <p id="indicative-status" class="muted small" aria-live="polite">概算分析はまだ有効化されていません。</p>
+ <h3>精査・詳細税額資料のルート（既存）</h3>
  <p>（A）外部仮定の年次税額を納税CFに反映するルートと、（B）<strong>営業元帳から所得区分・費用の算入割合・仮定税率を明示して年次税額を計算する限定ルート</strong>を区別します。（B）は購入M4に加え、宿泊・自己居住併用M3の<strong>宿泊枠日数・見込泊数・事業用面積／建物事業供用期間</strong>を区別した限定試算に対応します。M3の売却時非業務用減価相当額は独立の審査済み月次明細が必要です。追加投資、VAT、税務上の実際の適格性は未接続です。税務前提は一時読込のみで、下書きに自動保存しません。</p>
  <div class="actions">
   <button type="button" class="secondary" id="load-demo-tax">外部税額の架空Base例を読込む</button>
@@ -104,11 +112,13 @@ import {previewV11Scenario} from "../src/v11-preview-engine.mjs";
 import {inspectV11Draft,parseV11Draft,saveV11Draft,restoreV11Draft,serializeV11Draft} from "../src/v11-draft-storage.mjs";
 import {compileV11IncomeTaxSidecar} from "../src/v11-income-tax-sidecar.mjs";
 import {deriveV11OrdinaryTax} from "../src/v11-derived-ordinary-tax.mjs";
+import {defaultV11IndicativeAssumptions} from "../src/v11-indicative-tax.mjs";
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=v=>v===null||v===undefined?"算定保留":new Intl.NumberFormat("ja-JP",{maximumFractionDigits:0}).format(v)+"円";
 const pct=v=>v===null||v===undefined?"算定保留":(v*100).toFixed(2)+"%";
-let data=null,last=null,selectedUnit=null,dirty=false,activeTab="business",sample=null,taxSidecar=null;
+let data=null,last=null,selectedUnit=null,dirty=false,activeTab="business",
+ sample=null,taxSidecar=null,indicativeAssumptions=null;
 const fields=[
  ["H01","ADR（円／室泊）","JPY_per_room_night"],["H02","宿泊稼働率（％）","percent"],
  ["R01","基準月額賃料（円）","JPY_per_month"],["R02","賃貸入居率（％）","percent"],
@@ -122,11 +132,14 @@ function calculate(){
  if(!data)return null;
  try{
   const auto=taxSidecar?.version==="v11-derived-ordinary-tax-plan-1";
-  last=previewV11Scenario(data,{scenarioId:activeScenario(),
-    ...(auto?{derivedTaxPlan:taxSidecar}:{incomeTaxSidecar:taxSidecar})});
+  const options=indicativeAssumptions!==null?{indicativeAssumptions}:
+      auto?{derivedTaxPlan:taxSidecar}:{incomeTaxSidecar:taxSidecar};
+  last=previewV11Scenario(data,{scenarioId:activeScenario(),...options});
   alertStatus(
   last.status==="estimated-pre-tax"?
-    "税引前試算が計算できました。所得税等の参考値は税額資料の照合結果を確認してください。正式な税引後指標は算定保留です。":
+    (indicativeAssumptions!==null?
+      "概算税引後CF・NPV・IRRを投資判断用の仮定で試算しました。税務申告用の税額ではありません。":
+      "税引前試算が計算できました。所得税等の参考値は税額資料の照合結果を確認してください。精査用の正式な税引後指標は算定保留です。"):
    "一部の計算を保留しました。入力不足欄を確認してください。",false);
  }catch(e){last={status:"error",error:String(e?.message??e)};
  alertStatus("計算エラー："+last.error,true);}
@@ -165,33 +178,62 @@ function renderEvidence(){
 }
 function renderKpis(){
  const r=last;
- const kpis=r?.status==="estimated-pre-tax"?[
-  ["税引前CF₀",fmt(r.CF0)],["税引前IRR",pct(r.preTax.IRR)],
-  ["参考NPV（税引前CFにP04適用）",fmt(r.preTax.NPV)],
-  ["所得税等を差引いた参考NPV",fmt(r.afterIncomeTaxSensitivity?.NPV)],
-  ["正式な税引後NPV／IRR","算定保留"],
-  ["所得税等の計算",r.incomeTaxStatus==="estimated"?
+ let kpis;
+ if(r?.status!=="estimated-pre-tax")kpis=[["計算状況","入力未完了／算定保留"]];
+ else if(r.indicativeAfterTax){
+   kpis=[
+    ["概算税引後NPV（投資判断用）",fmt(r.indicativeAfterTax.NPV)],
+    ["概算税引後IRR（投資判断用）",pct(r.indicativeAfterTax.IRR)],
+    ["概算所得税・譲渡税CF総額",fmt(r.indicativeCashReconciliation.incomeTaxCashTotal)],
+    ["概算消費税関連CF総額",fmt(r.indicativeCashReconciliation.netVatCashTotal)],
+    ["初期自己資金CF₀",fmt(r.CF0)],
+    ["税引前IRR（参考）",pct(r.preTax.IRR)],
+    ["税引前NPV（P04を参考適用）",fmt(r.preTax.NPV)],
+    ["試算の信頼性","概算の仮定。申告税額ではありません"]
+   ];
+ }else{
+   kpis=[
+    ["税引前CF₀",fmt(r.CF0)],["税引前IRR",pct(r.preTax.IRR)],
+    ["参考NPV（税引前CFにP04適用）",fmt(r.preTax.NPV)],
+    ["所得税等を差引いた参考NPV",fmt(r.afterIncomeTaxSensitivity?.NPV)],
+    ["精査用の正式税引後NPV／IRR","算定保留"],
+    ["所得税等の計算",r.incomeTaxStatus==="estimated"?
       (r.incomeTaxCalculationBasis==="derivedFromUnitOperations"?
-       "営業収益・費用から試算（要税務審査）":"外部仮定値を納付月に接続"):"未接続／不一致"],
-  ["消費税・申告適格性","未接続（0円ではありません）"]]:
-  [["税引前・税引後評価","算定保留"]];
+        "営業データから限定試算":"外部仮定の税額を納付月へ反映"):"未接続／不一致"],
+    ["消費税・税務適格性","精査ルートは未接続"]
+   ];
+ }
  $("kpis").innerHTML=kpis.map(x=>'<div class="kpi"><span class="muted small">'+
- esc(x[0])+'</span><strong>'+esc(x[1])+'</strong></div>').join("");
+   esc(x[0])+'</span><strong>'+esc(x[1])+'</strong></div>').join("");
 }
 function renderAnnual(){
- if(last?.status!=="estimated-pre-tax"){$("annual-table").textContent="入力の検証が完了するまで算定保留。";return}
+ if(last?.status!=="estimated-pre-tax"){
+   $("annual-table").textContent="入力の検証が完了するまで算定保留。";return;
+ }
  const baseline=new Map(last.annual.map(x=>[x.year,x]));
  const taxed=new Map((last.annualIncomeTaxSensitivity??[]).map(x=>[x.year,x]));
- const years=[...new Set([...baseline.keys(),...taxed.keys()])].sort();
- $("annual-table").innerHTML=simpleTable(
-  ["暦年","営業CF","投資CF","金融CF","税引前自己資本CF","所得税等の増分納税CF","所得税等控除後CF（参考）"],
-  years.map(year=>{
-   const x=baseline.get(year),tax=taxed.get(year);
-   return [year,fmt(x?.operating??0),fmt(x?.investing??0),
-      fmt(x?.financing??0),fmt(x?.preTaxEquityCF??0),
-      tax?fmt(tax.incrementalTaxCashFlow):"算定保留",
-      tax?fmt(tax.postIncomeTaxEquityCF):"算定保留"];
-  }));
+ const indicative=new Map((last.annualIndicativeCashFlows??[]).map(x=>[x.year,x]));
+ const years=[...new Set([...baseline.keys(),...taxed.keys(),...indicative.keys()])].sort();
+ if(last.indicativeAfterTax){
+   $("annual-table").innerHTML=simpleTable(
+      ["暦年","税引前自己資本CF","消費税CF差分（概算）","所得・譲渡税支払（概算）","概算税引後自己資本CF"],
+      years.map(year=>{
+        const b=baseline.get(year),x=indicative.get(year);
+        return [year,fmt(b?.preTaxEquityCF??0),
+          fmt(x?.VATCashDifference??0),fmt(x?.incrementalIncomeTaxPaid??0),
+          fmt(x?.indicativeAfterTaxEquityCF??0)];
+      }));
+ }else{
+   $("annual-table").innerHTML=simpleTable(
+      ["暦年","営業CF","投資CF","金融CF","税引前自己資本CF","所得税等の増分納税CF","所得税等控除後CF（参考）"],
+      years.map(year=>{
+       const x=baseline.get(year),tax=taxed.get(year);
+       return [year,fmt(x?.operating??0),fmt(x?.investing??0),
+          fmt(x?.financing??0),fmt(x?.preTaxEquityCF??0),
+          tax?fmt(tax.incrementalTaxCashFlow):"算定保留",
+          tax?fmt(tax.postIncomeTaxEquityCF):"算定保留"];
+      }));
+ }
 }
 function renderTaxCrosswalk(){
  const rows=last?.taxSourceCrosswalk?.rows;
@@ -278,17 +320,54 @@ function renderMonths(){
    fmt(x.result.lodging.revenue),fmt(x.result.rental.revenue),fmt(x.result.operatingSurplus)]));
 }
 function renderLimitations(){
- if(!last){$("limitations").textContent="計算結果がありません。";return}
+ if(!last){$("limitations").textContent="計算結果がありません。";return;}
  const lines=last.status==="error"?[last.error]:
- last.status==="incomplete"?(last.missing??[]).map(x=>(x.unitId??"全体")+" "+(x.month??"")+
-  " "+x.fieldId+" — "+x.reason):[...(last.limitations??[]),
-  last.incomeTaxStatus==="incomplete"?"所得税等の資料： "+last.incomeTaxBlocker:
-    last.incomeTaxCalculationBasis==="derivedFromUnitOperations"?
-      "住戸営業と審査済みの所得区分・費用配分・税率仮定から所得税等を試算しました。購入M4の他、購入M3の宿泊／私用・資産別償却・独立した私用減価相当額による譲渡益も限定対応。消費税・法定適格性を含む正式な税引後評価ではありません。":
-      "所得税等の外部仮定値を納付月へ接続しました。消費税を含む正式な税引後評価ではありません。",
-  ...(last.incomeTaxWarnings??[]),
-  "未入力の任意詳細値を0と解釈した箇所："+(last.inputWarnings?.length??0)+"件"];
+ last.status==="incomplete"?(last.missing??[]).map(x=>
+     (x.unitId??"全体")+" "+(x.month??"")+" "+x.fieldId+" — "+x.reason):
+ last.indicativeAfterTax?[
+   "これは投資判断用の簡易税務・消費税シナリオです。実際の申告税額や物件ごとの適用可能性を保証しません。",
+   ...(last.indicativeWarnings??[]),
+   "入力がない任意項目をゼロとみなした箇所："+(last.inputWarnings?.length??0)+"件"
+ ]:[...(last.limitations??[]),
+   last.incomeTaxStatus==="incomplete"?"所得税等の資料："+last.incomeTaxBlocker:
+     "個別レビューに基づいた所得税等の参考計算を納付月へ反映しています。消費税・法定適格性は未接続です。",
+   ...(last.incomeTaxWarnings??[]),
+   "入力がない任意項目をゼロとみなした箇所："+(last.inputWarnings?.length??0)+"件"];
  $("limitations").innerHTML="<ul>"+lines.map(x=>"<li>"+esc(x)+"</li>").join("")+"</ul>";
+}
+function renderIndicativeSettings(){
+ if(!indicativeAssumptions){
+   $("indicative-settings").textContent=
+      "「概算税引後分析を開始」を選ぶと、税率・償却・M3家事按分と主体別の消費税登録を変更できます。";
+   return;
+ }
+ const a=indicativeAssumptions;
+ const labels=[
+  ["personalOrdinaryEffectiveRate","個人・通常所得の追加税負担率"],
+  ["corporateEffectiveRate","法人・実効税負担率"],
+  ["personalShortSaleGainRate","個人・短期譲渡益の概算税率"],
+  ["personalLongSaleGainRate","個人・長期譲渡益の概算税率"],
+  ["vatRate","売上・仕入消費税率"],
+  ["buildingAnnualDepreciationRate","建物の年間概算償却率"],
+  ["assumedBuildingShareOfPurchase","台帳なしの場合の建物取得価額割合"],
+  ["mixedUseBusinessFloorShare","M3の建物事業用面積割合"],
+  ["mixedUseBuildingServiceShare","M3の年間建物事業供用期間割合"],
+  ["vatInputCreditRecoveryFactor","事業用仕入税額控除の有効割合"],
+  ["nationalTaxCashShare","個人所得税の国税納付割合"],
+  ["saleNationalTaxCashShare","個人譲渡税の国税納付割合"]
+ ];
+ const controls=labels.map(([key,label])=>
+  '<label>'+esc(label)+'（%）<input type="number" min="0" max="100" step="0.1"'+
+   ' data-approx-field="'+esc(key)+'" value="'+esc((a[key]*100).toFixed(3))+'"></label>').join("");
+ const vat=data.entities.map(e=>
+   '<label>'+esc(e.name)+'（消費税の計算上の登録仮定）<select data-approx-vat="'+esc(e.id)+'">'+
+   '<option value="false"'+(!a.vatRegisteredByEntity[e.id]?' selected':'')+
+   '>免税・登録なしと仮定</option>'+
+   '<option value="true"'+(a.vatRegisteredByEntity[e.id]?' selected':'')+
+   '>課税・登録ありと仮定</option></select></label>').join("");
+ $("indicative-settings").innerHTML=
+  '<p class="small">下記の値はすべて仮定です。税金の支払は概ね翌年度に配分します。仕入税額の還付、土地建物取得売却のVAT、複雑な控除は考慮しません。</p>'+
+  '<div class="form-grid">'+controls+vat+'</div>';
 }
 function render(){
  if(!data)return;
@@ -299,7 +378,7 @@ function render(){
  $("unit-choice").innerHTML=data.units.map(u=>'<option value="'+esc(u.id)+'">'+esc(u.name)+'</option>').join("");
  $("unit-choice").value=selectedUnit;
  calculate();
- renderBusiness();renderEvidence();renderKpis();renderAnnual();renderTaxCrosswalk();renderOwnedAssetTax();renderEditor();renderMonths();renderLimitations();
+ renderBusiness();renderEvidence();renderKpis();renderAnnual();renderTaxCrosswalk();renderOwnedAssetTax();renderEditor();renderMonths();renderLimitations();renderIndicativeSettings();
 }
 function showTab(tab){
  activeTab=tab;
@@ -310,7 +389,7 @@ function showTab(tab){
 function assign(obj){
  inspectV11Draft(obj); // browser structural + reference check, NOT full JSON Schema
  const replacement=structuredClone(obj);
- data=replacement;taxSidecar=null;selectedUnit=data.units[0]?.id??null;
+ data=replacement;taxSidecar=null;indicativeAssumptions=null;selectedUnit=data.units[0]?.id??null;
  $("tax-import-status").textContent="税額資料を解除しました。入力変更後は別途税額の再計算が必要です。";
  setDirty();render();
 }
@@ -323,6 +402,8 @@ function useTaxSidecar(value){
  if(simulation.incomeTaxStatus!=="estimated")
    throw new Error(simulation.incomeTaxBlocker??"税額資料が現在の入力に適合しません");
  taxSidecar=structuredClone(value);
+ indicativeAssumptions=null;
+ $("indicative-status").textContent="概算分析を解除し、個別税額資料の試算に切り替えました。";
  $("tax-import-status").textContent=auto?
    "実際の住戸営業元帳と所得区分／税率のレビュー済み仮定から、所得税等を試算しました（保存されません）。":
    "外部仮定の税額資料を一時読込みました（保存されません）。";
@@ -445,6 +526,35 @@ $("load-m3-demo-tax").addEventListener("click",async()=>{
   if(!r.ok)throw new Error("M3税務プランを読み込めません");
   useTaxSidecar(await r.json());
  }catch(e){$("tax-import-status").textContent="M3家事按分・税務計算の実行失敗："+e.message;}
+});
+$("enable-indicative").addEventListener("click",()=>{
+ if(!data)return;
+ indicativeAssumptions=defaultV11IndicativeAssumptions(data);
+ taxSidecar=null;
+ $("indicative-status").textContent=
+    "概算税引後CFを有効化しました。仮定の税率・消費税区分を変更すると再計算します（設定はブラウザ保存されません）。";
+ showTab("analysis");render();
+});
+$("clear-indicative").addEventListener("click",()=>{
+ indicativeAssumptions=null;
+ $("indicative-status").textContent="概算分析を解除しました。税引前試算に戻します。";
+ render();
+});
+$("indicative-settings").addEventListener("change",e=>{
+ if(!indicativeAssumptions)return;
+ const field=e.target.closest("[data-approx-field]");
+ const vat=e.target.closest("[data-approx-vat]");
+ if(field){
+   if(field.value.trim()===""||!Number.isFinite(Number(field.value))||
+      Number(field.value)<0||Number(field.value)>100){
+     $("indicative-status").textContent="割合は0〜100%で入力してください。";renderIndicativeSettings();return;
+   }
+   indicativeAssumptions[field.dataset.approxField]=Number(field.value)/100;
+ }else if(vat){
+   indicativeAssumptions.vatRegisteredByEntity[vat.dataset.approxVat]=vat.value==="true";
+ }else return;
+ $("indicative-status").textContent="仮定を更新し、概算税引後NPV・IRRを再計算しました。";
+ render();
 });
 $("choose-tax-import").addEventListener("click",()=>$("tax-import-file").click());
 $("tax-import-file").addEventListener("change",async e=>{
