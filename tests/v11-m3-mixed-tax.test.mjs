@@ -1,0 +1,159 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {allocateBusinessExpense} from "../src/tax.mjs";
+import {previewV11Scenario} from "../src/v11-preview-engine.mjs";
+import {fingerprintV11Document} from "../src/v11-income-tax-sidecar.mjs";
+import {inspectV11Draft} from "../src/v11-draft-storage.mjs";
+import {deriveOwnedM3MixedTaxRegister} from "../src/v11-owned-m3-mixed-tax.mjs";
+const load=name=>JSON.parse(readFileSync(new URL("../preview/"+name,import.meta.url),"utf8"));
+const source=load("v11-m3-mixed-use-sample.json");
+const tax=load("v11-m3-mixed-tax-plan.json");
+const clone=x=>structuredClone(x);
+const near=(x,y)=>assert.ok(Math.abs(x-y)<1e-6,`${x} != ${y}`);
+const evaluate=(d=source,p=tax)=>previewV11Scenario(d,{scenarioId:"base",derivedTaxPlan:p});
+test("M3 mixed-use saved document and reviewed sidecar match actual canonical v1.1 shape",()=>{
+ assert.equal(inspectV11Draft(source).status,"structurallyReviewed");
+ assert.equal(fingerprintV11Document(source),tax.documentFingerprint);
+ assert.equal(source.units[0].modelId,"M3");
+ assert.equal(source.units[0].tenure,"own");
+ assert.equal(source.units[0].calendar.reduce((s,x)=>s+x.lodgingDays,0),180);
+ assert.equal(source.units[0].assets.length,2);
+ assert.equal(source.units[0].expenses.length,12);
+});
+test("M3 180 calendar lodging days vs 54 forecast nights vs 365 building-business days: annual utility and building income-tax treatment",()=>{
+ const x=evaluate();
+ assert.equal(x.status,"estimated-pre-tax");
+ assert.equal(x.incomeTaxStatus,"estimated",x.incomeTaxBlocker);
+ assert.equal(x.taxStatus,"incomplete");
+ assert.equal(x.afterTax,null);
+ assert.equal(x.CF0,-1100000);
+ assert.equal(x.preTax.cashFlows[1],2598000);
+ assert.equal(x.ownedAssetTaxRegisters.length,1);
+ const register=x.ownedAssetTaxRegisters[0];
+ assert.equal(register.modelId,"M3");
+ assert.equal(register.annualUse.length,1);
+ const y=register.annualUse[0];
+ assert.equal(y.lodgingAllocatedDays,180);
+ assert.equal(y.forecastSoldNights,54);
+ assert.equal(y.calendarDays,365);
+ near(y.sharedUtilityExpenseShare,.6*54/365);
+ near(y.buildingBusinessShare,.6);
+ assert.notEqual(y.sharedUtilityExpenseShare,180/365);
+ assert.equal(register.assetLines.find(a=>a.category==="land").annual[0].grossBookReduction,0);
+ const b=register.assetLines.find(a=>a.category==="building");
+ assert.equal(b.annual[0].grossBookReduction,30000);
+ assert.equal(b.annual[0].deductibleDepreciation,18000);
+ near(register.disposalEvidence.businessBookReduction,18000);
+ near(register.disposalEvidence.nonbusinessBookReduction,12000);
+ near(register.disposalEvidence.deductibleBusinessExpenseHistory,18000);
+ assert.equal(register.disposalEvidence.adjustedBuildingBasis,570000);
+ assert.equal(register.taxBookValueAtExit,970000);
+ assert.equal(register.saleGain.gain,220000);
+ assert.equal(register.saleGain.holdingClass,"short");
+ near(register.individualSaleAssessment.amount,87186);
+ near(register.reconciliation.operatingDeductedVsDisposalBusinessHistory,0);
+ const expense=x.derivedTaxItems.filter(a=>a.entityId==="person-1"&&a.sourceLine==="propertyOperatingLodgingAllocated");
+ assert.equal(expense.length,1);
+ near(expense[0].amount,240000*.6*54/365);
+ const dep=x.derivedTaxItems.filter(a=>a.sourceLine==="buildingTaxDepreciation");
+ assert.equal(dep.length,1);
+ assert.equal(dep[0].category,"miscellaneous");
+ assert.equal(dep[0].amount,18000);
+ const gainTax=x.incomeTaxCashEvents.filter(a=>a.taxKind==="saleGainTax");
+ assert.equal(gainTax.length,5);
+ near(gainTax.reduce((s,a)=>s+a.incrementalTaxCF,0),-87186);
+ assert.ok(gainTax.some(a=>a.month==="2028-01"));
+});
+test("B-T06 independent utility allocation is 19,726.027.. for 240000 x 60/180 x 90/365, not 180 days",()=>{
+ const actual=allocateBusinessExpense({expense:240000,method:"areaGuestNights",
+   areaBusiness:60,areaTotal:180,actualGuestNights:90,daysInYear:365});
+ near(actual.amount,19726.027397260274);
+ assert.equal(Math.round(actual.amount),19726);
+ const wrongly=allocateBusinessExpense({expense:240000,method:"areaGuestNights",
+   areaBusiness:60,areaTotal:180,actualGuestNights:180,daysInYear:365});
+ assert.ok(wrongly.amount>actual.amount*1.9);
+ const building=allocateBusinessExpense({expense:30000,method:"areaBusinessPeriod",
+   areaBusiness:60,areaTotal:180,businessDays:365,daysInYear:365});
+ near(building.amount,10000);
+});
+test("Scenario edits or alternate scenario invalidate reviewed actual-night and monthly sale tax plan",()=>{
+ const changed=clone(source);changed.units[0].fields.H.H02.value=60;
+ const stale=evaluate(changed,tax);
+ assert.equal(stale.incomeTaxStatus,"incomplete");
+ assert.equal(stale.afterIncomeTaxSensitivity,null);
+ const up=previewV11Scenario(source,{scenarioId:"upside",derivedTaxPlan:tax});
+ assert.equal(up.incomeTaxStatus,"incomplete");
+ assert.equal(up.afterIncomeTaxSensitivity,null);
+ const p=clone(tax);p.unitYearReviews.find(r=>r.unitId==="osaka-m3").deductibleShares.propertyOperating=180/365;
+ const x=evaluate(source,p);
+ assert.equal(x.incomeTaxStatus,"incomplete");
+ assert.match(x.incomeTaxBlocker,/guest nights|utility/i);
+});
+test("M3 disposal basis cannot be inferred from operating depreciation: monthly records are required and reconcile with deduction",()=>{
+ for(const alter of [
+  p=>p.ownedPropertyReviews[0].disposalBasisReview.monthlyRecords.pop(),
+  p=>p.ownedPropertyReviews[0].disposalBasisReview.monthlyRecords[0].nonbusinessGrossEquivalent=-1,
+  p=>p.ownedPropertyReviews[0].disposalBasisReview.monthlyRecords[0].businessActualDeducted=100,
+  p=>p.ownedPropertyReviews[0].disposalBasisReview.use90PercentException=true,
+  p=>p.ownedPropertyReviews[0].disposalBasisReview.monthlyRecords[0].businessShare=.5,
+  p=>p.ownedPropertyReviews[0].yearUseReviews[0].forecastGuestNights=180,
+  p=>p.ownedPropertyReviews[0].yearUseReviews[0].businessSupplyDays=180,
+  p=>p.ownedPropertyReviews[0].assetRates.building.eligibilityReviewed=false
+ ]){
+  const p=clone(tax);alter(p);
+  const x=evaluate(source,p);
+  assert.equal(x.incomeTaxStatus,"incomplete",x.incomeTaxBlocker);
+  assert.equal(x.afterIncomeTaxSensitivity,null);
+  assert.equal(x.afterTax,null);
+ }
+});
+test("Changing reviewed business area modifies ordinary depreciation without mutating any pre-tax investor acquisition or operating cash",()=>{
+ const original=evaluate();
+ const alternative=clone(tax);
+ const r=alternative.ownedPropertyReviews[0].yearUseReviews[0];
+ r.businessFloorArea=50;
+ for(const asset of source.units[0].assets){
+  // Asset tax-use history is part of canonical saved document, so use a
+  // matched, newly fingerprinted alternate document too.
+ }
+ const d=clone(source);
+ d.units[0].assets.forEach(a=>a.businessUseRatioByYear[0].ratio=50);
+ alternative.documentFingerprint=fingerprintV11Document(d);
+ alternative.unitYearReviews.find(x=>x.unitId==="osaka-m3")
+    .deductibleShares.propertyOperating=.5*54/365;
+ const dep=alternative.ownedPropertyReviews[0].disposalBasisReview.monthlyRecords;
+ for(const m of dep){
+  m.businessShare=.5;m.privateShare=.5;
+  m.businessGrossEquivalent=1250;
+  m.nonbusinessGrossEquivalent=1250;
+  m.businessActualDeducted=1250;
+ }
+ const revised=evaluate(d,alternative);
+ assert.equal(revised.incomeTaxStatus,"estimated",revised.incomeTaxBlocker);
+ assert.deepEqual(original.preTax.cashFlows,revised.preTax.cashFlows);
+ assert.equal(original.CF0,revised.CF0);
+ assert.equal(original.ownedAssetTaxRegisters[0].assetLines[1].annual[0].deductibleDepreciation,18000);
+ assert.equal(revised.ownedAssetTaxRegisters[0].assetLines[1].annual[0].deductibleDepreciation,15000);
+ near(revised.derivedTaxItems.find(x=>x.sourceLine==="propertyOperatingLodgingAllocated").amount,
+   240000*.5*54/365);
+ assert.notEqual(original.afterIncomeTaxSensitivity.NPV,revised.afterIncomeTaxSensitivity.NPV);
+});
+test("M3 cannot silently treat unreviewed renovation, other private cost or corporation's self-use as individual M3",()=>{
+ const d=clone(source);
+ d.units[0].assets.push({...clone(d.units[0].assets[0]),id:"unclassified-extra"});
+ assert.throws(()=>previewV11Scenario(d),/one land and one building/);
+ const withPrivate=clone(source);
+ withPrivate.units[0].expenses[0].allocationMethod="private";
+ const plan=clone(tax);plan.documentFingerprint=fingerprintV11Document(withPrivate);
+ const x=evaluate(withPrivate,plan);
+ assert.equal(x.incomeTaxStatus,"incomplete");
+ assert.match(x.incomeTaxBlocker,/utility expenses/);
+ const corp=clone(source);
+ corp.units[0].operatorEntityId="corporation-1";
+ corp.units[0].ownerEntityId="corporation-1";
+ corp.units[0].assets.forEach(a=>a.ownerEntityId="corporation-1");
+ corp.units[0].expenses.forEach(a=>a.entityId="corporation-1");
+ const q=clone(tax);q.documentFingerprint=fingerprintV11Document(corp);
+ assert.equal(evaluate(corp,q).incomeTaxStatus,"incomplete");
+});
