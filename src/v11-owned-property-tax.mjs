@@ -207,9 +207,15 @@ export function deriveOwnedM4TaxRegister({unit,unitResult,ownerType,ownedReview}
       typeof indiv.nationalPaymentMonth!=="string")
      throw new RangeError("Explicit national/local capital-gain payment months required");
    const settlement=[indiv.nationalPaymentMonth,...indiv.residencePaymentMonths];
-   if(settlement.some(m=>!/^\d{4}-(0[1-9]|1[0-2])$/.test(m)||
-      Number(m.slice(0,4))!==gain.saleYear+1))
-      throw new RangeError("Capital gains due must be next calendar year in this reviewed model");
+   if(settlement.some(m=>!/^\d{4}-(0[1-9]|1[0-2])$/.test(m))||
+      Number(indiv.nationalPaymentMonth.slice(0,4))!==gain.saleYear+1||
+      settlement.some((m,i)=>i>0&&m<=settlement[i-1])||
+      indiv.residencePaymentMonths.some(m=>{
+        const year=Number(m.slice(0,4)),month=monthNumber(m);
+        return !((year===gain.saleYear+1&&month>=6)||
+          (year===gain.saleYear+2&&month===1));
+      }))
+      throw new RangeError("Reviewed income-tax and following-year residence-tax payment periods required");
    const capitalTax=individualSaleGainTax({
      taxYear:gain.saleYear,taxableGain:gain.taxableGain,holdingClass:gain.holdingClass,
      eligibleReliefConfirmed:false,specialDeduction:0,
