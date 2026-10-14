@@ -5,9 +5,12 @@
  * into category-specific annual tax items. Income tax is then calculated by
  * the EXISTING assessPersonalYear / assessCorporateYear rule engines.
  *
- * Scope deliberately excludes: owned property (land/building basis, exit gain),
- * any capitalizable investment/finance fees, asset depreciation, withholding,
- * VAT invoice cash, non-January fiscal years and unsettled classification.
+ * Owned M4 full-business real-estate is supported only by a reviewed
+ * land/building tax register, noncash straight-line building depreciation
+ * and separate individual capital gain or corporate disposal gain.
+ * Other owned models, capital additions/finance fees, private use,
+ * withholding, VAT invoice cash, non-January fiscal years and unsettled
+ * classification are deliberately blocked.
  * Missing tax inputs block the output; a blank input never means zero tax.
  *
  * All tax rules and expense/business shares are separately supplied reviewed
