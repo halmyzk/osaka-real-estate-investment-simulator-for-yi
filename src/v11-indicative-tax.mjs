@@ -50,7 +50,7 @@ function propertyExpenseMix(unit,month,common,shares,assumptions){
     method==="private"?0:1;
   if(e.taxTreatment==="nonDeductible"||e.taxTreatment==="pending")share=0;
   if(e.taxTreatment==="capital")throw new RangeError("Capital item may not be treated as operating expense");
-  const k=e.description?.match(/^\\[quick:([A-Za-z]+)\\]/)?.[1]??"other";
+  const k=e.description?.startsWith("[quick:")?e.description.slice(7).split("]")[0]:"other";
   const vatFraction=["propertyTax","insurance"].includes(k)?0:
     assumptions.taxableVendorExpenseShares.property;
   const taxOnBill=value*vatFraction*assumptions.vatRate;
