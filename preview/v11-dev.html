@@ -436,6 +436,14 @@ function renderIndicativeSettings(){
  const controls=labels.map(([key,label])=>
   '<label>'+esc(label)+'（%）<input type="number" min="0" max="100" step="0.1"'+
    ' data-approx-field="'+esc(key)+'" value="'+esc((a[key]*100).toFixed(3))+'"></label>').join("");
+ const vatRates=[
+  ["lodging","宿泊運営費のVAT課税仕入割合"],
+  ["rental","賃貸運営費のVAT課税仕入割合"],
+  ["property","物件保有・共通費のVAT課税仕入割合（固定資産税等は非課税）"]
+ ].map(([key,label])=>
+    '<label>'+esc(label)+'（%）<input type="number" min="0" max="100" step="0.1"'+
+    ' data-approx-vat-expense="'+esc(key)+'" value="'+
+       esc((a.taxableVendorExpenseShares[key]*100).toFixed(3))+'"></label>').join("");
  const vat=data.entities.map(e=>
    '<label>'+esc(e.name)+'（消費税の計算上の登録仮定）<select data-approx-vat="'+esc(e.id)+'">'+
    '<option value="false"'+(!a.vatRegisteredByEntity[e.id]?' selected':'')+
@@ -444,7 +452,7 @@ function renderIndicativeSettings(){
    '>課税・登録ありと仮定</option></select></label>').join("");
  $("indicative-settings").innerHTML=
   '<p class="small">下記の値はすべて仮定です。税金の支払は概ね翌年度に配分します。仕入税額の還付、土地建物取得売却のVAT、複雑な控除は考慮しません。</p>'+
-  '<div class="form-grid">'+controls+vat+'</div>';
+  '<div class="form-grid">'+controls+vatRates+vat+'</div>';
 }
 function render(){
  if(!data)return;
@@ -648,6 +656,7 @@ $("indicative-settings").addEventListener("change",e=>{
  if(!indicativeAssumptions)return;
  const field=e.target.closest("[data-approx-field]");
  const vat=e.target.closest("[data-approx-vat]");
+ const vendor=e.target.closest("[data-approx-vat-expense]");
  if(field){
    if(field.value.trim()===""||!Number.isFinite(Number(field.value))||
       Number(field.value)<0||Number(field.value)>100){
@@ -656,6 +665,14 @@ $("indicative-settings").addEventListener("change",e=>{
    indicativeAssumptions[field.dataset.approxField]=Number(field.value)/100;
  }else if(vat){
    indicativeAssumptions.vatRegisteredByEntity[vat.dataset.approxVat]=vat.value==="true";
+ }else if(vendor){
+   if(vendor.value.trim()===""||!Number.isFinite(Number(vendor.value))||
+      Number(vendor.value)<0||Number(vendor.value)>100){
+     $("indicative-status").textContent="VAT対象経費の割合は0〜100%で入力してください。";
+     renderIndicativeSettings();return;
+   }
+   indicativeAssumptions.taxableVendorExpenseShares[vendor.dataset.approxVatExpense]=
+     Number(vendor.value)/100;
  }else return;
  $("indicative-status").textContent="仮定を更新し、概算税引後NPV・IRRを再計算しました。";
  render();
