@@ -29,6 +29,47 @@ const yearDays=y=>new Date(Date.UTC(y+1,0,1))-new Date(Date.UTC(y,0,1));
 const roundTrip=(values)=>values.every(x=>Number.isFinite(x));
 const categories=["business","miscellaneous","realEstate","corporate"];
 const near=(a,b)=>Math.abs(a-b)<=Math.max(1e-6,Math.abs(b)*1e-10);
+/**
+ * Allocate each classified property bill separately.
+ * 'propertyTax' is outside VAT; insurance is assumed VAT-exempt in this
+ * simplified input preset. M3 utilities use forecast nights, whereas taxes
+ * and insurance use building area x service period.
+ */
+function propertyExpenseMix(unit,month,common,shares,assumptions){
+ const details=(unit.expenses??[]).filter(e=>e.category==="propertyOperating"&&
+   e.periodStart?.slice(0,7)===month);
+ let detailed=0,deductible=0,vatPaid=0,vatBusiness=0;
+ const proof=[];
+ for(const e of details){
+  const value=finite(e.amount,"itemized property expense");
+  detailed+=value;
+  const method=e.allocationMethod;
+  let share=unit.modelId!=="M3"?1:
+    method==="areaTimesGuestNights"?shares.utilityShare:
+    method==="areaTimesBusinessPeriod"?shares.depreciationShare:
+    method==="private"?0:1;
+  if(e.taxTreatment==="nonDeductible"||e.taxTreatment==="pending")share=0;
+  if(e.taxTreatment==="capital")throw new RangeError("Capital item may not be treated as operating expense");
+  const k=e.description?.match(/^\\[quick:([A-Za-z]+)\\]/)?.[1]??"other";
+  const vatFraction=["propertyTax","insurance"].includes(k)?0:
+    assumptions.taxableVendorExpenseShares.property;
+  const taxOnBill=value*vatFraction*assumptions.vatRate;
+  deductible+=value*share;
+  vatPaid+=taxOnBill;
+  vatBusiness+=taxOnBill*share;
+  proof.push({id:e.id,kind:k,amount:value,businessShare:share,
+    netDeductible:value*share,vatPaid:taxOnBill});
+ }
+ if(detailed>common+1e-7)throw new RangeError("Itemized property bills exceed operating cost; double counting detected");
+ // A05 recurring property holding cost is separate from explicit utilities.
+ const remaining=Math.max(0,common-detailed);
+ const remainingShare=unit.modelId==="M3"?shares.depreciationShare:1;
+ const extraVAT=remaining*assumptions.taxableVendorExpenseShares.property*assumptions.vatRate;
+ return {taxDeductible:deductible+remaining*remainingShare,
+   vatPaid:vatPaid+extraVAT,
+   vatBusiness:vatBusiness+extraVAT*remainingShare,
+   proof};
+}
 
 export function defaultV11IndicativeAssumptions(document){
  if(!document?.entities||!Array.isArray(document.entities))throw new TypeError("v1.1 entities required");
@@ -162,7 +203,7 @@ export function estimateV11IndicativeTaxCash({document,unitResults,assumptions})
  const entities=new Map(document.entities.map(e=>[e.id,e]));
  const stored=new Map(document.units.map(u=>[u.id,u]));
  const {map:years,find}=collect(document.entities);
- const cash=new Map(),taxes=new Map(),sales=[],unitProof=[];
+ const cash=new Map(),taxes=new Map(),sales=[],unitProof=[],expenseProof=[];
  const seen=new Set();
  for(const u of unitResults){
   if(u.status!=="computed"||!stored.has(u.unitId)||!entities.has(u.entityId)||
@@ -203,7 +244,8 @@ export function estimateV11IndicativeTaxCash({document,unitResults,assumptions})
     const lodgingCost=finite(r.expenses.lodgingOperating,"lodging operating cost");
     const rentalCost=finite(r.expenses.rentalOperating,"rental operating cost");
     const headRent=finite(r.expenses.masterRent,"master rent");
-    const sharedTaxShare=shares.utilityShare;
+    const propertyMix=propertyExpenseMix(unit,month,common,shares,a);
+    expenseProof.push(...propertyMix.proof.map(x=>({...x,unitId:unit.id,month})));
     annualRevenue+=lodging+rental;
     annualExpenses+=lodgingCost+rentalCost+common+headRent;
     subtotal.lodgingRevenue+=lodging;subtotal.rentalRevenue+=rental;
@@ -220,16 +262,16 @@ export function estimateV11IndicativeTaxCash({document,unitResults,assumptions})
       lodgeShare=d>0?r.lodging.allocatedDays/d:1;
       rentShare=1-lodgeShare;
     }
-    const commonBusinessExpense=common*sharedTaxShare;
+    const commonBusinessExpense=propertyMix.taxDeductible;
     subtotal.categoryProfit[lodgingCategory]-=commonBusinessExpense*lodgeShare;
     subtotal.categoryProfit[rentalCategory]-=commonBusinessExpense*rentShare;
     subtotal.netBusinessDeductibleExpenses+=lodgingCost+rentalCost+headRent+commonBusinessExpense;
     const outputVAT=registered?lodging*a.vatRate:0;
     const lodgingVendorVat=lodgingCost*a.taxableVendorExpenseShares.lodging*a.vatRate;
     const rentalVendorVat=rentalCost*a.taxableVendorExpenseShares.rental*a.vatRate;
-    const sharedVendorVat=common*a.taxableVendorExpenseShares.property*a.vatRate;
+    const sharedVendorVat=propertyMix.vatPaid;
     const vendorVAT=lodgingVendorVat+rentalVendorVat+sharedVendorVat;
-    const eligibleVendorVAT=lodgingVendorVat+sharedVendorVat*sharedTaxShare;
+    const eligibleVendorVAT=lodgingVendorVat+propertyMix.vatBusiness;
     // Rents are treated as residential exempt. Rental-operation vendors are
     // assumed taxable cash suppliers, but have no input VAT credit here.
     // VAT input credit for lodging/common only if entity VAT-registered.
@@ -239,10 +281,10 @@ export function estimateV11IndicativeTaxCash({document,unitResults,assumptions})
     subtotal.candidateInputVatCredit+=candidateInput;
     // When a supplier VAT payment relates to business expenses, the
     // non-credited share is also assumed deductible for ordinary income.
-    const taxableVendorVat=lodgingVendorVat+rentalVendorVat+sharedVendorVat*sharedTaxShare;
+    const taxableVendorVat=lodgingVendorVat+rentalVendorVat+propertyMix.vatBusiness;
     subtotal.vatDeductibleBeforeCredit+=taxableVendorVat;
-    subtotal.categoryProfit[lodgingCategory]-=lodgingVendorVat+sharedVendorVat*sharedTaxShare*lodgeShare;
-    subtotal.categoryProfit[rentalCategory]-=rentalVendorVat+sharedVendorVat*sharedTaxShare*rentShare;
+    subtotal.categoryProfit[lodgingCategory]-=lodgingVendorVat+propertyMix.vatBusiness*lodgeShare;
+    subtotal.categoryProfit[rentalCategory]-=rentalVendorVat+propertyMix.vatBusiness*rentShare;
     pushCash(cash,entity.id,month,"collectionsVAT",outputVAT);
     pushCash(cash,entity.id,month,"vendorVATCash",-vendorVAT);
    }
@@ -375,7 +417,7 @@ export function estimateV11IndicativeTaxCash({document,unitResults,assumptions})
  const allVat=sum(vatCashAdjustments.map(x=>x.operating));
  if(!roundTrip([allIncomeTax,allVat]))throw new RangeError("Nonfinite total indicative cash");
  return {status:"estimated",scope:"indicativeInvestorSensitivity",
-   assumptions:a,unitProof,taxRows,saleRows:sales,vatRows,
+   assumptions:a,unitProof,expenseProof,taxRows,saleRows:sales,vatRows,
    vatCashAdjustments,incomeTaxCashEvents,
    reconciliation:{incomeTaxCashTotal:allIncomeTax,netVatCashTotal:allVat,
     cashAdjustmentsTotal:allVat+allIncomeTax},
@@ -385,7 +427,7 @@ export function estimateV11IndicativeTaxCash({document,unitResults,assumptions})
     "Residential rent VAT-exempt; vendor VAT applied only to editable fractions of lodging, rental and property expenses (fixed asset taxes are not taxable supply); head rent exempt",
     "No automatically recognized VAT refund, project-loss refund, corporate loss carryforward or cross-income offset",
     "Building basis defaults to a visible purchase allocation assumption only if no land/building tax asset ledger exists",
-    "Mixed-use utilities use forecast nights and floor share; building depreciation uses floor share and year service share; independent legal disposition basis may differ",
+    "M3 explicit utility bills use forecast nights; insurance/property tax bills and A05 holding costs use building service share, and building depreciation is noncash; legal exit basis may differ",
     "Non-recovered supplier VAT assumed deductible only on business-use component; small credits not used for refunds are not recognized",
     "VAT and income tax remittance months are forecasting conventions; amounts may differ materially from actual tax liabilities",
     "Individual salary-related additional tax, minimum taxes, residential relief, credits and legal eligibility not modeled",
