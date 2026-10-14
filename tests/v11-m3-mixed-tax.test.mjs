@@ -157,3 +157,16 @@ test("M3 cannot silently treat unreviewed renovation, other private cost or corp
  const q=clone(tax);q.documentFingerprint=fingerprintV11Document(corp);
  assert.equal(evaluate(corp,q).incomeTaxStatus,"incomplete");
 });
+
+test("Developer preview exposes two-step explicit M3 sample and tax-plan controls, never claims final VAT-inclusive tax",()=>{
+ const html=readFileSync(new URL("../preview/v11-dev.html",import.meta.url),"utf8");
+ for(const id of ["choose-m3-demo","load-m3-demo-tax","owned-tax-register"])
+   assert.match(html,new RegExp('id="'+id+'"'));
+ assert.match(html,/v11-m3-mixed-use-sample\.json/);
+ assert.match(html,/v11-m3-mixed-tax-plan\.json/);
+ assert.match(html,/forecastSoldNights/);
+ assert.match(html,/sharedUtilityExpenseShare/);
+ assert.match(html,/buildingBusinessShare/);
+ assert.match(html,/nonbusinessBookReduction/);
+ assert.match(html,/正式な税引後NPV／IRR/);
+});
