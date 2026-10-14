@@ -292,7 +292,7 @@ function renderQuickCosts(){
  quickInputMonths();
  const unit=selected();
  const rows=(unit.expenses??[]).filter(x=>x.description?.startsWith("[quick:"))
-   .map(x=>[x.description.replace(/^\\[quick:[^\\]]+\\] /,""),
+   .map(x=>[x.description.slice(x.description.indexOf("]")+2),
      x.periodStart.slice(0,7),fmt(x.amount),x.category]);
  const assets=(unit.assets??[]).filter(x=>x.id.startsWith("quick-renovation-"))
    .map(x=>["改修・FF&E投資（CapEx）",x.invoiceDate.slice(0,7),
