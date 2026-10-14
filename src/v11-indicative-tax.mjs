@@ -118,7 +118,8 @@ const pushCash=(map,entityId,month,category,value)=>{
  row.operating+=value;row[category]+=value;map.set(key,row);
 };
 const pushTax=(taxes,entityId,month,taxKind,amount)=>{
- finite(amount,"estimated cash tax");
+ if(typeof amount!=="number"||!Number.isFinite(amount)||amount>0)
+  throw new RangeError("Indicative cash tax paid must be finite and nonpositive");
  if(amount===0)return;
  const k=entityId+"|"+month+"|"+taxKind;
  taxes.set(k,(taxes.get(k)??0)+amount);
