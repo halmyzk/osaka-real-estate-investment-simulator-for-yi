@@ -337,7 +337,129 @@
             "evidenceUrl": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/joto/3261.htm"
           }
         ]
-      }
+      },
+      "sharedUtilityExpenseReviews": [
+        {
+          "expenseId": "shared-utilities-2026-01",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-02",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-03",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-04",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-05",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-06",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-07",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-08",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-09",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-10",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-11",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        },
+        {
+          "expenseId": "shared-utilities-2026-12",
+          "reviewStatus": "reviewedScenarioAssumption",
+          "expenseKind": "sharedUtilities",
+          "deductionBasis": "areaGuestNights",
+          "reviewedGrossCashAmount": 20000,
+          "amountAgreesWithCash": true,
+          "reviewEvidenceUrl": "https://www.nta.go.jp/law/joho-zeikaishaku/shotoku/shinkoku/0018005-115/0018005-115.pdf",
+          "note": "Illustrative annual tax allocation and cash bill match; the URL is a general rule source, not a receipt"
+        }
+      ]
     }
   ]
 }
