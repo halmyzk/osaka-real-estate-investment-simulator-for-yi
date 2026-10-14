@@ -43,6 +43,7 @@ export function defaultV11IndicativeAssumptions(document){
   vatRate:0.10,
   vatRegisteredByEntity:Object.fromEntries(document.entities.map(e=>[e.id,false])),
   vatInputCreditRecoveryFactor:1,
+  taxableVendorExpenseShares:{lodging:1,rental:1,property:1},
   vatSettlementMonth:3,
   buildingAnnualDepreciationRate:0.05,
   assumedBuildingShareOfPurchase:0.60,
@@ -52,7 +53,7 @@ export function defaultV11IndicativeAssumptions(document){
   assetTransactionVAT:"excludedByScenarioAssumption",
   noAutomaticTaxRefunds:true,
   crossCategoryLossOffset:"disabled",
-  vendorExpenseVAT:"allThreeOperatingExpenseCategories",
+  vendorExpenseVAT:"explicitExpenseCategoryFractions",
   withholdingAndPriorPayments:"excludedByScenarioAssumption",
   fixedYearEndCashTiming:"incomeNextYearAndResidentsIntoFollowingJanuary"
  };
@@ -66,6 +67,13 @@ function validate(document,a){
   "buildingAnnualDepreciationRate","assumedBuildingShareOfPurchase",
   "mixedUseBusinessFloorShare","mixedUseBuildingServiceShare"];
  for(const field of fields)pct(a[field],field);
+ if(!a.taxableVendorExpenseShares||Array.isArray(a.taxableVendorExpenseShares)||
+    Object.keys(a.taxableVendorExpenseShares).length!==3||
+    ["lodging","rental","property"].some(k=>!(k in a.taxableVendorExpenseShares))||
+    Object.keys(a.taxableVendorExpenseShares).some(k=>!["lodging","rental","property"].includes(k)))
+   throw new RangeError("VAT taxable-vendor fractions required separately for lodging/rental/property expenses");
+ for(const k of ["lodging","rental","property"])
+    pct(a.taxableVendorExpenseShares[k],k+" taxable-vendor fraction");
  if(!Number.isInteger(a.vatSettlementMonth)||a.vatSettlementMonth<1||
     a.vatSettlementMonth>12)throw new RangeError("VAT settlement month must be 1..12");
  const expected=document.entities.map(e=>e.id);
@@ -79,7 +87,7 @@ function validate(document,a){
   assetTransactionVAT:"excludedByScenarioAssumption",
   noAutomaticTaxRefunds:true,
   crossCategoryLossOffset:"disabled",
-  vendorExpenseVAT:"allThreeOperatingExpenseCategories",
+  vendorExpenseVAT:"explicitExpenseCategoryFractions",
   withholdingAndPriorPayments:"excludedByScenarioAssumption",
   fixedYearEndCashTiming:"incomeNextYearAndResidentsIntoFollowingJanuary"
  }))if(a[k]!==v)throw new RangeError("Unsupported indicative assumption "+k);
@@ -217,8 +225,11 @@ export function estimateV11IndicativeTaxCash({document,unitResults,assumptions})
     subtotal.categoryProfit[rentalCategory]-=commonBusinessExpense*rentShare;
     subtotal.netBusinessDeductibleExpenses+=lodgingCost+rentalCost+headRent+commonBusinessExpense;
     const outputVAT=registered?lodging*a.vatRate:0;
-    const vendorVAT=(lodgingCost+rentalCost+common)*a.vatRate;
-    const eligibleVendorVAT=(lodgingCost+common*sharedTaxShare)*a.vatRate;
+    const lodgingVendorVat=lodgingCost*a.taxableVendorExpenseShares.lodging*a.vatRate;
+    const rentalVendorVat=rentalCost*a.taxableVendorExpenseShares.rental*a.vatRate;
+    const sharedVendorVat=common*a.taxableVendorExpenseShares.property*a.vatRate;
+    const vendorVAT=lodgingVendorVat+rentalVendorVat+sharedVendorVat;
+    const eligibleVendorVAT=lodgingVendorVat+sharedVendorVat*sharedTaxShare;
     // Rents are treated as residential exempt. Rental-operation vendors are
     // assumed taxable cash suppliers, but have no input VAT credit here.
     // VAT input credit for lodging/common only if entity VAT-registered.
@@ -228,10 +239,10 @@ export function estimateV11IndicativeTaxCash({document,unitResults,assumptions})
     subtotal.candidateInputVatCredit+=candidateInput;
     // When a supplier VAT payment relates to business expenses, the
     // non-credited share is also assumed deductible for ordinary income.
-    const taxableVendorVat=(lodgingCost+rentalCost+common*sharedTaxShare)*a.vatRate;
+    const taxableVendorVat=lodgingVendorVat+rentalVendorVat+sharedVendorVat*sharedTaxShare;
     subtotal.vatDeductibleBeforeCredit+=taxableVendorVat;
-    subtotal.categoryProfit[lodgingCategory]-=(lodgingCost+common*sharedTaxShare*lodgeShare)*a.vatRate;
-    subtotal.categoryProfit[rentalCategory]-=(rentalCost+common*sharedTaxShare*rentShare)*a.vatRate;
+    subtotal.categoryProfit[lodgingCategory]-=lodgingVendorVat+sharedVendorVat*sharedTaxShare*lodgeShare;
+    subtotal.categoryProfit[rentalCategory]-=rentalVendorVat+sharedVendorVat*sharedTaxShare*rentShare;
     pushCash(cash,entity.id,month,"collectionsVAT",outputVAT);
     pushCash(cash,entity.id,month,"vendorVATCash",-vendorVAT);
    }
@@ -371,7 +382,7 @@ export function estimateV11IndicativeTaxCash({document,unitResults,assumptions})
    warnings:[
     "Rates and profit classification are user-editable approximate assumptions, not tax return calculations",
     "Tax-exclusive operating cash assumption; property purchase/sale and other investing cash unchanged (assumed VAT-excluded or already gross)",
-    "Residential rent VAT-exempt; all named vendor operating costs modeled as taxable suppliers; head rent exempt",
+    "Residential rent VAT-exempt; vendor VAT applied only to editable fractions of lodging, rental and property expenses (fixed asset taxes are not taxable supply); head rent exempt",
     "No automatically recognized VAT refund, project-loss refund, corporate loss carryforward or cross-income offset",
     "Building basis defaults to a visible purchase allocation assumption only if no land/building tax asset ledger exists",
     "Mixed-use utilities use forecast nights and floor share; building depreciation uses floor share and year service share; independent legal disposition basis may differ",
