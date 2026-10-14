@@ -114,6 +114,29 @@ export function deriveOwnedM3MixedTaxRegister({
       e.taxTreatment!=="deductible"||
       e.businessUseRatio!==undefined&&e.businessUseRatio!==100))
    throw new RangeError("M3 pilot accepts only independently reviewed shared utility expenses; other cost attribution must be classified separately");
+ const utilityReviews=ownedReview.sharedUtilityExpenseReviews;
+ if(!Array.isArray(utilityReviews)||
+     utilityReviews.length!==(unit.expenses??[]).length)
+   throw new RangeError("Every cash-paid M3 shared utility bill requires item-level reviewed eligibility and amount");
+ const utilityById=new Map();
+ for(const r of utilityReviews){
+   if(!r?.expenseId||utilityById.has(r.expenseId)||
+      r.reviewStatus!=="reviewedScenarioAssumption"||
+      r.expenseKind!=="sharedUtilities"||
+      r.deductionBasis!=="areaGuestNights"||
+      r.amountAgreesWithCash!==true||
+      !r.reviewEvidenceUrl?.startsWith("https://"))
+     throw new RangeError("M3 utility bill classification/cash matching has not been independently reviewed");
+   utilityById.set(r.expenseId,r);
+ }
+ for(const e of unit.expenses??[]){
+   const r=utilityById.get(e.id);
+   if(!r||!equal(finite(r.reviewedGrossCashAmount,"shared utility reviewed amount"),
+                   finite(e.amount,"shared utility cash expense")))
+     throw new RangeError("M3 shared utility review must cover each unique cash invoice at actual full amount");
+ }
+ if(utilityById.size!==(unit.expenses??[]).length)
+   throw new RangeError("M3 utility tax review has unknown/stale expense IDs");
  if(unitResult.investing.some(e=>
       !["acquisitionPrice","disposalProceeds","saleCosts"].includes(e.category)&&e.amount!==0))
    throw new RangeError("M3 investment fee, capital work, sale liability or extra asset tax adjustment needs own reviewed ledger");
