@@ -58,7 +58,12 @@ footer{font-size:.8rem;color:#516a76;padding:20px 0}
  <section class="card"><h3>標準入力（選択住戸）</h3><label for="unit-choice">住戸</label><select id="unit-choice"></select>
  <fieldset id="edit-fields" class="field-grid" style="margin-top:18px"></fieldset>
  <p class="muted small">変更は現在の下書きに反映します。「保存」を押すまでブラウザには書き込みません。シナリオ差分がある場合は差分が優先されます。</p></section>
- <section class="card"><h3>暦年別の税引前キャッシュフロー</h3><div id="annual-table"></div></section>
+ <section class="card"><h3>暦年別の投資キャッシュフロー</h3><div id="annual-table"></div></section>
+ <section class="card"><h3>Base／Upside／Downside比較（概算・同じ税務仮定）</h3>
+ <p class="muted small">営業前提の違いによって税額・消費税CF・NPVがどう変化するかを比較します。IRRは符号反転が複数ある場合、数値を強制表示しません。</p>
+ <div id="indicative-comparison">概算モードを有効化すると、シナリオ比較を表示します。</div></section>
+ <section class="card"><h3>概算の税額・消費税・家事按分の内訳</h3>
+ <div id="indicative-breakdown">概算モードを有効化すると、仮定と計算根拠を表示します。</div></section>
  <section class="card"><h3>納税主体別の税務計算用元帳（監査用）</h3>
  <p class="muted small">営業売上・現金費用・取得支出・売却代金・借入／元本・利息を分類します。表の差額は税法上の課税所得ではありません。償却・VAT・家事按分・譲渡益の審査を別途要します。</p>
  <div id="tax-crosswalk"></div></section>
@@ -235,6 +240,75 @@ function renderAnnual(){
       }));
  }
 }
+function renderIndicativeComparison(){
+ const target=$("indicative-comparison");
+ if(!indicativeAssumptions||last?.status!=="estimated-pre-tax"){
+   target.textContent="概算モードが有効で、営業計算が完成したときに表示します。";return;
+ }
+ const rows=[];
+ for(const scenario of data.scenarios){
+  try{
+   const r=previewV11Scenario(data,{scenarioId:scenario.id,indicativeAssumptions});
+   if(!r.indicativeAfterTax){
+     rows.push([scenario.name,"算定保留","算定保留","—","—",
+       r.reason??"入力不足"]);continue;
+   }
+   const tax=r.indicativeCashReconciliation;
+   const after=r.indicativeAfterTax;
+   const total=after.cashFlows.reduce((a,b)=>a+b,0);
+   rows.push([scenario.name,fmt(after.NPV),pct(after.IRR),
+     fmt(tax.incomeTaxCashTotal),fmt(tax.netVatCashTotal),fmt(total)]);
+  }catch(error){
+   rows.push([scenario.name,"算定保留","算定保留","—","—",
+     "要確認："+String(error?.message??error)]);
+  }
+ }
+ target.innerHTML=simpleTable([
+  "シナリオ","概算税引後NPV","概算税引後IRR",
+  "所得・譲渡税CF合計","消費税関連CF合計","期間純回収差額（割引前）"
+ ],rows);
+}
+function renderIndicativeBreakdown(){
+ const target=$("indicative-breakdown");
+ if(!last?.indicativeAfterTax){
+   target.textContent="概算モード有効時にのみ表示します。";return;
+ }
+ const r=last;
+ const tax=simpleTable(
+  ["主体","暦年","概算所得課税ベース","想定実効税率","所得税等の見込額","法人売却益加算"],
+  r.indicativeTaxRows.map(x=>[
+    x.entityId,x.taxYear,fmt(x.incomeTaxBase),
+    pct(x.ordinaryIncomeTaxRate),fmt(x.estimatedOrdinaryTax),
+    fmt(x.corporateSaleGain)]));
+ const vat=simpleTable(
+  ["主体","暦年","課税事業者仮定","売上VAT","仕入VAT支払",
+    "認める仕入税額控除","現金納付見込"],
+  r.indicativeVATRows.map(x=>[
+    x.entityId,x.taxYear,x.registered?"課税":"免税",
+    fmt(x.outputVAT),fmt(x.taxableVendorVATPaid),
+    fmt(x.creditApplied),fmt(x.estimatedCashSettlement)]));
+ const use=simpleTable(
+  ["住戸","暦年","年間宿泊割当","見込宿泊泊数","光熱費の事業利用割合",
+   "建物償却の事業利用割合","非現金償却総額","うち所得計算に反映"],
+  r.indicativeUnitProof.map(x=>[
+   x.unitId,x.taxYear,x.lodgingAllocatedDays,
+   Number(x.forecastLodgingNights.toFixed(2)),
+   pct(x.guestNightBasedSharedExpenseShare),
+   pct(x.buildingTaxExpenseBusinessShare),
+   fmt(x.assumedNoncashDepreciationGross),
+   fmt(x.assumedNoncashDepreciationDeducted)]));
+ const sale=simpleTable(
+   ["住戸","譲渡年","税務上の購入原価（概算）","調整後の取得費（概算）",
+    "譲渡利益のプラス部分","概算適用税率"],
+   r.indicativeSaleRows.map(x=>[
+     x.unitId,x.taxYear,fmt(x.acquisitionPurchase),
+     fmt(x.estimatedAdjustedTaxBasis),fmt(x.positiveTaxableGain),
+     pct(x.estimatedGainRate)]));
+ target.innerHTML="<h4>主体別の通常所得税等</h4>"+tax+
+  "<h4>消費税の税込現金調整（簡易方式）</h4>"+vat+
+  "<h4>住戸別の償却・家事按分の仮定</h4>"+use+
+  "<h4>売却益の概算前提</h4>"+sale;
+}
 function renderTaxCrosswalk(){
  const rows=last?.taxSourceCrosswalk?.rows;
  if(!Array.isArray(rows)){
@@ -378,7 +452,7 @@ function render(){
  $("unit-choice").innerHTML=data.units.map(u=>'<option value="'+esc(u.id)+'">'+esc(u.name)+'</option>').join("");
  $("unit-choice").value=selectedUnit;
  calculate();
- renderBusiness();renderEvidence();renderKpis();renderAnnual();renderTaxCrosswalk();renderOwnedAssetTax();renderEditor();renderMonths();renderLimitations();renderIndicativeSettings();
+ renderBusiness();renderEvidence();renderKpis();renderAnnual();renderIndicativeComparison();renderIndicativeBreakdown();renderTaxCrosswalk();renderOwnedAssetTax();renderEditor();renderMonths();renderLimitations();renderIndicativeSettings();
 }
 function showTab(tab){
  activeTab=tab;
